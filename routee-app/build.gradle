@@ -3,8 +3,12 @@ plugins {
 }
 
 dependencies {
-    implementation project(':routee-api')
-    implementation project(':routee-infrastructure')
+    implementation project(':routee-activity')
+    implementation project(':routee-auth')
+    implementation project(':routee-course')
+
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
     // modulith
     implementation 'org.springframework.modulith:spring-modulith-starter-core'

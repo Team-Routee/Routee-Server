@@ -1,4 +1,0 @@
-dependencies {
-    implementation project(':routee-domain')
-    implementation 'org.springframework.boot:spring-boot-starter'
-}
