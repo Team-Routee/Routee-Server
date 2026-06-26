@@ -1,8 +1,12 @@
 package org.sopt.routee.exception.handler;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+
 import org.sopt.routee.code.ErrorCode;
 import org.sopt.routee.exception.BaseException;
 import org.sopt.routee.response.ApiResponse;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -49,6 +54,25 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
 		String message = e.getBindingResult().getFieldErrors().stream()
 			.findFirst()
 			.map(DefaultMessageSourceResolvable::getDefaultMessage)
+			.orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+		return buildErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message);
+	}
+
+	@ExceptionHandler(HandlerMethodValidationException.class)
+	protected ResponseEntity<ApiResponse> handleHandlerMethodValidation(HandlerMethodValidationException e) {
+		String message = e.getParameterValidationResults().stream()
+			.flatMap(result -> result.getResolvableErrors().stream())
+			.findFirst()
+			.map(MessageSourceResolvable::getDefaultMessage)
+			.orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+		return buildErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message);
+	}
+
+	@ExceptionHandler(ConstraintViolationException.class)
+	protected ResponseEntity<ApiResponse> handleConstraintViolation(ConstraintViolationException e) {
+		String message = e.getConstraintViolations().stream()
+			.findFirst()
+			.map(ConstraintViolation::getMessage)
 			.orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
 		return buildErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message);
 	}
