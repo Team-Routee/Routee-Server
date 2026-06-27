@@ -70,11 +70,12 @@ reviews:
 
     - path: "routee-auth/**"
       instructions: |
-        routee-auth는 인증 도메인 모듈입니다.
+        routee-auth는 인증 전용 도메인 모듈입니다. 회원 엔티티와 영속성은 routee-member가 담당합니다.
 
         [모듈 경계]
         - internal 패키지의 타입은 외부 모듈에서 직접 참조하면 안 됩니다.
-        - 다른 도메인 모듈에 의존하면 안 됩니다.
+        - routee-member의 공개 API(MemberUseCase, SocialProvider 등)는 사용할 수 있습니다.
+        - routee-member 이외의 다른 도메인 모듈에 의존하면 안 됩니다.
 
         [JWT]
         - 토큰 발급, 검증, 파싱 등의 책임은 단일 책임 원칙을 고려하여 적절히 분리합니다.
@@ -85,6 +86,23 @@ reviews:
         [인증]
         - 인증이 필요 없는 엔드포인트는 중앙화된 화이트리스트로 관리합니다.
         - 새로운 Public Endpoint 추가 시 관련 보안 설정도 함께 검토합니다.
+
+    - path: "routee-member/**"
+      instructions: |
+        routee-member는 회원 도메인 모듈입니다. 회원 식별, 생성, 조회 등 회원 생명주기를 담당합니다.
+
+        [모듈 경계]
+        - internal 패키지(Member 엔티티, MemberRepository, MemberService)는 외부에 노출하면 안 됩니다.
+        - 공개 API(MemberUseCase, SocialProvider, FindOrCreateMemberCommand)만 외부 모듈이 사용합니다.
+        - 다른 도메인 모듈에 의존하면 안 됩니다.
+
+        [도메인 소유]
+        - SocialProvider enum은 이 모듈이 소유합니다. 인증 모듈 등 다른 모듈은 이 타입을 import하여 사용합니다.
+        - 회원 관련 비즈니스 규칙(중복 가입 방지 등)은 이 모듈이 담당합니다.
+
+        [공개 API]
+        - 새로운 회원 조회/수정 기능은 MemberUseCase에 추가하고 internal에서 구현합니다.
+        - Command, Query, Result 등의 계약 객체는 모듈 루트 또는 명시적 공개 패키지에 위치합니다.
 
     - path: "routee-app/**"
       instructions: |
@@ -129,7 +147,9 @@ reviews:
         - Spring Boot BOM 또는 Spring Modulith BOM에서 관리하는 의존성은 버전을 명시하지 않습니다.
         - BOM에서 관리하지 않는 라이브러리는 버전을 명시합니다.
         - 필요한 의존성은 사용하는 모듈에 명시적으로 선언합니다.
-        - 도메인 모듈 간 직접 의존성이 추가되지 않도록 검토합니다.
+        - 도메인 모듈이 다른 도메인 모듈에 의존할 경우, 공개 API만 사용하는지 확인합니다.
+        - 도메인 모듈 간 순환 의존성이 생기지 않도록 검토합니다.
+        - 현재 허용된 도메인 간 의존 방향: routee-auth → routee-member (단방향, 공개 API만)
 
 chat:
   auto_reply: true
