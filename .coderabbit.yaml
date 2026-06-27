@@ -1,0 +1,135 @@
+language: "ko-KR"
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "chore"
+
+  path_filters:
+    - "!**/*.md"
+    - "!**/build/**"
+    - "!**/.gradle/**"
+    - "!**/gradlew"
+    - "!**/gradlew.bat"
+    - "!**/HELP.md"
+
+  path_instructions:
+    - path: "**/*.java"
+      instructions: |
+        이 프로젝트는 Spring Boot 4.x + Spring Modulith 2.x 기반의 모듈러 모놀리스입니다.
+
+        [Spring Modulith]
+        - 각 모듈의 `internal` 패키지는 모듈 외부에서 직접 참조하면 안 됩니다.
+        - 모듈 간 협력은 공개 API(루트 패키지 또는 명시적으로 공개된 패키지)를 통해 이루어져야 합니다.
+        - 도메인 모듈 간 직접 구현체 의존은 금지됩니다.
+        - 조회(Query)보다 상태 변경(Command)에 대해 이벤트 기반 협력을 우선적으로 고려합니다.
+        - 동기 호출이 필요한 경우 공개 UseCase를 사용합니다.
+
+        [도메인 이벤트]
+        - 도메인 이벤트는 비즈니스 의미를 표현해야 합니다.
+        - 이벤트 객체는 immutable하게 유지합니다.
+        - 이벤트 리스너는 모듈 간 이벤트 처리만 담당하고, 비즈니스 로직을 과도하게 포함하지 않습니다.
+        - 이벤트 처리는 향후 메시지 브로커(Kafka 등)로 이전 가능하도록 느슨한 결합을 유지합니다.
+
+        [레이어 구조]
+        - 컨트롤러는 구현체가 아닌 UseCase 인터페이스에만 의존해야 합니다.
+        - 공개되는 Command, Query, Result 등의 계약 객체는 모듈의 공개 패키지에 위치해야 합니다.
+        - 서비스 레이어가 컨트롤러 레이어의 타입에 의존하면 안 됩니다.
+
+        [예외 처리]
+        - 애플리케이션에서 정의하는 예외는 공통 기반 예외 클래스를 상속해야 합니다.
+        - Spring Security 예외는 HandlerExceptionResolver를 통해 MVC 예외 처리 체계로 위임해야 합니다.
+
+        [응답]
+        - 컨트롤러 응답은 공통 응답 팩토리를 통해 생성해야 합니다.
+        - 응답 코드 enum은 공통 인터페이스를 구현해야 합니다.
+
+        [일반 코드 품질]
+        - 생성자 주입을 사용하고 필드 주입은 사용하지 않습니다.
+        - DTO는 특별한 이유가 없다면 record 사용을 우선 고려합니다.
+        - Optional은 반환 타입에서만 사용하고 필드 타입으로 사용하지 않습니다.
+        - System.out.println 대신 Logger를 사용합니다.
+        - JPA 조회 시 N+1 문제가 발생할 가능성이 있으면 검토합니다.
+        - 조회 전용 트랜잭션에는 readOnly=true 사용 여부를 검토합니다.
+
+    - path: "routee-common/**"
+      instructions: |
+        routee-common은 모든 모듈이 공유하는 공통 인프라 모듈입니다.
+
+        - 특정 도메인의 비즈니스 로직을 포함하면 안 됩니다.
+        - 인증/인가 실패(401, 403)는 공통 에러 코드로 관리합니다.
+        - 공통 예외 핸들러는 요청 바디, 쿼리 파라미터 등 모든 유효성 검증 예외를 일관되게 처리해야 합니다.
+
+    - path: "routee-auth/**"
+      instructions: |
+        routee-auth는 인증 도메인 모듈입니다.
+
+        [모듈 경계]
+        - internal 패키지의 타입은 외부 모듈에서 직접 참조하면 안 됩니다.
+        - 다른 도메인 모듈에 의존하면 안 됩니다.
+
+        [JWT]
+        - 토큰 발급, 검증, 파싱 등의 책임은 단일 책임 원칙을 고려하여 적절히 분리합니다.
+        - JJWT 예외는 즉시 도메인 예외로 변환합니다.
+        - Access Token과 Refresh Token은 명확하게 구분되어야 합니다.
+        - Refresh Token 재발급 시 새로운 Refresh Token도 함께 발급하는 것을 원칙으로 합니다.
+
+        [인증]
+        - 인증이 필요 없는 엔드포인트는 중앙화된 화이트리스트로 관리합니다.
+        - 새로운 Public Endpoint 추가 시 관련 보안 설정도 함께 검토합니다.
+
+    - path: "routee-app/**"
+      instructions: |
+        routee-app은 Composition Root이자 애플리케이션 진입점입니다.
+
+        - 비즈니스 로직을 포함하지 않습니다.
+        - 설정과 Bean 조립만 담당합니다.
+        - 도메인 모듈의 internal 패키지에 직접 접근하면 안 됩니다.
+        - SecurityFilterChain 및 Security 관련 Bean은 이 모듈에서 구성합니다.
+        - Spring Security 예외는 HandlerExceptionResolver를 통해 MVC 예외 처리 체계로 위임합니다.
+
+    - path: "routee-activity/**"
+      instructions: |
+        routee-activity는 활동 도메인 모듈입니다.
+
+        - internal 패키지의 타입은 외부 모듈에 노출하면 안 됩니다.
+        - 다른 도메인 모듈에 의존하면 안 됩니다.
+        - 애플리케이션 예외는 공통 기반 예외를 상속해야 합니다.
+        - 응답 코드 enum은 공통 인터페이스를 구현해야 합니다.
+        - 상태 변경 시 적절한 도메인 이벤트 발행 여부를 함께 검토합니다.
+
+    - path: "routee-course/**"
+      instructions: |
+        routee-course는 코스 도메인 모듈입니다.
+
+        - internal 패키지의 타입은 외부 모듈에 노출하면 안 됩니다.
+        - 다른 도메인 모듈에 의존하면 안 됩니다.
+        - 애플리케이션 예외는 공통 기반 예외를 상속해야 합니다.
+        - 응답 코드 enum은 공통 인터페이스를 구현해야 합니다.
+        - 상태 변경 시 적절한 도메인 이벤트 발행 여부를 함께 검토합니다.
+
+    - path: "routee-external/**"
+      instructions: |
+        routee-external은 외부 시스템 연동 모듈입니다.
+
+        - 다른 도메인 모듈에 직접 의존하면 안 됩니다.
+        - 외부 연동 구현체는 도메인 모듈에 노출하지 않습니다.
+        - 외부 API 호출 실패는 공통 기반 예외로 변환해야 합니다.
+
+    - path: "**/*.gradle"
+      instructions: |
+        - Spring Boot BOM 또는 Spring Modulith BOM에서 관리하는 의존성은 버전을 명시하지 않습니다.
+        - BOM에서 관리하지 않는 라이브러리는 버전을 명시합니다.
+        - 필요한 의존성은 사용하는 모듈에 명시적으로 선언합니다.
+        - 도메인 모듈 간 직접 의존성이 추가되지 않도록 검토합니다.
+
+chat:
+  auto_reply: true
