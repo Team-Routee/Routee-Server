@@ -1,4 +1,4 @@
-<!-- PR의 제목은 "type: subject" 와 같이 작성해주세요! -->
+<!-- PR의 제목은 "[TYPE/#issue_num] subject" 와 같이 작성해주세요! -->
 
 ## 📌 Related Issue
 
