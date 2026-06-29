@@ -1,0 +1,78 @@
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: routee-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/service-url.inc:/etc/nginx/conf.d/service-url.inc
+    networks:
+      - routee-network
+
+  app-blue:
+    image: ${APP_IMAGE}
+    container_name: routee-app-blue
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - routee-network
+
+  app-green:
+    image: ${APP_IMAGE}
+    container_name: routee-app-green
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - routee-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: routee-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - routee-network
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: routee-dozzle
+    restart: unless-stopped
+    ports:
+      - "9999:8080"
+    environment:
+      DOZZLE_USERNAME: ${DOZZLE_USERNAME}
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - routee-network
+
+volumes:
+  redis-data:
+
+networks:
+  routee-network:
+    driver: bridge

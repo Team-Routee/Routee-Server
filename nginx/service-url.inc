@@ -1,0 +1,1 @@
+set $service_url app-blue:8080;
