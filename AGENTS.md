@@ -193,25 +193,26 @@ Member domain — owns member identity and lifecycle.
 ### routee-external
 
 Owns all integrations with external systems (third-party APIs, social login providers, etc.).
+Uses a **port-adapter pattern**: public port interfaces define what an integration does; adapter implementations are private in `internal`.
 
-- Encapsulates third-party SDKs and HTTP clients.
-- Exposes integration capabilities through public interfaces.
-- Converts external exceptions into application domain exceptions immediately at the boundary.
+- Domain modules depend only on port interfaces — never on adapter implementations.
+- Adapters translate third-party exceptions into typed exceptions that extend `BaseException`,
+  so `GlobalExceptionHandler` handles them without any caller-side catch blocks.
 - Must not contain business logic.
-- Domain modules should depend on abstractions from `routee-external`, not on its implementations.
 
 ---
 
 ## 4. Dependency Rules
 
 ```
-              routee-app
-             /    |    \
-         auth  activity  course  external
-           |       \    /
-         member
-             \    |    /
-            routee-common
+                 routee-app
+        /      /      \       \
+     auth   member  activity  course
+       \      \        \       /
+        \      \        \     /
+              external
+                  |
+               common
 ```
 
 **Allowed**
@@ -221,7 +222,6 @@ Owns all integrations with external systems (third-party APIs, social login prov
 - A module → its own `internal` packages
 - Domain module → another domain module's **public API** only, when a synchronous result is required
   and the dependency is directed and non-circular
-  (e.g. `routee-auth` → `routee-member` for find-or-create during login)
 
 **Forbidden**
 
@@ -244,7 +244,8 @@ Declare every dependency a module actually uses explicitly.
 ## 5. Security
 
 - Security configuration (`SecurityFilterChain`, filter registration) belongs only in `routee-app`.
-- Authentication logic (JWT issuance, validation, OIDC token decoding) belongs only in `routee-auth`.
+- JWT issuance and validation belong only in `routee-auth`.
+- OIDC token decoding (Apple, Kakao JWKS) belongs in `routee-external`. Callers use the `OidcTokenVerifier` port interface.
 - Other domain modules must not depend on Spring Security directly.
 - Spring Security exceptions must be delegated to the MVC exception handling mechanism
   (`HandlerExceptionResolver` → `@RestControllerAdvice`) rather than handled inside filters.
@@ -414,8 +415,8 @@ Keep module coupling loose. Never introduce shortcuts that violate module bounda
 
 ## 11. Current Development Phase
 
-The common infrastructure is complete. `routee-auth` and `routee-member` are actively implemented.
-`routee-activity`, `routee-course`, and `routee-external` are placeholders.
+The common infrastructure is complete. `routee-auth`, `routee-member`, and `routee-external` are actively implemented.
+`routee-activity` and `routee-course` are placeholders.
 
 **Do not**
 
