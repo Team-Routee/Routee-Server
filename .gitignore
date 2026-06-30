@@ -49,3 +49,6 @@ logs/
 
 ### Env ###
 .env
+
+### Local Docker Compose ###
+docker-compose.dev.yml
