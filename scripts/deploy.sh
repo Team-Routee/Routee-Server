@@ -93,7 +93,8 @@ echo "set \$service_url $TARGET:8080;" > nginx/service-url.inc
 docker exec routee-nginx nginx -s reload
 echo "Traffic switched to $TARGET"
 
-echo "Step 4: Stopping old container ($OLD)..."
+echo "Step 4: Removing old container ($OLD)..."
+docker compose -f docker-compose.yml stop $OLD || true
 docker compose -f docker-compose.yml rm -f $OLD || true
 
 docker image prune -f

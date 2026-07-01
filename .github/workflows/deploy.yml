@@ -70,4 +70,4 @@ jobs:
             export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
             export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
 
-            cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:latest
+            cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ github.sha }}
