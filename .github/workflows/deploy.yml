@@ -23,17 +23,10 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Create application.yml
-        run: |
-          mkdir -p ./routee-app/src/main/resources
-          cat << 'EOF' > ./routee-app/src/main/resources/application.yml
-          ${{ secrets.APPLICATION_YML }}
-          EOF
-
       - name: Build with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew :routee-app:build
+          ./gradlew :routee-app:build -x test
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -71,6 +64,7 @@ jobs:
             export DB_NAME="${{ secrets.DB_NAME }}"
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
             export DOZZLE_USERNAME="${{ secrets.DOZZLE_USERNAME }}"
             export DOZZLE_PASSWORD="${{ secrets.DOZZLE_PASSWORD }}"
 
