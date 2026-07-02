@@ -64,10 +64,14 @@ jobs:
           script: |
             chmod +x ~/app/scripts/deploy.sh
 
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+            export DB_HOST="${{ secrets.DB_HOST }}"
+            export DB_PORT="${{ secrets.DB_PORT }}"
+            export DB_NAME="${{ secrets.DB_NAME }}"
+            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export DOZZLE_USERNAME="${{ secrets.DOZZLE_USERNAME }}"
             export DOZZLE_PASSWORD="${{ secrets.DOZZLE_PASSWORD }}"
-            export POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
-            export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
-            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
 
             cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ github.sha }}

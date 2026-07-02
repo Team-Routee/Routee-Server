@@ -17,19 +17,13 @@ if ! docker ps --format '{{.Names}}' | grep -q "^routee-nginx$"; then
   if [ ! -f nginx/service-url.inc ]; then
     echo "set \$service_url app-blue:8080;" > nginx/service-url.inc
   fi
-  docker compose -f docker-compose.yml up -d nginx redis postgres dozzle
+  docker compose -f docker-compose.yml up -d nginx redis dozzle
 
   echo "Waiting for Redis to be ready..."
   until docker exec routee-redis redis-cli ping 2>/dev/null | grep -q PONG; do
     sleep 1
   done
   echo "Redis is ready"
-
-  echo "Waiting for PostgreSQL to be ready..."
-  until docker exec routee-postgres pg_isready 2>/dev/null; do
-    sleep 1
-  done
-  echo "PostgreSQL is ready"
 fi
 
 if docker ps --format '{{.Names}}' | grep -q "^routee-app-blue$"; then
@@ -98,5 +92,7 @@ docker compose -f docker-compose.yml stop $OLD || true
 docker compose -f docker-compose.yml rm -f $OLD || true
 
 docker image prune -f
+
+echo "$APP_IMAGE" > .last-deployed-tag
 
 echo "Deploy completed. Active app: $TARGET"

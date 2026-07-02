@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 
 WORKDIR /app
 
-COPY routee-app/build/libs/*.jar app.jar
+COPY routee-app/build/libs/routee-app.jar app.jar
 
 EXPOSE 8080
 
