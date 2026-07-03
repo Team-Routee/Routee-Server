@@ -7,6 +7,8 @@ dependencies {
     implementation project(':routee-auth')
     implementation project(':routee-course')
 
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
