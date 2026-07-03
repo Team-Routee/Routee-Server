@@ -20,10 +20,18 @@ if ! docker ps --format '{{.Names}}' | grep -q "^routee-nginx$"; then
   docker compose -f docker-compose.yml up -d nginx redis dozzle
 
   echo "Waiting for Redis to be ready..."
-  until docker exec routee-redis redis-cli ping 2>/dev/null | grep -q PONG; do
+  for i in {1..30}; do
+    if docker exec routee-redis redis-cli ping 2>/dev/null | grep -q PONG; then
+      echo "Redis is ready"
+      break
+    fi
+    if [ "$i" -eq 30 ]; then
+      echo "Redis healthcheck failed"
+      docker logs routee-redis --tail 50
+      exit 1
+    fi
     sleep 1
   done
-  echo "Redis is ready"
 fi
 
 if docker ps --format '{{.Names}}' | grep -q "^routee-app-blue$"; then
