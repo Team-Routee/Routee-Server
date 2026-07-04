@@ -46,7 +46,7 @@ public class Activity {
 	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(name = "activity_status", nullable = false)
-	@ColumnDefault("ACTIVITY_IN_PROGRESS")
+	@ColumnDefault("'ACTIVITY_IN_PROGRESS'")
 	private ActivityStatus activityStatus = ActivityStatus.ACTIVITY_IN_PROGRESS;
 
 	@Column(name = "distance")

@@ -56,7 +56,7 @@ public class Member extends BaseEntity {
 	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
-	@ColumnDefault("ROLE_USER")
+	@ColumnDefault("'ROLE_USER'")
 	private MemberRole role = MemberRole.ROLE_USER;
 
 	@Column(name = "last_activity_date")

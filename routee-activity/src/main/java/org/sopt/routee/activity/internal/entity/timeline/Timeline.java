@@ -46,7 +46,7 @@ public class Timeline {
 	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(name = "timeline_status", nullable = false)
-	@ColumnDefault("CREATION_IN_PROGRESS")
+	@ColumnDefault("'CREATION_IN_PROGRESS'")
 	private TimelineStatus timelineStatus = TimelineStatus.CREATION_IN_PROGRESS;
 
 	@Column(name = "timeline_image_object_key", nullable = false)
