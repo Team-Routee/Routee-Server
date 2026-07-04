@@ -3,10 +3,25 @@ plugins {
 }
 
 dependencies {
+    implementation project(':routee-common')
     implementation project(':routee-activity')
     implementation project(':routee-auth')
+    implementation project(':routee-member')
     implementation project(':routee-course')
 
+    // Web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // JPA — JpaAuditingConfig(@EnableJpaAuditing)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // PostgreSQL
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // swagger
