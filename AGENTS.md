@@ -224,7 +224,7 @@ Shared infrastructure used by all modules.
 Member domain — owns member identity and lifecycle.
 
 - Exposes `MemberUseCase` for find-or-create and future member queries.
-- Exposes `SocialProvider` as a shared domain type (enum).
+- Exposes `OAuthProvider` as a shared domain type (enum).
 - Owns the `Member` JPA entity and `MemberRepository` (both internal).
 - Other domain modules may declare a Gradle dependency on this module to access its public API,
   provided the dependency is directed and non-circular.
