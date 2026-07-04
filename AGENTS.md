@@ -42,11 +42,13 @@ This project is a **modular monolith** built on Spring Modulith.
 The `internal` package is the **private implementation area** of a module.
 
 - No other module may import any type from another module's `internal` package — ever.
-- Modules interact only through their **public API**.
+- Modules interact only through another module's **`api` package**.
+- Only the `api` package is exported through Spring Modulith Named Interfaces.
 - Direct dependency on another module's implementation class is forbidden.
 
-### Public API
+### API Package
 
+Everything intended for other modules must reside under the `api` package.
 The only types a module exposes to the outside world are:
 
 - **UseCase** — interface for triggering the module's behavior.
@@ -62,27 +64,69 @@ Everything else belongs to `internal`.
 
 ```
 org.sopt.routee.{module}
-├── {Module}UseCase.java         ← public
-├── command/
-│   └── Create{Entity}Command.java   ← public
-├── query/
-│   └── Get{Entity}Query.java        ← public
-├── result/
-│   └── {Entity}Result.java          ← public
-├── event/
-│   └── {Entity}Registered.java      ← public, immutable record
-└── internal/                        ← private — never import from outside
+├── api/                                   ← published interface — @NamedInterface("api")
+│   ├── package-info.java
+│   ├── usecase/
+│   │   ├── package-info.java                 ← @NamedInterface("api")
+│   │   └── {Module}UseCase.java              ← public
+│   ├── command/
+│   │   ├── package-info.java                 ← @NamedInterface("api")
+│   │   └── Create{Entity}Command.java        ← public
+│   ├── query/
+│   │   ├── package-info.java                 ← @NamedInterface("api")
+│   │   └── Get{Entity}Query.java             ← public
+│   ├── result/
+│   │   ├── package-info.java                 ← @NamedInterface("api")
+│   │   └── {Entity}Result.java               ← public
+│   └── event/
+│       ├── package-info.java                 ← @NamedInterface("api")
+│       └── {Entity}Registered.java           ← public, immutable record
+└── internal/                              ← private — never import from outside
     ├── controller/
     ├── service/
     ├── repository/
     ├── entity/
+    ├── mapper/
+    ├── listener/
+    ├── config/
     ├── exception/
     └── code/
 ```
 
-A module may also have named public sub-packages for intentionally exposed infrastructure
-(e.g. `security/` for types that a configuration module must reference).
-These are exceptions and should be minimized.
+All sub-packages of `api` are considered part of the published API.
+
+A module may also declare additional Named Interfaces for infrastructure that must be
+exposed only to the Composition Root (e.g. `security/` for types that `routee-app`'s
+security configuration must reference). These live outside `api`, are exceptions,
+and should be minimized.
+
+### Named Interface
+
+Every module exposes exactly one primary published interface, spread across `api` and its
+sub-packages:
+
+```java
+// api/package-info.java
+@org.springframework.modulith.NamedInterface("api")
+package org.sopt.routee.member.api;
+
+// api/usecase/package-info.java
+@org.springframework.modulith.NamedInterface("api")
+package org.sopt.routee.member.api.usecase;
+```
+
+- A package-level `@NamedInterface` covers only the types declared directly in that
+  package — it does **not** propagate to sub-packages. Every sub-package of `api` that
+  contains public types must declare its own `package-info.java`.
+- Give every one of these `package-info.java` files the **same name** (`"api"`). Spring
+  Modulith merges named interfaces that share a name into a single logical published
+  interface, so `api`, `api.usecase`, `api.command`, `api.query`, `api.result`, and
+  `api.event` all resolve to one `api` interface from another module's point of view.
+- Only the `api` package (and its sub-packages) may be referenced from other modules.
+- Never annotate an `internal` package with `@NamedInterface`.
+- Verify with `ApplicationModules.of(RouteeApplication.class).verify()`
+  (`routee-app`'s `ModularityTests`) after adding or moving packages — a missing
+  `package-info.java` fails loudly as a boundary violation, not a silent leak.
 
 ### Composition Root
 
@@ -90,7 +134,7 @@ These are exceptions and should be minimized.
 
 - Contains: `@SpringBootApplication`, `SecurityFilterChain`, global configuration.
 - Must not contain: business logic, domain entities, repositories, services.
-- May reference only public packages of domain modules — never `internal`.
+- May reference only another module's `api` package — never `internal`.
 
 ### Inter-Module Communication
 
@@ -129,6 +173,7 @@ initializeFor(memberId)
 - Events are **immutable**. Use `record`.
 - Event listeners **orchestrate only**: invoke public UseCases or publish additional events.
   Listeners must not contain business rules or access repositories directly.
+- `ApplicationModuleListener` classes belong in `internal.listener`.
 - Design listeners so they can be replaced by a message broker (Kafka, etc.) without
   changing the publishing side.
 
@@ -168,7 +213,10 @@ Shared infrastructure used by all modules.
 
 - Contains cross-cutting concerns: response format, result codes, base exception,
   global exception handler, validation support, logging abstractions.
-- Must not contain: entities, repositories, domain services, business logic.
+- May contain a technical `BaseEntity` (`@MappedSuperclass`) providing auditing fields
+  (`createdAt`, `updatedAt`) for domain modules to extend. This is infrastructure, not a
+  domain entity — it has no table, no identifier, and no relationships.
+- Must not contain: domain entities, repositories, domain services, business logic.
 - Has no dependency on any domain module.
 
 ### routee-member
@@ -218,9 +266,9 @@ Uses a **port-adapter pattern**: public port interfaces define what an integrati
 **Allowed**
 
 - Any module → `routee-common`
-- `routee-app` → public packages of any domain module
+- `routee-app` → the `api` package of any domain module
 - A module → its own `internal` packages
-- Domain module → another domain module's **public API** only, when a synchronous result is required
+- Domain module → another domain module's **`api` package** only, when a synchronous result is required
   and the dependency is directed and non-circular
 
 **Forbidden**
@@ -231,7 +279,7 @@ Uses a **port-adapter pattern**: public port interfaces define what an integrati
 - Circular Gradle dependencies between modules
 
 When a domain module depends on another domain module via Gradle,
-it must use only the target module's public API — never its `internal` types.
+it must use only the target module's `api` package — never its `internal` types.
 Prefer Domain Events over direct UseCase calls whenever an immediate return value is not required.
 
 Do not introduce circular Gradle dependencies between modules.
@@ -269,7 +317,9 @@ Declare every dependency a module actually uses explicitly.
 
 **Packages**
 
-- Public packages reflect **business concepts**: `member`, `course`, `activity`.
+- The published API of a module resides under the `api` package.
+  Business concepts are represented by sub-packages of `api`
+  (e.g. `api.command`, `api.query`, `api.event`).
 - Avoid `manager`, `helper`, `processor`, `util`, `misc` outside of `internal`.
 - Inside `internal`, technical layer names (`controller`, `service`, `repository`) are acceptable.
 
@@ -277,7 +327,16 @@ Declare every dependency a module actually uses explicitly.
 
 ## 7. Layer Rules
 
+### UseCase
+
+A UseCase is always an interface located under `api.usecase`.
+Its implementation belongs to `internal.service`.
+Controllers and other modules depend only on the interface, never the implementation.
+
 ### Controllers
+
+Controllers are implementation details. They always belong to `internal.controller`
+and are never exposed outside the module.
 
 Controllers should remain thin.
 
@@ -305,6 +364,7 @@ internal/controller/
 
 Services should be cohesive — one service should represent one business capability.
 
+- Services always belong to `internal.service`.
 - Contain all business logic for the module.
 - Never depend on types in the controller layer.
 - Never communicate with another module's service directly — use a UseCase instead.
@@ -313,10 +373,23 @@ Services should be cohesive — one service should represent one business capabi
 
 ### Repositories
 
-- Belong only in `internal`.
+- Repositories always belong to `internal.repository`.
 - Are never exposed outside the module.
 - Are accessed only by services.
 - Contain persistence logic only — no business logic.
+
+### Mappers
+
+Conversion between `api` contracts (Command, Query, Result) and `internal` entities is done
+by a dedicated Mapper, not inline in the service or via static factory methods on the entity.
+
+- Mappers always belong to `internal.mapper`.
+- One Mapper per aggregate (e.g. `MemberMapper` converts `RegisterMemberCommand` ↔ `Member`).
+- Are Spring components injected into services via constructor injection, consistent with
+  the rest of the codebase's DI convention.
+- Contain only field-to-field translation — no persistence calls, no cross-module lookups,
+  no validation beyond what the target type's constructor already enforces.
+- Never imported outside the module; only the owning module's services depend on them.
 
 ### DTOs
 
@@ -324,7 +397,14 @@ Services should be cohesive — one service should represent one business capabi
 - Contain no business logic.
 - Request DTOs live in `internal.controller`. Do not reuse them as UseCase Commands —
   always map to a Command object before passing to the UseCase.
-- UseCase contracts (Command, Query, Result) live in the module's public packages.
+- UseCase contracts (Command, Query, Result) belong under `api`.
+
+### Package Visibility
+
+Only packages under `api` may contain public contracts intended for other modules.
+
+- Implementation classes should remain package-private whenever possible.
+- Avoid declaring public classes under `internal` unless required by Spring or JPA.
 
 ---
 
@@ -373,7 +453,7 @@ Services should be cohesive — one service should represent one business capabi
 
 **Configuration Classes**
 
-- Configuration classes that are purely internal to a module belong in that module's `internal` package.
+- Configuration classes that are purely internal to a module belong in that module's `internal.config` package.
 - Cross-module configuration (Security, global beans) belongs in `routee-app`.
 - Avoid exposing implementation beans as public APIs. Inject UseCase interfaces wherever possible.
 
