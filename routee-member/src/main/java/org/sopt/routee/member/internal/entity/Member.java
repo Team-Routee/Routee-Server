@@ -13,22 +13,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @Table(name = "member",
 	uniqueConstraints = {
 		@UniqueConstraint(
 			name = "uk_member_oauth_id_provider",
 			columnNames = {"oauth_id", "oauth_provider"})
 	})
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 	@Id
@@ -51,6 +53,7 @@ public class Member extends BaseEntity {
 	@Column(name = "oauth_provider", nullable = false, updatable = false)
 	private OAuthProvider oauthProvider;
 
+	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
 	@ColumnDefault("ROLE_USER")
@@ -59,36 +62,13 @@ public class Member extends BaseEntity {
 	@Column(name = "last_activity_date")
 	private LocalDate lastActivityDate;
 
+	@Builder.Default
 	@Column(name = "current_streak", nullable = false)
 	@ColumnDefault("0")
 	private Integer currentStreak = 0;
 
 	@Column(name = "total_activity_count", nullable = false)
+	@Builder.Default
 	@ColumnDefault("0")
 	private Integer totalActivityCount = 0;
-
-	@Builder
-	private Member(
-		Long id,
-		String nickname,
-		String tagName,
-		String profileImageUrl,
-		String oauthId,
-		OAuthProvider oauthProvider,
-		MemberRole role,
-		LocalDate lastActivityDate,
-		Integer currentStreak,
-		Integer totalActivityCount
-	) {
-		this.id = id;
-		this.nickname = nickname;
-		this.tagName = tagName;
-		this.profileImageUrl = profileImageUrl;
-		this.oauthId = oauthId;
-		this.oauthProvider = oauthProvider;
-		this.role = role;
-		this.lastActivityDate = lastActivityDate;
-		this.currentStreak = currentStreak;
-		this.totalActivityCount = totalActivityCount;
-	}
 }

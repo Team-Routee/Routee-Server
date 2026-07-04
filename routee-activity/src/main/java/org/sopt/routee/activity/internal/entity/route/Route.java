@@ -14,12 +14,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @Table(name = "route",
 	indexes = {
 		@Index(
@@ -27,6 +29,7 @@ import lombok.NoArgsConstructor;
 			columnList = "activity_id, sequence"
 		)
 	})
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Route {
 	@Id
@@ -45,19 +48,4 @@ public class Route {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "activity_id", nullable = false)
 	private Activity activity;
-
-	@Builder
-	private Route(
-		Long id,
-		String name,
-		Integer sequence,
-		Instant createdAt,
-		Activity activity
-	) {
-		this.id = id;
-		this.name = name;
-		this.sequence = sequence;
-		this.createdAt = createdAt;
-		this.activity = activity;
-	}
 }

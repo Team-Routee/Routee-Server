@@ -18,12 +18,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @Table(name = "timeline",
 	uniqueConstraints = {
 		@UniqueConstraint(
@@ -31,6 +33,7 @@ import lombok.NoArgsConstructor;
 			columnNames = {"activity_id", "track_point_index"}
 		)
 	})
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Timeline {
 	@Id
@@ -40,6 +43,7 @@ public class Timeline {
 	@Column(name = "title", nullable = false)
 	private String title;
 
+	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(name = "timeline_status", nullable = false)
 	@ColumnDefault("CREATION_IN_PROGRESS")
@@ -60,25 +64,4 @@ public class Timeline {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "activity_id", nullable = false)
 	private Activity activity;
-
-	@Builder
-	private Timeline(
-		Long id,
-		String title,
-		TimelineStatus timelineStatus,
-		String timelineImageObjectKey,
-		Instant createdAt,
-		Integer trackPointIndex,
-		Point location,
-		Activity activity
-	) {
-		this.id = id;
-		this.title = title;
-		this.timelineStatus = timelineStatus;
-		this.timelineImageObjectKey = timelineImageObjectKey;
-		this.createdAt = createdAt;
-		this.trackPointIndex = trackPointIndex;
-		this.location = location;
-		this.activity = activity;
-	}
 }

@@ -14,12 +14,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @Table(name = "activity",
 	indexes = {
 		@Index(
@@ -27,6 +29,7 @@ import lombok.NoArgsConstructor;
 			columnList = "member_id, started_at"
 		)
 	})
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Activity {
 	@Id
@@ -40,6 +43,7 @@ public class Activity {
 	@Column(name = "activity_type", nullable = false)
 	private ActivityType activityType;
 
+	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(name = "activity_status", nullable = false)
 	@ColumnDefault("ACTIVITY_IN_PROGRESS")
@@ -74,37 +78,4 @@ public class Activity {
 
 	@Column(name = "member_id", nullable = false, updatable = false)
 	private Long memberId;
-
-	@Builder
-	private Activity(
-		Long id,
-		String title,
-		ActivityType activityType,
-		ActivityStatus activityStatus,
-		Integer distance,
-		Integer durationSec,
-		Integer maxElevation,
-		String mapImageUrl,
-		String trackImageUrl,
-		String coverImageObjectKey,
-		LineString track,
-		Instant startedAt,
-		Instant endedAt,
-		Long memberId
-	) {
-		this.id = id;
-		this.title = title;
-		this.activityType = activityType;
-		this.activityStatus = activityStatus;
-		this.distance = distance;
-		this.durationSec = durationSec;
-		this.maxElevation = maxElevation;
-		this.mapImageUrl = mapImageUrl;
-		this.trackImageUrl = trackImageUrl;
-		this.coverImageObjectKey = coverImageObjectKey;
-		this.track = track;
-		this.startedAt = startedAt;
-		this.endedAt = endedAt;
-		this.memberId = memberId;
-	}
 }
