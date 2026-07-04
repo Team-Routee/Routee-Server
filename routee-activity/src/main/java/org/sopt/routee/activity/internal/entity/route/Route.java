@@ -42,9 +42,6 @@ public class Route {
 	@Column(name = "sequence", nullable = false)
 	private Integer sequence;
 
-	@Column(name = "created_at", nullable = false)
-	private Instant createdAt;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "activity_id", nullable = false)
 	private Activity activity;
