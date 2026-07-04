@@ -2,7 +2,9 @@ package org.sopt.routee.member.internal.entity;
 
 import java.time.LocalDate;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.sopt.routee.entity.BaseEntity;
+import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.api.type.OAuthProvider;
 
 import io.hypersistence.utils.hibernate.id.Tsid;
@@ -22,12 +24,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @Table(name = "member",
-	indexes = {
-		@Index(
-			name = "idx_member_tag_name",
-			columnList = "tag_name"
-		)
-	},
 	uniqueConstraints = {
 		@UniqueConstraint(
 			name = "uk_member_oauth_id_provider",
@@ -42,7 +38,7 @@ public class Member extends BaseEntity {
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
-	@Column(name = "tag_name", nullable = false)
+	@Column(name = "tag_name", nullable = false, unique = true)
 	private String tagName;
 
 	@Column(name = "profile_image_url")
@@ -57,16 +53,19 @@ public class Member extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
-	private MemberRole role;
+	@ColumnDefault("ROLE_USER")
+	private MemberRole role = MemberRole.ROLE_USER;
 
 	@Column(name = "last_activity_date")
 	private LocalDate lastActivityDate;
 
 	@Column(name = "current_streak", nullable = false)
-	private Integer currentStreak;
+	@ColumnDefault("0")
+	private Integer currentStreak = 0;
 
-	@Column(name = "total_avtivity_count", nullable = false)
-	private Integer totalActivityCount;
+	@Column(name = "total_activity_count", nullable = false)
+	@ColumnDefault("0")
+	private Integer totalActivityCount = 0;
 
 	@Builder
 	private Member(
