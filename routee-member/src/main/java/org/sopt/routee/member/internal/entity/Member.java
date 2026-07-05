@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.sopt.routee.entity.BaseEntity;
+import org.sopt.routee.external.api.OAuthProvider;
 import org.sopt.routee.member.api.type.MemberRole;
-import org.sopt.routee.member.api.type.OAuthProvider;
 
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
@@ -39,9 +39,6 @@ public class Member extends BaseEntity {
 
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
-
-	@Column(name = "tag_name", nullable = false, unique = true)
-	private String tagName;
 
 	@Column(name = "profile_image_url")
 	private String profileImageUrl;
