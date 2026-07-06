@@ -3,8 +3,10 @@ package org.sopt.routee.auth.security;
 import java.io.IOException;
 import java.util.List;
 
+import org.sopt.routee.auth.internal.exception.InvalidTokenException;
 import org.sopt.routee.auth.internal.jwt.JwtParser;
 import org.sopt.routee.auth.internal.jwt.JwtValidator;
+import org.sopt.routee.auth.internal.repository.TokenBlacklistRepository;
 import org.sopt.routee.auth.security.util.AuthWhiteList;
 import org.sopt.routee.auth.security.util.TokenExtractor;
 import org.sopt.routee.exception.BaseException;
@@ -28,16 +30,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtValidator jwtValidator;
 	private final JwtParser jwtParser;
+	private final TokenBlacklistRepository tokenBlacklistRepository;
 	private final HandlerExceptionResolver handlerExceptionResolver;
 
 	public JwtAuthenticationFilter(
 		JwtValidator jwtValidator,
 		JwtParser jwtParser,
+		TokenBlacklistRepository tokenBlacklistRepository,
 		@Qualifier("handlerExceptionResolver")
 		HandlerExceptionResolver handlerExceptionResolver
 	) {
 		this.jwtValidator = jwtValidator;
 		this.jwtParser = jwtParser;
+		this.tokenBlacklistRepository = tokenBlacklistRepository;
 		this.handlerExceptionResolver = handlerExceptionResolver;
 	}
 
@@ -55,6 +60,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		try {
 			String accessToken = TokenExtractor.extract(request);
+
+			if(tokenBlacklistRepository.isBlacklisted(accessToken)) {
+				throw new InvalidTokenException();
+			}
 
 			if (accessToken != null) {
 				Claims claims = jwtValidator.validate(accessToken);
