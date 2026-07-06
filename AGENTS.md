@@ -49,14 +49,21 @@ The `internal` package is the **private implementation area** of a module.
 ### API Package
 
 Everything intended for other modules must reside under the `api` package.
-The only types a module exposes to the outside world are:
+The types a module may expose to the outside world are:
 
 - **UseCase** — interface for triggering the module's behavior.
   A UseCase represents a business capability, not an application service.
-- **Command** — input for state-changing operations
-- **Query** — input for read operations
+- **Command** — input for a state-changing UseCase method, when another module is the caller
+- **Query** — input for a read-only UseCase method, when another module is the caller
 - **Result** — output returned from a UseCase
 - **Domain Event** — signals that something has happened inside the module
+- **Type** — shared enums/value types referenced by a UseCase signature (e.g. `MemberRole`)
+
+A UseCase method that only the owning module's own controller ever calls does not need a
+dedicated Command/Query type — it may take primitives, enums, or `api.type` values directly.
+Promote a parameter to `api.command` / `api.query` only once another module actually needs
+to construct it. DTOs that merely hand a request from a controller to its own module's
+service stay under `internal.service.dto`.
 
 Everything else belongs to `internal`.
 
@@ -66,24 +73,22 @@ Everything else belongs to `internal`.
 org.sopt.routee.{module}
 ├── api/                                   ← published interface — @NamedInterface("api")
 │   ├── package-info.java
-│   ├── usecase/
-│   │   ├── package-info.java                 ← @NamedInterface("api")
-│   │   └── {Module}UseCase.java              ← public
-│   ├── command/
-│   │   ├── package-info.java                 ← @NamedInterface("api")
-│   │   └── Create{Entity}Command.java        ← public
-│   ├── query/
-│   │   ├── package-info.java                 ← @NamedInterface("api")
-│   │   └── Get{Entity}Query.java             ← public
+│   ├── usecase/                               ← every module's cross-module entry point
+│   │   ├── package-info.java                     ← @NamedInterface("api")
+│   │   └── {Module}UseCase.java                  ← public
 │   ├── result/
-│   │   ├── package-info.java                 ← @NamedInterface("api")
-│   │   └── {Entity}Result.java               ← public
-│   └── event/
-│       ├── package-info.java                 ← @NamedInterface("api")
-│       └── {Entity}Registered.java           ← public, immutable record
+│   │   ├── package-info.java                     ← @NamedInterface("api")
+│   │   └── {Entity}Result.java                   ← public
+│   ├── type/                                  ← shared enums/value types, when needed
+│   │   ├── package-info.java                     ← @NamedInterface("api")
+│   │   └── {Entity}Role.java                     ← public
+│   └── command/ · query/ · event/ · port/     ← add only when a use case needs it (see below)
 └── internal/                              ← private — never import from outside
     ├── controller/
+    │   └── dto/                               ← request DTOs; mapped to a Command before
+    │                                              reaching the service
     ├── service/
+    │   └── dto/command/                       ← Commands consumed only within this module
     ├── repository/
     ├── entity/
     ├── mapper/
@@ -92,6 +97,10 @@ org.sopt.routee.{module}
     ├── exception/
     └── code/
 ```
+
+`command`, `query`, and `event` are added under `api` only once another module needs to
+construct that input or react to that event. `routee-external` uses `api.port` instead of
+`api.usecase` — its published contract is a set of integration ports, not a business UseCase.
 
 All sub-packages of `api` are considered part of the published API.
 
@@ -120,8 +129,9 @@ package org.sopt.routee.member.api.usecase;
   contains public types must declare its own `package-info.java`.
 - Give every one of these `package-info.java` files the **same name** (`"api"`). Spring
   Modulith merges named interfaces that share a name into a single logical published
-  interface, so `api`, `api.usecase`, `api.command`, `api.query`, `api.result`, and
-  `api.event` all resolve to one `api` interface from another module's point of view.
+  interface, so every sub-package of `api` in use (`usecase`, `result`, `type`, `port`,
+  `command`, `query`, `event`) resolves to one `api` interface from another module's
+  point of view.
 - Only the `api` package (and its sub-packages) may be referenced from other modules.
 - Never annotate an `internal` package with `@NamedInterface`.
 - Verify with `ApplicationModules.of(RouteeApplication.class).verify()`
@@ -223,11 +233,14 @@ Shared infrastructure used by all modules.
 
 Member domain — owns member identity and lifecycle.
 
-- Exposes `MemberUseCase` for find-or-create and future member queries.
-- Exposes `OAuthProvider` as a shared domain type (enum).
+- Exposes `MemberUseCase` for the read operations other modules need (currently: resolving
+  token claims by OAuth identity for login). Registration is handled through this module's
+  own controller/service and does not need to be part of the cross-module contract.
+- Exposes `MemberRole` as a shared type under `api.type`.
 - Owns the `Member` JPA entity and `MemberRepository` (both internal).
-- Other domain modules may declare a Gradle dependency on this module to access its public API,
-  provided the dependency is directed and non-circular.
+- `routee-auth` declares a Gradle dependency on this module to resolve member identity during
+  login. Other domain modules may do the same, provided the dependency stays directed and
+  non-circular.
 
 ### Domain Modules
 
@@ -243,25 +256,33 @@ Member domain — owns member identity and lifecycle.
 Owns all integrations with external systems (third-party APIs, social login providers, etc.).
 Uses a **port-adapter pattern**: public port interfaces define what an integration does; adapter implementations are private in `internal`.
 
+- Exposes ports under `api.port` (e.g. `OidcVerifyPort`) instead of a `UseCase` —
+  this module's public contract is "what can be verified/fetched", not a business capability.
+- Exposes `OAuthProvider` as a shared type under `api.type`, used by any module that needs
+  to identify a social login provider.
 - Domain modules depend only on port interfaces — never on adapter implementations.
 - Adapters translate third-party exceptions into typed exceptions that extend `BaseException`,
   so `GlobalExceptionHandler` handles them without any caller-side catch blocks.
 - Must not contain business logic.
+- Depended on by `routee-member` (OIDC subject verification) and `routee-auth` (token issuance
+  needs the provider type and, currently, the same verification port).
 
 ---
 
 ## 4. Dependency Rules
 
 ```
-                 routee-app
-        /      /      \       \
-     auth   member  activity  course
-       \      \        \       /
-        \      \        \     /
-              external
-                  |
-               common
+routee-app                    → api of every module (composition root)
+routee-common                 ← depended on by every other module
+routee-external               ← depended on by routee-member, routee-auth
+routee-member                 ← depended on by routee-auth
+routee-auth, routee-activity,
+routee-course                 ← no other domain module depends on these (yet)
 ```
+
+A domain module depends directly on another domain module's `api` only when it has a real,
+current need for a synchronous result — this is the exception, not the default shape. Prefer
+Domain Events when an immediate return value isn't required.
 
 **Allowed**
 
@@ -331,7 +352,9 @@ Declare every dependency a module actually uses explicitly.
 
 A UseCase is always an interface located under `api.usecase`.
 Its implementation belongs to `internal.service`.
-Controllers and other modules depend only on the interface, never the implementation.
+It is the module's **cross-module contract** — add a method here only for behavior another
+module actually needs to call. Other modules depend only on the interface, never the
+implementation.
 
 ### Controllers
 
@@ -340,11 +363,14 @@ and are never exposed outside the module.
 
 Controllers should remain thin.
 
-- Depend only on UseCase interfaces, never on service implementations.
+- For endpoints local to the module, depend on the module's own `internal.service` directly —
+  a UseCase indirection isn't needed until another module has to call the same behavior.
+- For behavior owned by another module, depend on that module's UseCase interface, never its
+  service implementation.
 - Contain no business logic.
 - Never access repositories directly.
-- Map request objects to Command/Query objects and pass them to the UseCase.
-  Do not pass controller request DTOs directly to a UseCase as-is.
+- Map request objects to Command/Query objects and pass them to the service or UseCase.
+  Do not pass controller request DTOs directly as-is.
 - Build responses exclusively using the common response factory (`ApiResponse`).
 
 **Swagger Documentation Separation**
@@ -384,7 +410,7 @@ Conversion between `api` contracts (Command, Query, Result) and `internal` entit
 by a dedicated Mapper, not inline in the service or via static factory methods on the entity.
 
 - Mappers always belong to `internal.mapper`.
-- One Mapper per aggregate (e.g. `MemberMapper` converts `RegisterMemberCommand` ↔ `Member`).
+- One Mapper per aggregate (e.g. `MemberMapper` converts `RegisterCommand` ↔ `Member`).
 - Are Spring components injected into services via constructor injection, consistent with
   the rest of the codebase's DI convention.
 - Contain only field-to-field translation — no persistence calls, no cross-module lookups,
@@ -395,9 +421,12 @@ by a dedicated Mapper, not inline in the service or via static factory methods o
 
 - Are immutable. Use `record` unless mutability is required.
 - Contain no business logic.
-- Request DTOs live in `internal.controller`. Do not reuse them as UseCase Commands —
-  always map to a Command object before passing to the UseCase.
-- UseCase contracts (Command, Query, Result) belong under `api`.
+- Request DTOs live in `internal.controller.dto`. Do not reuse them as Commands —
+  always map to a Command object before passing it to the service.
+- A Command/Query consumed only by its own module's service stays under
+  `internal.service.dto.command`. Move it to `api.command` / `api.query` only once another
+  module needs to construct it.
+- A Result returned across a module boundary belongs under `api.result`.
 
 ### Package Visibility
 
@@ -495,8 +524,11 @@ Keep module coupling loose. Never introduce shortcuts that violate module bounda
 
 ## 11. Current Development Phase
 
-The common infrastructure is complete. `routee-auth`, `routee-member`, and `routee-external` are actively implemented.
-`routee-activity` and `routee-course` are placeholders.
+The common infrastructure is complete. `routee-auth`, `routee-member`, and `routee-external` are
+actively implemented, each with a full `api`/`internal` split.
+`routee-activity` has its JPA entities and repositories in place but no `service`, `api.usecase`,
+or `controller` layer yet — treat it as schema-first, not yet behavior-complete.
+`routee-course` is a pure placeholder (`package-info.java` only).
 
 **Do not**
 
