@@ -7,7 +7,9 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 
+@Getter
 public enum AuthWhiteList {
 
 	AUTH_HEALTH(HttpMethod.GET, "/api/v1/auth/health"),
@@ -20,20 +22,22 @@ public enum AuthWhiteList {
 
 	private final HttpMethod method;
 	private final String pattern;
+	private final RequestMatcher matcher;
 
 	AuthWhiteList(HttpMethod method, String pattern) {
 		this.method = method;
 		this.pattern = pattern;
+		this.matcher = PathPatternRequestMatcher.pathPattern(method, pattern);
 	}
 
 	public static RequestMatcher[] requestMatchers() {
 		return Arrays.stream(values())
-			.map(e -> PathPatternRequestMatcher.pathPattern(e.method, e.pattern))
+			.map(e -> e.matcher)
 			.toArray(RequestMatcher[]::new);
 	}
 
 	public static boolean isPermitted(HttpServletRequest request) {
 		return Arrays.stream(values())
-			.anyMatch(e -> PathPatternRequestMatcher.pathPattern(e.method, e.pattern).matches(request));
+			.anyMatch(e -> e.matcher.matches(request));
 	}
 }
