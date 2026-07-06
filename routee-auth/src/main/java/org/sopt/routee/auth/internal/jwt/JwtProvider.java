@@ -15,9 +15,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtProvider {
 
-	private static final String TOKEN_TYPE = "type";
-	private static final String MEMBER_TYPE = "role";
-
 	private final SecretKey secretKey;
 	private final JwtProperties jwtProperties;
 
@@ -40,8 +37,8 @@ public class JwtProvider {
 		return Jwts.builder()
 			.subject(String.valueOf(memberId))
 			.issuer(jwtProperties.issuer())
-			.claim(TOKEN_TYPE, tokenType.value())
-			.claim(MEMBER_TYPE, role)
+			.claim(JwtClaimKeys.TOKEN_TYPE.getKey(), tokenType.value())
+			.claim(JwtClaimKeys.MEMBER_ROLE.getKey(), role)
 			.issuedAt(Date.from(now))
 			.expiration(Date.from(expiration))
 			.signWith(secretKey)

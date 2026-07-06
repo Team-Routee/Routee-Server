@@ -9,15 +9,12 @@ import io.jsonwebtoken.Claims;
 @Component
 public class JwtParser {
 
-	private static final String TOKEN_TYPE = "type";
-	private static final String MEMBER_TYPE = "role";
-
 	public Long extractMemberId(Claims claims) {
 		return Long.parseLong(claims.getSubject());
 	}
 
 	public TokenType extractTokenType(Claims claims) {
-		String type = claims.get(TOKEN_TYPE, String.class);
+		String type = claims.get(JwtClaimKeys.TOKEN_TYPE.getKey(), String.class);
 		try {
 			return TokenType.valueOf(type.toUpperCase());
 		} catch (IllegalArgumentException | NullPointerException e) {
@@ -26,7 +23,7 @@ public class JwtParser {
 	}
 
 	public MemberRole extractMemberRole(Claims claims) {
-		String role = claims.get(MEMBER_TYPE, String.class);
+		String role = claims.get(JwtClaimKeys.MEMBER_ROLE.getKey(), String.class);
 		try {
 			return MemberRole.valueOf(role.toUpperCase());
 		} catch (IllegalArgumentException | NullPointerException e) {
