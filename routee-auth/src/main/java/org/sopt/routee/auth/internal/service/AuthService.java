@@ -33,7 +33,7 @@ public class AuthService {
 
 		TokenClaimsResult tokenClaims = memberUseCase.getTokenResult(oauthId, command.provider());
 
-		return issueTokenPair(tokenClaims);
+		return issueTokenPair(tokenClaims.memberId(), tokenClaims.memberRole());
 	}
 
 	public TokenResult reissue(String refreshToken) {
@@ -43,21 +43,13 @@ public class AuthService {
 		}
 
 		// TODO: redis 블랙리스팅 추가
-		return issueTokenPair(jwtParser.extractMemberId(claims), jwtParser.extractMemberRole(claims));
+		return issueTokenPair(jwtParser.extractMemberId(claims), jwtParser.extractMemberRole(claims).name());
 	}
 
-	private TokenResult issueTokenPair(TokenClaimsResult tokenClaims) {
+	private TokenResult issueTokenPair(long memberId, String memberRole) {
 		return new TokenResult(
-			jwtProvider.issueAccessToken(tokenClaims.memberId(), tokenClaims.memberRole()),
-			jwtProvider.issueRefreshToken(tokenClaims.memberId(), tokenClaims.memberRole()),
-			TOKEN_PREFIX
-		);
-	}
-
-	private TokenResult issueTokenPair(long memberId, MemberRole memberRole) {
-		return new TokenResult(
-			jwtProvider.issueAccessToken(memberId, memberRole.name()),
-			jwtProvider.issueRefreshToken(memberId, memberRole.name()),
+			jwtProvider.issueAccessToken(memberId, memberRole),
+			jwtProvider.issueRefreshToken(memberId, memberRole),
 			TOKEN_PREFIX
 		);
 	}
