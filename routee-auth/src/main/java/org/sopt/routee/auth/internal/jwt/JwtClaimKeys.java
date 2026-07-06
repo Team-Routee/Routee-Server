@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum JwtClaimKeys {
+enum JwtClaimKeys {
 
 	TOKEN_TYPE("type"),
 	MEMBER_ROLE("role");
