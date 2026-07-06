@@ -39,6 +39,7 @@ public class JwtProvider {
 
 		return Jwts.builder()
 			.subject(String.valueOf(memberId))
+			.issuer(jwtProperties.issuer())
 			.claim(TOKEN_TYPE, tokenType.value())
 			.claim(MEMBER_TYPE, role)
 			.issuedAt(Date.from(now))
