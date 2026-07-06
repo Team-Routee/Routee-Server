@@ -1,0 +1,32 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches:
+      - develop
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR title convention
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          PATTERN='^\[(FEAT|FIX|REFACTOR|CHORE|DOCS|SETTING|TEST)/#[0-9]+\] .+$'
+
+          echo "PR Title: $PR_TITLE"
+
+          if [[ "$PR_TITLE" =~ $PATTERN ]]; then
+            echo "✅ PR 제목이 컨벤션을 준수합니다."
+          else
+            echo "❌ PR 제목이 컨벤션을 위반했습니다."
+            echo ""
+            echo "올바른 형식: [TYPE/#이슈넘버] 제목"
+            echo "예시: [FEAT/#12] 로그인 API 구현"
+            echo ""
+            echo "허용된 TYPE: FEAT, FIX, REFACTOR, CHORE, DOCS, SETTING, TEST"
+            exit 1
+          fi

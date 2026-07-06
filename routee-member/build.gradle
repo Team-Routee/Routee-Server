@@ -1,0 +1,20 @@
+dependencies {
+    implementation project(':routee-common')
+    implementation project(':routee-external')
+
+    // JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Web + Validation
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
+
+    // TSID
+    implementation "io.hypersistence:hypersistence-utils-hibernate-71:${rootProject.ext['hypersistenceUtilsVersion']}"
+
+    // Modulith — @NamedInterface 어노테이션 사용에 필요
+    compileOnly 'org.springframework.modulith:spring-modulith-api'
+}
