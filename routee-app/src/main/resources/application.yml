@@ -20,7 +20,7 @@ spring:
     show-sql: false
 
 oidc:
-  providers:
+  properties:
     apple:
       jwk-set-uri: https://appleid.apple.com/auth/keys
       issuer: https://appleid.apple.com
@@ -28,5 +28,6 @@ oidc:
 
 jwt:
   secret: ${JWT_SECRET}
+  issuer: org.routee
   access-token-expiry-ms: 14400000    # 4시간
   refresh-token-expiry-ms: 2592000000    # 30일
