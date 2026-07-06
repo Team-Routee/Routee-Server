@@ -1,4 +1,11 @@
 dependencies {
     implementation project(':routee-common')
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // OAuth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+    // Modulith
+    compileOnly 'org.springframework.modulith:spring-modulith-api'
 }
