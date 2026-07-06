@@ -8,6 +8,7 @@ dependencies {
     implementation project(':routee-auth')
     implementation project(':routee-member')
     implementation project(':routee-course')
+    implementation project(':routee-external')
 
     // Web
     implementation 'org.springframework.boot:spring-boot-starter-web'

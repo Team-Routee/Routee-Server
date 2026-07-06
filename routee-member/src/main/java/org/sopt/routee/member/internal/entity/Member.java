@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.sopt.routee.entity.BaseEntity;
-import org.sopt.routee.external.api.OAuthProvider;
+import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.member.api.type.MemberRole;
 
 import io.hypersistence.utils.hibernate.id.Tsid;
