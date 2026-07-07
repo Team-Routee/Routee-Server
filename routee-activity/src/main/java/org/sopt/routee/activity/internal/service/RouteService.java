@@ -24,8 +24,10 @@ public class RouteService {
 
 	@Transactional
 	public List<RouteResult> createRoutes(Long activityId, List<CreateRouteCommand> commands) {
-		Activity activity = activityRepository.findById(activityId)
-			.orElseThrow(ActivityNotFoundException::new);
+		if (!activityRepository.existsById(activityId)) {
+			throw new ActivityNotFoundException();
+		}
+		Activity activity = activityRepository.getReferenceById(activityId);
 
 		routeRepository.deleteByActivityId(activityId);
 
