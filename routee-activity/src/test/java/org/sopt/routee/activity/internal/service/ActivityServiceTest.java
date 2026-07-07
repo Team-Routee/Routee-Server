@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.EnumSet;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,11 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateActivityComma
 @ExtendWith(MockitoExtension.class)
 class ActivityServiceTest {
 
+	private static final EnumSet<ActivityStatus> ACTIVE_STATUSES = EnumSet.of(
+		ActivityStatus.ACTIVITY_IN_PROGRESS,
+		ActivityStatus.ACTIVITY_PAUSED
+	);
+
 	@Mock
 	private ActivityRepository activityRepository;
 
@@ -32,23 +38,23 @@ class ActivityServiceTest {
 	private ActivityService activityService;
 
 	@Test
-	void create_진행중인_활동이_없으면_기본값으로_활동을_생성한다() {
+	void create_진행중인_활동이_없으면_요청한_활동_유형으로_활동을_생성한다() {
 		Long memberId = 1L;
 		Activity savedActivity = Activity.builder()
 			.id(10L)
 			.title("2026.07.06 기록")
-			.activityType(ActivityType.HIKING)
+			.activityType(ActivityType.RUNNING)
 			.activityStatus(ActivityStatus.ACTIVITY_IN_PROGRESS)
 			.memberId(memberId)
 			.build();
 
-		when(activityRepository.existsByMemberIdAndActivityStatus(memberId, ActivityStatus.ACTIVITY_IN_PROGRESS))
+		when(activityRepository.existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES))
 			.thenReturn(false);
 		when(activityRepository.save(any(Activity.class)))
 			.thenReturn(savedActivity);
 
 		Instant beforeCreate = Instant.now();
-		Long activityId = activityService.create(new CreateActivityCommand(memberId));
+		Long activityId = activityService.create(new CreateActivityCommand(memberId, ActivityType.RUNNING));
 		Instant afterCreate = Instant.now();
 
 		assertThat(activityId).isEqualTo(10L);
@@ -58,7 +64,7 @@ class ActivityServiceTest {
 		Activity activity = activityCaptor.getValue();
 		assertThat(activity.getTitle()).matches("\\d{4}\\.\\d{2}\\.\\d{2} 기록");
 		assertThat(activity.getStartedAt()).isBetween(beforeCreate, afterCreate);
-		assertThat(activity.getActivityType()).isEqualTo(ActivityType.HIKING);
+		assertThat(activity.getActivityType()).isEqualTo(ActivityType.RUNNING);
 		assertThat(activity.getActivityStatus()).isEqualTo(ActivityStatus.ACTIVITY_IN_PROGRESS);
 		assertThat(activity.getMemberId()).isEqualTo(memberId);
 	}
@@ -66,10 +72,22 @@ class ActivityServiceTest {
 	@Test
 	void create_진행중인_활동이_있으면_예외를_던진다() {
 		Long memberId = 1L;
-		when(activityRepository.existsByMemberIdAndActivityStatus(memberId, ActivityStatus.ACTIVITY_IN_PROGRESS))
+		when(activityRepository.existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES))
 			.thenReturn(true);
 
-		assertThatThrownBy(() -> activityService.create(new CreateActivityCommand(memberId)))
+		assertThatThrownBy(() -> activityService.create(new CreateActivityCommand(memberId, ActivityType.HIKING)))
+			.isInstanceOf(AlreadyInProgressActivityException.class);
+
+		verify(activityRepository, never()).save(any(Activity.class));
+	}
+
+	@Test
+	void create_일시정지된_활동이_있으면_예외를_던진다() {
+		Long memberId = 1L;
+		when(activityRepository.existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES))
+			.thenReturn(true);
+
+		assertThatThrownBy(() -> activityService.create(new CreateActivityCommand(memberId, ActivityType.HIKING)))
 			.isInstanceOf(AlreadyInProgressActivityException.class);
 
 		verify(activityRepository, never()).save(any(Activity.class));
