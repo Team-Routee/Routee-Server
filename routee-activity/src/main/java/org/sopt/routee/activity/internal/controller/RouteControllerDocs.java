@@ -26,8 +26,12 @@ public interface RouteControllerDocs {
 			content = @Content(schema = @Schema(implementation = RouteListResponse.class))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
-				examples = @ExampleObject(name = "INVALID_INPUT_VALUE",
-					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트는 최대 12개까지 등록할 수 있습니다.\"}"))),
+				examples = {
+					@ExampleObject(name = "ROUTES_EMPTY",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트 목록 생성 시 최소 1개 이상의 루트를 입력해야 합니다.\"}"),
+					@ExampleObject(name = "ROUTES_TOO_MANY",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트는 최대 12개까지 등록할 수 있습니다.\"}")
+				})),
 		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
