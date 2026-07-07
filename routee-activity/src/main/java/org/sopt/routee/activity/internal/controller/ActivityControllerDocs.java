@@ -8,8 +8,10 @@ import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,8 +29,14 @@ public interface ActivityControllerDocs {
 			content = @Content(schema = @Schema(implementation = ActivityCreateResponse.class))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
-				examples = @ExampleObject(name = "INVALID_INPUT_VALUE",
-					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"activityType은 필수입니다.\"}"))),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"activityType은 필수입니다.\"}"),
+					@ExampleObject(name = "MISSING_STARTED_AT",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"startedAt은 필수입니다.\"}"),
+					@ExampleObject(name = "INVALID_TIME_ZONE",
+						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}")
+				})),
 		@ApiResponse(responseCode = "401", description = "인증 실패",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
 		@ApiResponse(responseCode = "409", description = "이미 진행 중인 활동이 있음",
@@ -38,6 +46,11 @@ public interface ActivityControllerDocs {
 	})
 	ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		Principal principal,
+		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
+		@RequestHeader("Time-Zone") String timeZone,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ActivityCreateRequest.class),
+				examples = @ExampleObject(value = "{\"activityType\":\"HIKING\",\"startedAt\":\"2026-07-07T15:30:00\"}")))
 		@Valid @RequestBody ActivityCreateRequest request
 	);
 }
