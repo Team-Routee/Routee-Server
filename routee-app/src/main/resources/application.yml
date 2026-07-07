@@ -37,3 +37,8 @@ jwt:
   issuer: org.routee
   access-token-expiry-ms: 14400000    # 4시간
   refresh-token-expiry-ms: 2592000000    # 30일
+
+s3:
+  bucket: ${S3_BUCKET}
+  region: ${AWS_REGION}
+  presigned-url-expiry-minutes: ${S3_PRESIGNED_URL_EXPIRY_MINUTES:10}
