@@ -1,6 +1,5 @@
 package org.sopt.routee.activity.internal.controller;
 
-import java.security.Principal;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -15,6 +14,7 @@ import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -33,11 +33,10 @@ public class ActivityController implements ActivityControllerDocs {
 
 	@PostMapping
 	public ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
-		Principal principal,
+		@AuthenticationPrincipal Long memberId,
 		@RequestHeader("Time-Zone") String timeZone,
 		@Valid @RequestBody ActivityCreateRequest request
 	) {
-		Long memberId = Long.valueOf(principal.getName());
 		CreateActivityResult result = activityService.create(request.toCommand(memberId, parseTimeZone(timeZone)));
 
 		return ResponseEntity.status(HttpStatus.CREATED)

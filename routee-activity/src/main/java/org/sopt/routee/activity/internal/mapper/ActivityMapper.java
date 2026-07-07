@@ -6,10 +6,11 @@ import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 
-public class ActivityMapper {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-	private ActivityMapper() {
-	}
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ActivityMapper {
 
 	public static Activity toEntity(CreateActivityCommand command, String title, Instant startedAt) {
 		return Activity.builder()
