@@ -1,7 +1,5 @@
 package org.sopt.routee.activity.internal.controller;
 
-import java.security.Principal;
-
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.response.FailureResponse;
@@ -45,7 +43,7 @@ public interface ActivityControllerDocs {
 					value = "{\"status\":409,\"code\":\"ALREADY_IN_PROGRESS_ACTIVITY\",\"message\":\"이미 진행 중이거나 일시정지된 활동이 있습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
-		Principal principal,
+		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") String timeZone,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
