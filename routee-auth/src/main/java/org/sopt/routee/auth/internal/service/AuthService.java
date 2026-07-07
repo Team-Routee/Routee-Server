@@ -76,6 +76,13 @@ public class AuthService {
 		refreshTokenRepository.deleteByToken(refreshToken);
 	}
 
+	public void revokeTokens(String accessTokenHash, String refreshTokenHash) {
+		Duration ttl = Duration.ofMillis(jwtProperties.accessTokenExpiryMs());
+
+		tokenBlacklistRepository.blacklistHash(accessTokenHash, ttl);
+		refreshTokenRepository.deleteHash(refreshTokenHash);
+	}
+
 	private TokenResult issueTokenPair(long memberId, String memberRole) {
 		String accessToken = jwtProvider.issueAccessToken(memberId, memberRole);
 		String refreshToken = jwtProvider.issueRefreshToken(memberId, memberRole);

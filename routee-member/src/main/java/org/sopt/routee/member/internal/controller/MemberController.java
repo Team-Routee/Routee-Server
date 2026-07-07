@@ -6,6 +6,7 @@ import org.sopt.routee.member.internal.controller.dto.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
+import org.sopt.routee.util.TokenHasher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/member")
 public class MemberController implements MemberControllerDocs {
 
+	private static final String BEARER_PREFIX = "Bearer ";
+
 	private final MemberService memberService;
 
 	@PostMapping("/register")
@@ -43,9 +46,18 @@ public class MemberController implements MemberControllerDocs {
 		@RequestHeader(name = HttpHeaders.AUTHORIZATION) String accessTokenWithBearer,
 		@Valid @RequestBody WithdrawRequest request
 	) {
-		memberService.withdraw(memberId, accessTokenWithBearer, request.refreshToken());
+		String accessTokenHash = TokenHasher.hash(stripBearerPrefix(accessTokenWithBearer));
+		String refreshTokenHash = TokenHasher.hash(request.refreshToken());
+
+		memberService.withdraw(memberId, accessTokenHash, refreshTokenHash);
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_WITHDRAW));
+	}
+
+	private String stripBearerPrefix(String accessTokenWithBearer) {
+		return accessTokenWithBearer.startsWith(BEARER_PREFIX)
+			? accessTokenWithBearer.substring(BEARER_PREFIX.length())
+			: accessTokenWithBearer;
 	}
 }

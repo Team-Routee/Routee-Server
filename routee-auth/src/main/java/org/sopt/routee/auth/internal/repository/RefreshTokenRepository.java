@@ -10,4 +10,6 @@ public interface RefreshTokenRepository {
 
 	void deleteByToken(String token);
 
+	void deleteHash(String tokenHash);
+
 }

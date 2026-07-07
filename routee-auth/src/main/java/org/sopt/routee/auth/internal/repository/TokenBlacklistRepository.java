@@ -6,6 +6,8 @@ public interface TokenBlacklistRepository {
 
 	void blacklist(String token, Duration ttl);
 
+	void blacklistHash(String tokenHash, Duration ttl);
+
 	boolean isBlacklisted(String token);
 
 }

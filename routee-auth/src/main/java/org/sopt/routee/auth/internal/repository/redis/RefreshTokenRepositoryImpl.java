@@ -3,6 +3,7 @@ package org.sopt.routee.auth.internal.repository.redis;
 import java.time.Duration;
 
 import org.sopt.routee.auth.internal.repository.RefreshTokenRepository;
+import org.sopt.routee.util.TokenHasher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -26,5 +27,9 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
 
 	public void deleteByToken(String token) {
 		redisTemplate.delete(TokenHasher.hash(token));
+	}
+
+	public void deleteHash(String tokenHash) {
+		redisTemplate.delete(tokenHash);
 	}
 }

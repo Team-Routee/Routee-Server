@@ -3,6 +3,7 @@ package org.sopt.routee.auth.internal.repository.redis;
 import java.time.Duration;
 
 import org.sopt.routee.auth.internal.repository.TokenBlacklistRepository;
+import org.sopt.routee.util.TokenHasher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +19,10 @@ public class TokenBlacklistRepositoryImpl implements TokenBlacklistRepository {
 
 	public void blacklist(String token, Duration ttl) {
 		redisTemplate.opsForValue().set(TokenHasher.hash(token), BLACKLISTED_VALUE, ttl);
+	}
+
+	public void blacklistHash(String tokenHash, Duration ttl) {
+		redisTemplate.opsForValue().set(tokenHash, BLACKLISTED_VALUE, ttl);
 	}
 
 	public boolean isBlacklisted(String token) {

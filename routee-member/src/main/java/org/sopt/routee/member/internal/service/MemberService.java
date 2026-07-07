@@ -44,12 +44,12 @@ public class MemberService implements MemberUseCase {
 	}
 
 	@Transactional
-	public void withdraw(long memberId, String accessTokenWithBearer, String refreshToken) {
+	public void withdraw(long memberId, String accessTokenHash, String refreshTokenHash) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(MemberNotFoundException::new);
 
 		memberRepository.delete(member);
 
-		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenWithBearer, refreshToken));
+		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
 	}
 }
