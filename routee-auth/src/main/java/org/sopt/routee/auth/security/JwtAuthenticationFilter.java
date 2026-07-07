@@ -62,11 +62,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		try {
 			String accessToken = TokenExtractor.extract(request.getHeader(HttpHeaders.AUTHORIZATION));
 
-			if(tokenBlacklistRepository.isBlacklisted(accessToken)) {
-				throw new InvalidTokenException();
-			}
-
 			if (accessToken != null) {
+				if (tokenBlacklistRepository.isBlacklisted(accessToken)) {
+					throw new InvalidTokenException();
+				}
+
 				Claims claims = jwtValidator.validate(accessToken);
 
 				long memberId = jwtParser.extractMemberId(claims);
