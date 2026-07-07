@@ -30,5 +30,6 @@ dependencies {
 
     // modulith
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    implementation 'org.springframework.modulith:spring-modulith-events-core'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 }
