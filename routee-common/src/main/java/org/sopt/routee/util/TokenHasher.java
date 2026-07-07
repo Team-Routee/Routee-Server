@@ -1,4 +1,4 @@
-package org.sopt.routee.auth.internal.repository.redis;
+package org.sopt.routee.util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -9,11 +9,11 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-final class TokenHasher {
+public final class TokenHasher {
 
 	private static final String HASH_ALGORITHM = "SHA-256";
 
-	static String hash(String token) {
+	public static String hash(String token) {
 		try {
 			MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
 			byte[] hashed = digest.digest(token.getBytes(StandardCharsets.UTF_8));
