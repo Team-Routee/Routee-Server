@@ -2,7 +2,7 @@ package org.sopt.routee.auth.internal.listener;
 
 import org.sopt.routee.auth.internal.service.AuthService;
 import org.sopt.routee.auth.security.util.TokenExtractor;
-import org.sopt.routee.member.api.event.MemberWithdrawEvent;
+import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +15,7 @@ class MemberEventListener {
 	private final AuthService authService;
 
 	@ApplicationModuleListener
-	void handle(MemberWithdrawEvent event) {
+	void handle(MemberWithdrawnEvent event) {
 		authService.logout(TokenExtractor.extract(event.accessTokenWithBearer()), event.refreshToken());
 	}
 }
