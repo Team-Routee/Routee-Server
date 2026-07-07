@@ -1,0 +1,18 @@
+package org.sopt.routee.activity.internal.code;
+
+import org.sopt.routee.code.SuccessResultCode;
+import org.springframework.http.HttpStatus;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public enum SuccessCode implements SuccessResultCode {
+
+	ROUTE_LIST_CREATE_SUCCESS(HttpStatus.CREATED, "루트 목록 생성에 성공했습니다."),
+	ROUTE_LIST_GET_SUCCESS(HttpStatus.OK, "루트 목록 조회에 성공했습니다.");
+
+	private final HttpStatus status;
+	private final String message;
+}
