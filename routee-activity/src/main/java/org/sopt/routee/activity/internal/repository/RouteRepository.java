@@ -12,9 +12,7 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 
 	List<Route> findByActivityIdOrderBySequenceAsc(Long activityId);
 
-	@Modifying
-	@Query("DELETE FROM Route r WHERE r.activity.id = :activityId")
-	void deleteByActivityId(@Param("activityId") Long activityId);
+	boolean existsByActivityId(Long activityId);
 
 	@Modifying
 	@Query("DELETE FROM Route r WHERE r.activity.memberId = :memberId")

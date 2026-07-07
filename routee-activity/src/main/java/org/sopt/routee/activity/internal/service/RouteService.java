@@ -5,6 +5,7 @@ import java.util.List;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.route.Route;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
+import org.sopt.routee.activity.internal.exception.RouteAlreadyExistsException;
 import org.sopt.routee.activity.internal.mapper.RouteMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
@@ -27,9 +28,10 @@ public class RouteService {
 		if (!activityRepository.existsById(activityId)) {
 			throw new ActivityNotFoundException();
 		}
+		if (routeRepository.existsByActivityId(activityId)) {
+			throw new RouteAlreadyExistsException();
+		}
 		Activity activity = activityRepository.getReferenceById(activityId);
-
-		routeRepository.deleteByActivityId(activityId);
 
 		List<Route> routes = commands.stream()
 			.map(command -> RouteMapper.toEntity(command, activity))

@@ -31,7 +31,11 @@ public interface RouteControllerDocs {
 		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
-					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}"))),
+		@ApiResponse(responseCode = "409", description = "루트 목록이 이미 존재함",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ROUTE_ALREADY_EXISTS",
+					value = "{\"status\":409,\"code\":\"ROUTE_ALREADY_EXISTS\",\"message\":\"루트 목록이 이미 존재합니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<RouteListResponse>> createRoutes(
 		@PathVariable(name = "activityId") Long activityId,
