@@ -1,11 +1,8 @@
 package org.sopt.routee.activity.internal.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.time.Instant;
 import java.util.EnumSet;
@@ -70,7 +67,7 @@ class ActivityServiceTest {
 	}
 
 	@Test
-	void create_진행중인_활동이_있으면_예외를_던진다() {
+	void create_진행중이거나_일시정지된_활동이_있으면_예외를_던진다() {
 		Long memberId = 1L;
 		when(activityRepository.existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES))
 			.thenReturn(true);
@@ -78,17 +75,11 @@ class ActivityServiceTest {
 		assertThatThrownBy(() -> activityService.create(new CreateActivityCommand(memberId, ActivityType.HIKING)))
 			.isInstanceOf(AlreadyInProgressActivityException.class);
 
-		verify(activityRepository, never()).save(any(Activity.class));
-	}
-
-	@Test
-	void create_일시정지된_활동이_있으면_예외를_던진다() {
-		Long memberId = 1L;
-		when(activityRepository.existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES))
-			.thenReturn(true);
-
-		assertThatThrownBy(() -> activityService.create(new CreateActivityCommand(memberId, ActivityType.HIKING)))
-			.isInstanceOf(AlreadyInProgressActivityException.class);
+		verify(activityRepository).existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES);
+		assertThat(ACTIVE_STATUSES).containsExactlyInAnyOrder(
+			ActivityStatus.ACTIVITY_IN_PROGRESS,
+			ActivityStatus.ACTIVITY_PAUSED
+		);
 
 		verify(activityRepository, never()).save(any(Activity.class));
 	}
