@@ -1,6 +1,8 @@
 package org.sopt.routee.activity.internal.service;
 
 import java.time.Instant;
+import java.util.EnumSet;
+import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
@@ -18,13 +20,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ActivityService {
 
+	private static final Set<ActivityStatus> ACTIVE_STATUSES = EnumSet.of(
+		ActivityStatus.ACTIVITY_IN_PROGRESS,
+		ActivityStatus.ACTIVITY_PAUSED
+	);
+
 	private final ActivityRepository activityRepository;
 
 	@Transactional
 	public Long create(CreateActivityCommand command) {
-		if (activityRepository.existsByMemberIdAndActivityStatus(
+		if (activityRepository.existsByMemberIdAndActivityStatusIn(
 			command.memberId(),
-			ActivityStatus.ACTIVITY_IN_PROGRESS
+			ACTIVE_STATUSES
 		)) {
 			throw new AlreadyInProgressActivityException();
 		}
