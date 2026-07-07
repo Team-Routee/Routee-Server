@@ -1,9 +1,11 @@
 package org.sopt.routee.auth.internal.service;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import org.sopt.routee.auth.internal.config.JwtProperties;
 import org.sopt.routee.auth.internal.repository.RefreshTokenRepository;
+import org.sopt.routee.auth.internal.repository.TokenBlacklistRepository;
 import org.sopt.routee.auth.internal.service.dto.command.LoginCommand;
 import org.sopt.routee.auth.internal.exception.InvalidTokenException;
 import org.sopt.routee.auth.internal.jwt.JwtParser;
@@ -32,6 +34,7 @@ public class AuthService {
 	private final JwtParser jwtParser;
 	private final JwtProperties jwtProperties;
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final TokenBlacklistRepository tokenBlacklistRepository;
 
 	public TokenResult login(LoginCommand command) {
 		String oauthId = oidcVerifyPort.extractSubject(command.provider(), command.idToken());
@@ -55,6 +58,14 @@ public class AuthService {
 		refreshTokenRepository.deleteByToken(refreshToken);
 
 		return issueTokenPair(jwtParser.extractMemberId(claims), jwtParser.extractMemberRole(claims).name());
+	}
+
+	public void logout(String accessToken, String refreshToken) {
+		Claims claims = jwtValidator.validate(accessToken);
+		Duration ttl = Duration.between(Instant.now(), jwtParser.extractExpiration(claims));
+
+		tokenBlacklistRepository.blacklist(accessToken, ttl);
+		refreshTokenRepository.deleteByToken(refreshToken);
 	}
 
 	private TokenResult issueTokenPair(long memberId, String memberRole) {
