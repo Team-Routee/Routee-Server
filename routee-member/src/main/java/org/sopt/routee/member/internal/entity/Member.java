@@ -1,7 +1,5 @@
 package org.sopt.routee.member.internal.entity;
 
-import java.time.LocalDate;
-
 import org.hibernate.annotations.ColumnDefault;
 import org.sopt.routee.entity.BaseEntity;
 import org.sopt.routee.external.api.type.OAuthProvider;
@@ -55,14 +53,6 @@ public class Member extends BaseEntity {
 	@Column(name = "role", nullable = false)
 	@ColumnDefault("'ROLE_USER'")
 	private MemberRole role = MemberRole.ROLE_USER;
-
-	@Column(name = "last_activity_date")
-	private LocalDate lastActivityDate;
-
-	@Builder.Default
-	@Column(name = "current_streak", nullable = false)
-	@ColumnDefault("0")
-	private Integer currentStreak = 0;
 
 	@Column(name = "total_activity_count", nullable = false)
 	@Builder.Default

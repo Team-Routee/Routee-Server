@@ -13,7 +13,6 @@ public class MemberMapper {
 			.oauthId(oauthId)
 			.oauthProvider(command.provider())
 			.role(MemberRole.ROLE_USER)
-			.currentStreak(0)
 			.totalActivityCount(0)
 			.build();
 	}
