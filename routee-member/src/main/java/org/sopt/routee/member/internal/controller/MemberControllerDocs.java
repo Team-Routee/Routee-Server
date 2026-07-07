@@ -1,10 +1,12 @@
 package org.sopt.routee.member.internal.controller;
 
 import org.sopt.routee.member.internal.controller.dto.RegisterRequest;
+import org.sopt.routee.member.internal.controller.dto.WithdrawRequest;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,4 +50,30 @@ public interface MemberControllerDocs {
 					value = "{\"status\":409,\"code\":\"ALREADY_REGISTERED_MEMBER\",\"message\":\"이미 가입된 회원입니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<Void>> register(@Valid @RequestBody RegisterRequest request);
+
+	@Operation(summary = "회원 탈퇴", description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "탈퇴 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "INVALID_INPUT_VALUE",
+					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"refresh_token은 필수입니다.\"}"))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<Void>> withdraw(
+		Long memberId,
+		@RequestHeader(name = "Authorization") String accessTokenWithBearer,
+		@Valid @RequestBody WithdrawRequest request
+	);
 }

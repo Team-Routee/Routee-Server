@@ -1,9 +1,8 @@
 package org.sopt.routee.member.internal.service;
 
-import java.util.Optional;
-
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
+import org.sopt.routee.member.api.event.MemberWithdrawEvent;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.usecase.MemberUseCase;
@@ -12,6 +11,7 @@ import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberExceptio
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
 import org.sopt.routee.member.internal.mapper.MemberMapper;
 import org.sopt.routee.member.internal.repository.MemberRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +23,7 @@ public class MemberService implements MemberUseCase {
 
 	private final OidcVerifyPort oidcVerifyPort;
 	private final MemberRepository memberRepository;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional(readOnly = true)
 	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider) {
@@ -40,5 +41,15 @@ public class MemberService implements MemberUseCase {
 			throw new AlreadyRegisteredMemberException();
 		}
 		memberRepository.save(MemberMapper.toEntity(command, oauthId));
+	}
+
+	@Transactional
+	public void withdraw(long memberId, String accessTokenWithBearer, String refreshToken) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
+
+		memberRepository.delete(member);
+
+		applicationEventPublisher.publishEvent(new MemberWithdrawEvent(memberId, accessTokenWithBearer, refreshToken));
 	}
 }
