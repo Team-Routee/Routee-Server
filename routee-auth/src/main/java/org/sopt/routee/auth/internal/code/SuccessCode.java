@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 public enum SuccessCode implements SuccessResultCode {
 
 	LOGIN_SUCCESS(HttpStatus.OK, "로그인에 성공했습니다."),
-	TOKEN_REISSUE(HttpStatus.OK, "토큰 재발급에 성공했습니다.");
+	TOKEN_REISSUE(HttpStatus.OK, "토큰 재발급에 성공했습니다."),
+	LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃에 성공했습니다.");
 
 	private final HttpStatus status;
 	private final String message;

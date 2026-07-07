@@ -3,13 +3,16 @@ package org.sopt.routee.auth.security;
 import java.io.IOException;
 import java.util.List;
 
+import org.sopt.routee.auth.internal.exception.InvalidTokenException;
 import org.sopt.routee.auth.internal.jwt.JwtParser;
 import org.sopt.routee.auth.internal.jwt.JwtValidator;
+import org.sopt.routee.auth.internal.repository.TokenBlacklistRepository;
 import org.sopt.routee.auth.security.util.AuthWhiteList;
 import org.sopt.routee.auth.security.util.TokenExtractor;
 import org.sopt.routee.exception.BaseException;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,16 +31,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtValidator jwtValidator;
 	private final JwtParser jwtParser;
+	private final TokenBlacklistRepository tokenBlacklistRepository;
 	private final HandlerExceptionResolver handlerExceptionResolver;
 
 	public JwtAuthenticationFilter(
 		JwtValidator jwtValidator,
 		JwtParser jwtParser,
+		TokenBlacklistRepository tokenBlacklistRepository,
 		@Qualifier("handlerExceptionResolver")
 		HandlerExceptionResolver handlerExceptionResolver
 	) {
 		this.jwtValidator = jwtValidator;
 		this.jwtParser = jwtParser;
+		this.tokenBlacklistRepository = tokenBlacklistRepository;
 		this.handlerExceptionResolver = handlerExceptionResolver;
 	}
 
@@ -54,9 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 
 		try {
-			String accessToken = TokenExtractor.extract(request);
+			String accessToken = TokenExtractor.extract(request.getHeader(HttpHeaders.AUTHORIZATION));
 
 			if (accessToken != null) {
+				if (tokenBlacklistRepository.isBlacklisted(accessToken)) {
+					throw new InvalidTokenException();
+				}
+
 				Claims claims = jwtValidator.validate(accessToken);
 
 				long memberId = jwtParser.extractMemberId(claims);

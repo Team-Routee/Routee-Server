@@ -5,21 +5,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TokenExtractor {
 
 	private static final String BEARER_PREFIX = "Bearer ";
 
-	private TokenExtractor() {}
-
-	public static String extract(HttpServletRequest request) {
-		String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-		if (!StringUtils.hasText(header)) {
+	public static String extract(String accessTokenWithBearer) {
+		if (!StringUtils.hasText(accessTokenWithBearer)) {
 			return null;
 		}
-		if (!header.startsWith(BEARER_PREFIX)) {
+		if (!accessTokenWithBearer.startsWith(BEARER_PREFIX)) {
 			throw new InvalidTokenException();
 		}
-		return header.substring(BEARER_PREFIX.length());
+		return accessTokenWithBearer.substring(BEARER_PREFIX.length());
 	}
 }

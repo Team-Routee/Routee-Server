@@ -2,6 +2,7 @@ package org.sopt.routee.auth.internal.controller;
 
 import org.sopt.routee.auth.internal.controller.dto.response.TokenResponse;
 import org.sopt.routee.auth.internal.controller.dto.request.LoginRequest;
+import org.sopt.routee.auth.internal.controller.dto.request.LogoutRequest;
 import org.sopt.routee.auth.internal.controller.dto.request.ReissueRequest;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -67,4 +68,22 @@ public interface AuthControllerDocs {
 				}))
 	})
 	ResponseEntity<SuccessResponse<TokenResponse>> reissue(@Valid @RequestBody ReissueRequest request);
+
+	@Operation(summary = "로그아웃", description = "액세스 토큰을 블랙리스트에 등록하고 리프레시 토큰을 무효화합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "INVALID_INPUT_VALUE",
+					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"refresh_token은 필수입니다.\"}"))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				}))
+	})
+	ResponseEntity<SuccessResponse<Void>> logout(String accessTokenWithBearer, @Valid @RequestBody LogoutRequest logoutRequest);
 }

@@ -5,6 +5,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
+
     // JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -14,4 +17,7 @@ dependencies {
 
     // TSID
     implementation "io.hypersistence:hypersistence-utils-hibernate-71:${rootProject.ext['hypersistenceUtilsVersion']}"
+
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }
