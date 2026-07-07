@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.EnumSet;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.sopt.routee.activity.internal.entity.activity.ActivityType;
 import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
+import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 
 @ExtendWith(MockitoExtension.class)
 class ActivityServiceTest {
@@ -50,17 +53,21 @@ class ActivityServiceTest {
 		when(activityRepository.save(any(Activity.class)))
 			.thenReturn(savedActivity);
 
-		Instant beforeCreate = Instant.now();
-		Long activityId = activityService.create(new CreateActivityCommand(memberId, ActivityType.RUNNING));
-		Instant afterCreate = Instant.now();
+		ZoneId timeZone = ZoneId.of("Pacific/Kiritimati");
+		LocalDateTime startedAt = LocalDateTime.of(2026, 7, 7, 15, 30);
+		Instant expectedStartedAt = startedAt.atZone(timeZone).toInstant();
+		CreateActivityResult result = activityService.create(
+			new CreateActivityCommand(memberId, ActivityType.RUNNING, startedAt, timeZone)
+		);
 
-		assertThat(activityId).isEqualTo(10L);
+		assertThat(result.activityId()).isEqualTo(10L);
+		assertThat(result.title()).isEqualTo("2026.07.07 기록");
 
 		ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
 		verify(activityRepository).save(activityCaptor.capture());
 		Activity activity = activityCaptor.getValue();
-		assertThat(activity.getTitle()).matches("\\d{4}\\.\\d{2}\\.\\d{2} 기록");
-		assertThat(activity.getStartedAt()).isBetween(beforeCreate, afterCreate);
+		assertThat(activity.getTitle()).isEqualTo("2026.07.07 기록");
+		assertThat(activity.getStartedAt()).isEqualTo(expectedStartedAt);
 		assertThat(activity.getActivityType()).isEqualTo(ActivityType.RUNNING);
 		assertThat(activity.getActivityStatus()).isEqualTo(ActivityStatus.ACTIVITY_IN_PROGRESS);
 		assertThat(activity.getMemberId()).isEqualTo(memberId);
@@ -72,7 +79,14 @@ class ActivityServiceTest {
 		when(activityRepository.existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES))
 			.thenReturn(true);
 
-		assertThatThrownBy(() -> activityService.create(new CreateActivityCommand(memberId, ActivityType.HIKING)))
+		assertThatThrownBy(() -> activityService.create(
+			new CreateActivityCommand(
+				memberId,
+				ActivityType.HIKING,
+				LocalDateTime.of(2026, 7, 7, 15, 30),
+				ZoneId.of("Asia/Seoul")
+			)
+		))
 			.isInstanceOf(AlreadyInProgressActivityException.class);
 
 		verify(activityRepository).existsByMemberIdAndActivityStatusIn(memberId, ACTIVE_STATUSES);
