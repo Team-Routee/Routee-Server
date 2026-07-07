@@ -50,4 +50,9 @@ public class RouteService {
 			.map(RouteMapper::toResult)
 			.toList();
 	}
+
+	@Transactional
+	public void deleteRoutesByMemberId(Long memberId) {
+		routeRepository.deleteByMemberId(memberId);
+	}
 }
