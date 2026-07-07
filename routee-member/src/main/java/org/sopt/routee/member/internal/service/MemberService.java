@@ -2,7 +2,7 @@ package org.sopt.routee.member.internal.service;
 
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
-import org.sopt.routee.member.api.event.MemberWithdrawEvent;
+import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.usecase.MemberUseCase;
@@ -50,6 +50,6 @@ public class MemberService implements MemberUseCase {
 
 		memberRepository.delete(member);
 
-		applicationEventPublisher.publishEvent(new MemberWithdrawEvent(memberId, accessTokenWithBearer, refreshToken));
+		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenWithBearer, refreshToken));
 	}
 }
