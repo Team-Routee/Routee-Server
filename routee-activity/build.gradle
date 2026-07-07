@@ -17,4 +17,7 @@ dependencies {
 
     // TSID
     implementation "io.hypersistence:hypersistence-utils-hibernate-71:${rootProject.ext['hypersistenceUtilsVersion']}"
+
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }
