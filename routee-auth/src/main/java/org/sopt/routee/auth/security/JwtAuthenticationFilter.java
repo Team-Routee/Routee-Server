@@ -12,6 +12,7 @@ import org.sopt.routee.auth.security.util.TokenExtractor;
 import org.sopt.routee.exception.BaseException;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 
 		try {
-			String accessToken = TokenExtractor.extract(request);
+			String accessToken = TokenExtractor.extract(request.getHeader(HttpHeaders.AUTHORIZATION));
 
 			if(tokenBlacklistRepository.isBlacklisted(accessToken)) {
 				throw new InvalidTokenException();
