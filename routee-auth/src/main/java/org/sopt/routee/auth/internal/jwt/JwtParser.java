@@ -1,5 +1,7 @@
 package org.sopt.routee.auth.internal.jwt;
 
+import java.time.Instant;
+
 import org.sopt.routee.auth.internal.exception.InvalidTokenException;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.springframework.stereotype.Component;
@@ -29,5 +31,9 @@ public class JwtParser {
 		} catch (IllegalArgumentException | NullPointerException e) {
 			throw new InvalidTokenException();
 		}
+	}
+
+	public Instant extractExpiration(Claims claims) {
+		return claims.getExpiration().toInstant();
 	}
 }

@@ -5,17 +5,22 @@ import org.sopt.routee.auth.internal.service.dto.command.LoginCommand;
 import org.sopt.routee.auth.internal.code.SuccessCode;
 import org.sopt.routee.auth.internal.controller.dto.response.TokenResponse;
 import org.sopt.routee.auth.internal.controller.dto.request.LoginRequest;
+import org.sopt.routee.auth.internal.controller.dto.request.LogoutRequest;
 import org.sopt.routee.auth.internal.controller.dto.request.ReissueRequest;
 import org.sopt.routee.auth.internal.service.dto.result.TokenResult;
+import org.sopt.routee.auth.security.util.TokenExtractor;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -42,5 +47,16 @@ public class AuthController implements AuthControllerDocs {
 		TokenResult result = authService.reissue(request.refreshToken());
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.TOKEN_REISSUE, TokenResponse.of(result)));
+	}
+
+	@PostMapping("/logout")
+	public ResponseEntity<SuccessResponse<Void>> logout(
+		@RequestHeader(name = HttpHeaders.AUTHORIZATION) String accessTokenWithBearer,
+		@Valid @RequestBody LogoutRequest logoutRequest
+	) {
+		authService.logout(TokenExtractor.extract(accessTokenWithBearer), logoutRequest.refreshToken());
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.LOGOUT_SUCCESS));
 	}
 }
