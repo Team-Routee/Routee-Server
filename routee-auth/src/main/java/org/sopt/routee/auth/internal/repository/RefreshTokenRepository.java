@@ -6,7 +6,7 @@ public interface RefreshTokenRepository {
 
 	void save(String token, Duration ttl);
 
-	boolean existsByToken(String token);
+	boolean deleteIfExists(String token);
 
 	void deleteByToken(String token);
 

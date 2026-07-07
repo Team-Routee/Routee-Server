@@ -20,8 +20,8 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
 		redisTemplate.opsForValue().set(TokenHasher.hash(token), VALID_VALUE, ttl);
 	}
 
-	public boolean existsByToken(String token) {
-		return Boolean.TRUE.equals(redisTemplate.hasKey(TokenHasher.hash(token)));
+	public boolean deleteIfExists(String token) {
+		return Boolean.TRUE.equals(redisTemplate.delete(TokenHasher.hash(token)));
 	}
 
 	public void deleteByToken(String token) {

@@ -51,18 +51,26 @@ public class AuthService {
 			throw new InvalidTokenException();
 		}
 
-		if (!refreshTokenRepository.existsByToken(refreshToken)) {
+		if (!refreshTokenRepository.deleteIfExists(refreshToken)) {
 			throw new InvalidTokenException();
 		}
-
-		refreshTokenRepository.deleteByToken(refreshToken);
 
 		return issueTokenPair(jwtParser.extractMemberId(claims), jwtParser.extractMemberRole(claims).name());
 	}
 
 	public void logout(String accessToken, String refreshToken) {
-		Claims claims = jwtValidator.validate(accessToken);
-		Duration ttl = Duration.between(Instant.now(), jwtParser.extractExpiration(claims));
+		Claims accessClaims = jwtValidator.validate(accessToken);
+		Claims refreshClaims = jwtValidator.validate(refreshToken);
+
+		if (jwtParser.extractTokenType(refreshClaims) != TokenType.REFRESH) {
+			throw new InvalidTokenException();
+		}
+
+		if (!jwtParser.extractMemberId(accessClaims).equals(jwtParser.extractMemberId(refreshClaims))) {
+			throw new InvalidTokenException();
+		}
+
+		Duration ttl = Duration.between(Instant.now(), jwtParser.extractExpiration(accessClaims));
 
 		tokenBlacklistRepository.blacklist(accessToken, ttl);
 		refreshTokenRepository.deleteByToken(refreshToken);
