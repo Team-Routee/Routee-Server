@@ -34,7 +34,7 @@ public interface ActivityControllerDocs {
 		@ApiResponse(responseCode = "409", description = "이미 진행 중인 활동이 있음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ALREADY_IN_PROGRESS_ACTIVITY",
-					value = "{\"status\":409,\"code\":\"ALREADY_IN_PROGRESS_ACTIVITY\",\"message\":\"이미 진행 중인 활동이 있습니다.\"}")))
+					value = "{\"status\":409,\"code\":\"ALREADY_IN_PROGRESS_ACTIVITY\",\"message\":\"이미 진행 중이거나 일시정지된 활동이 있습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		Principal principal,
