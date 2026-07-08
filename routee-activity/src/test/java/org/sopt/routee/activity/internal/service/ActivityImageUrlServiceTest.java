@@ -43,17 +43,19 @@ class ActivityImageUrlServiceTest {
 
 	@Test
 	void generateImageUploadUrlReturnsPresignedUrlWithGeneratedObjectKey() {
-		String objectKey = "activities/100/images/original/uuid_hike.jpg";
+		String objectKey = "100/uuidhike.jpg";
+		String presignedObjectKey = "activity/original/100/uuidhike.jpg";
 
 		when(activityRepository.existsByIdAndMemberId(ACTIVITY_ID, MEMBER_ID)).thenReturn(true);
-		when(imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike.jpg")).thenReturn(objectKey);
-		when(fileUploadPresignPort.generatePutPresignedUrl(objectKey)).thenReturn("https://presigned-url");
+		when(imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike.jpg")).thenReturn(objectKey);
+		when(imageObjectKeyGenerator.assembleOriginalActivityImageKey(objectKey)).thenReturn(presignedObjectKey);
+		when(fileUploadPresignPort.generatePutPresignedUrl(presignedObjectKey)).thenReturn("https://presigned-url");
 
 		ImageUrlResult result = activityImageUrlService.generateImageUploadUrl(ACTIVITY_ID, MEMBER_ID, "hike.jpg");
 
 		assertThat(result.presignedUrl()).isEqualTo("https://presigned-url");
 		assertThat(result.objectKey()).isEqualTo(objectKey);
-		verify(fileUploadPresignPort).generatePutPresignedUrl(objectKey);
+		verify(fileUploadPresignPort).generatePutPresignedUrl(presignedObjectKey);
 	}
 
 	@Test

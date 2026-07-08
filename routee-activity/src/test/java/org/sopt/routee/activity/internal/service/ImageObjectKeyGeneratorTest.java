@@ -14,62 +14,70 @@ class ImageObjectKeyGeneratorTest {
 	private final ImageObjectKeyGenerator imageObjectKeyGenerator = new ImageObjectKeyGenerator();
 
 	@Test
-	void generateOriginalActivityImageKeyReturnsOriginalObjectKey() {
-		String objectKey = imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "my hike.JPG");
+	void generateStoredActivityImageKeyReturnsStoredObjectKey() {
+		String objectKey = imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "my hike.JPG");
 
 		assertThat(objectKey)
-			.matches("activities/100/images/original/[0-9a-f]{32}_my_hike\\.jpg");
+			.matches("100/[0-9a-f]{32}my_hike\\.jpg");
 	}
 
 	@Test
-	void generateOriginalActivityImageKeySupportsImageExtensions() {
-		assertThat(imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike.jpeg"))
-			.matches("activities/100/images/original/[0-9a-f]{32}_hike\\.jpeg");
-		assertThat(imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike.png"))
-			.matches("activities/100/images/original/[0-9a-f]{32}_hike\\.png");
-		assertThat(imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike.webp"))
-			.matches("activities/100/images/original/[0-9a-f]{32}_hike\\.webp");
-		assertThat(imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike.heic"))
-			.matches("activities/100/images/original/[0-9a-f]{32}_hike\\.heic");
+	void assembleOriginalActivityImageKeyReturnsFullObjectKey() {
+		String objectKey = imageObjectKeyGenerator.assembleOriginalActivityImageKey("100/uuidmy_hike.jpg");
+
+		assertThat(objectKey)
+			.isEqualTo("activity/original/100/uuidmy_hike.jpg");
 	}
 
 	@Test
-	void generateOriginalActivityImageKeyThrowsWhenFileNameContainsSlash() {
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "dir/hike.jpg"))
+	void generateStoredActivityImageKeySupportsImageExtensions() {
+		assertThat(imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike.jpeg"))
+			.matches("100/[0-9a-f]{32}hike\\.jpeg");
+		assertThat(imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike.png"))
+			.matches("100/[0-9a-f]{32}hike\\.png");
+		assertThat(imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike.webp"))
+			.matches("100/[0-9a-f]{32}hike\\.webp");
+		assertThat(imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike.heic"))
+			.matches("100/[0-9a-f]{32}hike\\.heic");
+	}
+
+	@Test
+	void generateStoredActivityImageKeyThrowsWhenFileNameContainsSlash() {
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "dir/hike.jpg"))
 			.isInstanceOf(InvalidImageFileNameException.class);
 	}
 
 	@Test
-	void generateOriginalActivityImageKeyThrowsWhenFileNameContainsBackslash() {
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "dir\\hike.jpg"))
+	void generateStoredActivityImageKeyThrowsWhenFileNameContainsBackslash() {
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "dir\\hike.jpg"))
 			.isInstanceOf(InvalidImageFileNameException.class);
 	}
 
 	@Test
-	void generateOriginalActivityImageKeyThrowsWhenFileNameContainsControlCharacter() {
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike\n.jpg"))
+	void generateStoredActivityImageKeyThrowsWhenFileNameContainsControlCharacter() {
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike\n.jpg"))
 			.isInstanceOf(InvalidImageFileNameException.class);
 	}
 
 	@Test
-	void generateOriginalActivityImageKeyThrowsWhenSanitizedBaseNameIsBlank() {
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "!!!.jpg"))
+	void generateStoredActivityImageKeyThrowsWhenSanitizedBaseNameIsBlank() {
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "!!!.jpg"))
 			.isInstanceOf(InvalidImageFileNameException.class);
 	}
 
 	@Test
-	void generateOriginalActivityImageKeyThrowsWhenExtensionIsMissing() {
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike"))
+	void generateStoredActivityImageKeyThrowsWhenExtensionIsMissing() {
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike"))
 			.isInstanceOf(UnsupportedImageFileExtensionException.class);
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, ".jpg"))
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, ".jpg"))
 			.isInstanceOf(UnsupportedImageFileExtensionException.class);
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike."))
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike."))
 			.isInstanceOf(UnsupportedImageFileExtensionException.class);
 	}
 
 	@Test
-	void generateOriginalActivityImageKeyThrowsWhenExtensionIsUnsupported() {
-		assertThatThrownBy(() -> imageObjectKeyGenerator.generateOriginalActivityImageKey(ACTIVITY_ID, "hike.gif"))
+	void generateStoredActivityImageKeyThrowsWhenExtensionIsUnsupported() {
+		assertThatThrownBy(() -> imageObjectKeyGenerator.generateStoredActivityImageKey(ACTIVITY_ID, "hike.gif"))
 			.isInstanceOf(UnsupportedImageFileExtensionException.class);
 	}
 }
