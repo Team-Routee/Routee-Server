@@ -1,7 +1,6 @@
 package org.sopt.routee.activity.internal.controller;
 
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
-import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +24,8 @@ public interface TimelineControllerDocs {
 	@Operation(summary = "타임라인 생성", description = "인증된 사용자의 활동 기록에 타임라인을 생성합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "타임라인 생성 성공",
-			content = @Content(schema = @Schema(implementation = TimelineCreateResponse.class),
-				examples = @ExampleObject(value = "{\"status\":201,\"code\":\"TIMELINE_CREATED\",\"message\":\"타임라인 생성에 성공했습니다.\",\"data\":{}}"))),
+			content = @Content(
+				examples = @ExampleObject(value = "{\"status\":201,\"code\":\"TIMELINE_CREATED\",\"message\":\"타임라인 생성에 성공했습니다.\",\"data\":null}"))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
@@ -46,7 +45,7 @@ public interface TimelineControllerDocs {
 				examples = @ExampleObject(name = "TIMELINE_ALREADY_EXISTS",
 					value = "{\"status\":409,\"code\":\"TIMELINE_ALREADY_EXISTS\",\"message\":\"해당 경로 좌표에는 이미 타임라인이 존재합니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<TimelineCreateResponse>> create(
+	ResponseEntity<SuccessResponse<Void>> create(
 		@Parameter(hidden = true)
 		Long memberId,
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)

@@ -6,7 +6,6 @@ import java.time.ZoneOffset;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
-import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.TimelineService;
 import org.sopt.routee.response.ApiResponse;
@@ -32,7 +31,7 @@ public class TimelineController implements TimelineControllerDocs {
 	private final TimelineService timelineService;
 
 	@PostMapping("/{activityId}/timeline")
-	public ResponseEntity<SuccessResponse<TimelineCreateResponse>> create(
+	public ResponseEntity<SuccessResponse<Void>> create(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
 		@RequestHeader("Time-Zone") String timeZone,
@@ -41,7 +40,7 @@ public class TimelineController implements TimelineControllerDocs {
 		timelineService.create(request.toCommand(memberId, activityId, parseTimeZone(timeZone)));
 
 		return ResponseEntity.status(HttpStatus.CREATED)
-			.body(ApiResponse.success(SuccessCode.TIMELINE_CREATED, TimelineCreateResponse.empty()));
+			.body(ApiResponse.success(SuccessCode.TIMELINE_CREATED));
 	}
 
 	private ZoneId parseTimeZone(String timeZone) {
