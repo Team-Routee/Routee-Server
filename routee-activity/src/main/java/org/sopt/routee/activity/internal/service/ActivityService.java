@@ -2,6 +2,7 @@ package org.sopt.routee.activity.internal.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.Set;
@@ -15,6 +16,7 @@ import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
@@ -81,5 +83,14 @@ public class ActivityService {
 		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
+	}
+
+	@Transactional(readOnly = true)
+	public ActivityStatisticsResult getStatistics(Long activityId, Long memberId, ZoneId timeZone) {
+		Activity activity = activityRepository.findByIdAndMemberId(activityId, memberId)
+			.orElseThrow(ActivityNotFoundException::new);
+
+		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
+		return ActivityMapper.toStatisticsResult(activity, activityDate.format(TITLE_DATE_FORMATTER));
 	}
 }
