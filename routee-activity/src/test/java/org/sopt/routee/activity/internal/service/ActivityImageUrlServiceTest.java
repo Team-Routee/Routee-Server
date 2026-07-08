@@ -9,10 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
+import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
-import org.sopt.routee.activity.internal.service.validator.ActivityImageFileName;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
@@ -49,16 +49,15 @@ class ActivityImageUrlServiceTest {
 	@Test
 	void generateImageUploadUrl_검증된_파일명으로_external에_presigned_url_발급을_요청한다() {
 		String objectKey = "100/uuid.jpg";
-		ActivityImageFileName fileName = new ActivityImageFileName("jpg");
 		FileUploadPresignResult presignResult = new FileUploadPresignResult("https://presigned-url", objectKey);
 
 		when(activityRepository.existsByIdAndMemberId(ACTIVITY_ID, MEMBER_ID)).thenReturn(true);
-		when(activityImageFileNameValidator.validate("hike.jpg")).thenReturn(fileName);
+		when(activityImageFileNameValidator.validate("hike.jpg")).thenReturn(true);
 		FileUploadPresignCommand command = new FileUploadPresignCommand(
 			FileUploadDirectory.ACTIVITY,
 			FileUploadImageSize.ORIGINAL,
 			ACTIVITY_ID.toString(),
-			"jpg"
+			"hike.jpg"
 		);
 		when(fileUploadPresignPort.generatePutPresignedUrl(command))
 			.thenReturn(presignResult);
@@ -70,6 +69,18 @@ class ActivityImageUrlServiceTest {
 		assertThat(result.presignedUrl()).isEqualTo("https://presigned-url");
 		assertThat(result.objectKey()).isEqualTo(objectKey);
 		verify(fileUploadPresignPort).generatePutPresignedUrl(command);
+	}
+
+	@Test
+	void generateImageUploadUrl_지원하지_않는_확장자면_예외를_던진다() {
+		when(activityRepository.existsByIdAndMemberId(ACTIVITY_ID, MEMBER_ID)).thenReturn(true);
+		when(activityImageFileNameValidator.validate("hike.gif")).thenReturn(false);
+
+		assertThatThrownBy(() -> activityService.generateImageUploadUrl(
+			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.gif")
+		))
+			.isInstanceOf(UnsupportedImageFileExtensionException.class);
+		verifyNoInteractions(fileUploadPresignPort);
 	}
 
 	@Test
