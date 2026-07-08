@@ -9,9 +9,11 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineComma
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record CreateTimelineRequest(
 	@NotBlank(message = "title은 필수입니다.")
+	@Size(max = 16, message = "title은 16자 이하여야 합니다.")
 	String title,
 
 	@NotBlank(message = "objectKey는 필수입니다.")
