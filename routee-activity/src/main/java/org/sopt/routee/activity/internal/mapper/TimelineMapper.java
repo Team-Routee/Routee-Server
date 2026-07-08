@@ -18,7 +18,7 @@ public class TimelineMapper {
 	public static Timeline toEntity(CreateTimelineCommand command, Activity activity, Instant recordedAt) {
 		return Timeline.builder()
 			.title(command.title())
-정			.timelineImageObjectKey(command.objectKey())
+			.timelineImageObjectKey(command.objectKey())
 			.createdAt(recordedAt)
 			.trackPointIndex(command.trackPointIndex())
 			.location(toPoint(command))
