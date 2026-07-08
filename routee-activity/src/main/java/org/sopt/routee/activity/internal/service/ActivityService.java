@@ -8,11 +8,20 @@ import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
+import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
+import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
+import org.sopt.routee.activity.internal.service.validator.ActivityImageFileName;
+import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
+import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileUploadPresignPort;
+import org.sopt.routee.external.api.result.FileUploadPresignResult;
+import org.sopt.routee.external.api.type.FileUploadDirectory;
+import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +39,8 @@ public class ActivityService {
 	);
 
 	private final ActivityRepository activityRepository;
+	private final ActivityImageFileNameValidator activityImageFileNameValidator;
+	private final FileUploadPresignPort fileUploadPresignPort;
 
 	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
@@ -48,5 +59,24 @@ public class ActivityService {
 		Activity activity = ActivityMapper.toEntity(command, title, startedAt);
 		Activity savedActivity = activityRepository.save(activity);
 		return new CreateActivityResult(savedActivity.getId(), title);
+	}
+
+	@Transactional(readOnly = true)
+	public ImageUrlResult generateImageUploadUrl(Long activityId, Long memberId, String fileName) {
+		if (!activityRepository.existsByIdAndMemberId(activityId, memberId)) {
+			throw new ActivityNotFoundException();
+		}
+
+		ActivityImageFileName activityImageFileName = activityImageFileNameValidator.validate(fileName);
+		FileUploadPresignCommand command = new FileUploadPresignCommand(
+			FileUploadDirectory.ACTIVITY,
+			FileUploadImageSize.ORIGINAL,
+			activityId.toString(),
+			activityImageFileName.sanitizedBaseName(),
+			activityImageFileName.extension()
+		);
+		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(command);
+
+		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
 	}
 }

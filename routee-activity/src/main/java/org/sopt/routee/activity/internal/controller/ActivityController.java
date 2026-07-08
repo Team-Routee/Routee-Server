@@ -10,7 +10,6 @@ import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
-import org.sopt.routee.activity.internal.service.ActivityImageUrlService;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
@@ -35,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 public class ActivityController implements ActivityControllerDocs {
 
 	private final ActivityService activityService;
-	private final ActivityImageUrlService activityImageUrlService;
 
 	@PostMapping
 	public ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
@@ -55,7 +53,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@PathVariable(name = "activityId") Long activityId,
 		@Valid @RequestBody ImageUrlRequest request
 	) {
-		ImageUrlResult result = activityImageUrlService.generateImageUploadUrl(activityId, memberId,
+		ImageUrlResult result = activityService.generateImageUploadUrl(activityId, memberId,
 			request.fileName());
 
 		return ResponseEntity.status(HttpStatus.OK)

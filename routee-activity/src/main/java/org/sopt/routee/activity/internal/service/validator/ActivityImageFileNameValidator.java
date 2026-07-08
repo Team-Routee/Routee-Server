@@ -1,8 +1,7 @@
-package org.sopt.routee.activity.internal.service;
+package org.sopt.routee.activity.internal.service.validator;
 
 import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.sopt.routee.activity.internal.exception.InvalidImageFileNameException;
@@ -10,15 +9,13 @@ import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtension
 import org.springframework.stereotype.Component;
 
 @Component
-public class ImageObjectKeyGenerator {
+public class ActivityImageFileNameValidator {
 
-	private static final String ORIGINAL_SIZE = "original";
-	private static final String ACTIVITY_PREFIX = "activity";
 	private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "heic");
 	private static final Pattern UNSAFE_FILE_NAME = Pattern.compile("[/\\\\\\p{Cntrl}]");
 	private static final Pattern UNSAFE_BASE_NAME_CHARACTER = Pattern.compile("[^A-Za-z0-9._-]");
 
-	public String generateStoredActivityImageKey(Long activityId, String fileName) {
+	public ActivityImageFileName validate(String fileName) {
 		validateFileName(fileName);
 
 		int extensionSeparatorIndex = fileName.lastIndexOf('.');
@@ -33,14 +30,7 @@ public class ImageObjectKeyGenerator {
 		}
 
 		String sanitizedBaseName = sanitizeBaseName(fileName.substring(0, extensionSeparatorIndex));
-		String uuid = UUID.randomUUID().toString().replace("-", "");
-
-		return "%d/%s%s.%s"
-			.formatted(activityId, uuid, sanitizedBaseName, extension);
-	}
-
-	public String assembleOriginalActivityImageKey(String storedObjectKey) {
-		return "%s/%s/%s".formatted(ACTIVITY_PREFIX, ORIGINAL_SIZE, storedObjectKey);
+		return new ActivityImageFileName(sanitizedBaseName, extension);
 	}
 
 	private void validateFileName(String fileName) {

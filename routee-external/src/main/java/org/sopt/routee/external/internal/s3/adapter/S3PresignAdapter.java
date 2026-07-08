@@ -1,8 +1,11 @@
 package org.sopt.routee.external.internal.s3.adapter;
 
 import java.time.Duration;
+import java.util.UUID;
 
+import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
+import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.internal.s3.config.S3Properties;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +22,33 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 	private final S3Properties properties;
 
 	@Override
-	public String generatePutPresignedUrl(String objectKey) {
+	public FileUploadPresignResult generatePutPresignedUrl(FileUploadPresignCommand command) {
+		String objectKey = generateStoredObjectKey(
+			command.resourceId(),
+			command.sanitizedBaseName(),
+			command.extension()
+		);
+		String presignedObjectKey = assemblePresignedObjectKey(
+			command.directory().path(),
+			command.imageSize().path(),
+			objectKey
+		);
+		String presignedUrl = generatePutPresignedUrl(presignedObjectKey);
+
+		return new FileUploadPresignResult(presignedUrl, objectKey);
+	}
+
+	private String generateStoredObjectKey(String resourceId, String sanitizedBaseName, String extension) {
+		String uuid = UUID.randomUUID().toString().replace("-", "");
+		return "%s/%s%s.%s"
+			.formatted(resourceId, uuid, sanitizedBaseName, extension);
+	}
+
+	private String assemblePresignedObjectKey(String directoryPath, String imageSizePath, String storedObjectKey) {
+		return "%s/%s/%s".formatted(directoryPath, imageSizePath, storedObjectKey);
+	}
+
+	private String generatePutPresignedUrl(String objectKey) {
 		PutObjectRequest putObjectRequest = PutObjectRequest.builder()
 			.bucket(properties.bucket())
 			.key(objectKey)
