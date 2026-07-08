@@ -22,6 +22,8 @@ import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityExce
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
+import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
+import org.sopt.routee.external.api.port.FileUploadPresignPort;
 
 @ExtendWith(MockitoExtension.class)
 class ActivityServiceTest {
@@ -33,6 +35,12 @@ class ActivityServiceTest {
 
 	@Mock
 	private ActivityRepository activityRepository;
+
+	@Mock
+	private ActivityImageFileNameValidator activityImageFileNameValidator;
+
+	@Mock
+	private FileUploadPresignPort fileUploadPresignPort;
 
 	@InjectMocks
 	private ActivityService activityService;
