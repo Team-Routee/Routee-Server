@@ -23,8 +23,9 @@ public class ActivityImageUrlService {
 			throw new ActivityNotFoundException();
 		}
 
-		String objectKey = imageObjectKeyGenerator.generateOriginalActivityImageKey(activityId, fileName);
-		String presignedUrl = fileUploadPresignPort.generatePutPresignedUrl(objectKey);
+		String objectKey = imageObjectKeyGenerator.generateStoredActivityImageKey(activityId, fileName);
+		String presignedObjectKey = imageObjectKeyGenerator.assembleOriginalActivityImageKey(objectKey);
+		String presignedUrl = fileUploadPresignPort.generatePutPresignedUrl(presignedObjectKey);
 
 		return new ImageUrlResult(presignedUrl, objectKey);
 	}

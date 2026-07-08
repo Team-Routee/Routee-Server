@@ -13,11 +13,12 @@ import org.springframework.stereotype.Component;
 public class ImageObjectKeyGenerator {
 
 	private static final String ORIGINAL_SIZE = "original";
+	private static final String ACTIVITY_PREFIX = "activity";
 	private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "heic");
 	private static final Pattern UNSAFE_FILE_NAME = Pattern.compile("[/\\\\\\p{Cntrl}]");
 	private static final Pattern UNSAFE_BASE_NAME_CHARACTER = Pattern.compile("[^A-Za-z0-9._-]");
 
-	public String generateOriginalActivityImageKey(Long activityId, String fileName) {
+	public String generateStoredActivityImageKey(Long activityId, String fileName) {
 		validateFileName(fileName);
 
 		int extensionSeparatorIndex = fileName.lastIndexOf('.');
@@ -34,8 +35,12 @@ public class ImageObjectKeyGenerator {
 		String sanitizedBaseName = sanitizeBaseName(fileName.substring(0, extensionSeparatorIndex));
 		String uuid = UUID.randomUUID().toString().replace("-", "");
 
-		return "activities/%d/images/%s/%s_%s.%s"
-			.formatted(activityId, ORIGINAL_SIZE, uuid, sanitizedBaseName, extension);
+		return "%d/%s%s.%s"
+			.formatted(activityId, uuid, sanitizedBaseName, extension);
+	}
+
+	public String assembleOriginalActivityImageKey(String storedObjectKey) {
+		return "%s/%s/%s".formatted(ACTIVITY_PREFIX, ORIGINAL_SIZE, storedObjectKey);
 	}
 
 	private void validateFileName(String fileName) {
