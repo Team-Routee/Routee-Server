@@ -50,7 +50,7 @@ public interface TimelineControllerDocs {
 		@Parameter(hidden = true)
 		Long memberId,
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
-		@PathVariable Long activityId,
+		@PathVariable(name = "activityId") Long activityId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") String timeZone,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,

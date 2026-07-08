@@ -34,7 +34,7 @@ public class TimelineController implements TimelineControllerDocs {
 	@PostMapping("/{activityId}/timeline")
 	public ResponseEntity<SuccessResponse<TimelineCreateResponse>> create(
 		@AuthenticationPrincipal Long memberId,
-		@PathVariable Long activityId,
+		@PathVariable(name = "activityId") Long activityId,
 		@RequestHeader("Time-Zone") String timeZone,
 		@Valid @RequestBody CreateTimelineRequest request
 	) {
