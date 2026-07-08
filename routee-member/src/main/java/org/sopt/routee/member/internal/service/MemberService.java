@@ -1,9 +1,12 @@
 package org.sopt.routee.member.internal.service;
 
+import java.time.ZoneId;
+
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
+import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.usecase.MemberUseCase;
 import org.sopt.routee.member.internal.entity.Member;
@@ -51,5 +54,13 @@ public class MemberService implements MemberUseCase {
 		memberRepository.delete(member);
 
 		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
+	}
+
+	@Transactional(readOnly = true)
+	public MemberInfoResult getMemberInfo(long memberId, ZoneId zoneId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
+
+		return MemberMapper.toMemberInfoResult(member, zoneId);
 	}
 }

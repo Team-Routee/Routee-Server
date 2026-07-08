@@ -1,9 +1,13 @@
 package org.sopt.routee.member.internal.controller;
 
+import java.time.ZoneId;
+
 import org.sopt.routee.member.internal.code.SuccessCode;
+import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
 import org.sopt.routee.member.internal.controller.dto.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
+import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.sopt.routee.util.TokenExtractor;
@@ -13,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -52,5 +57,16 @@ public class MemberController implements MemberControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_WITHDRAW));
+	}
+
+	@GetMapping("/profile")
+	public ResponseEntity<SuccessResponse<MemberInfoResponse>> getMemberInfo(
+		@AuthenticationPrincipal Long memberId,
+		@RequestHeader(name = "Time-Zone") ZoneId timeZone
+	) {
+		MemberInfoResult result = memberService.getMemberInfo(memberId, timeZone);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberInfoResponse.from(result)));
 	}
 }
