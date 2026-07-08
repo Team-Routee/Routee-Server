@@ -29,6 +29,11 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
 		return buildErrorResponse(e.getCode());
 	}
 
+	@ExceptionHandler(IllegalArgumentException.class)
+	protected ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+		return buildErrorResponse(ErrorCode.INVALID_HEADER);
+	}
+
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	protected ResponseEntity<ApiResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
 		return buildErrorResponse(ErrorCode.MISSING_REQUEST_PARAMETER);
