@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -73,11 +75,11 @@ public class MemberController implements MemberControllerDocs {
 			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberInfoResponse.from(result)));
 	}
 
-	@GetMapping(path = "/archieve/activity-summary")
+	@GetMapping(path = "/archive/activity-summary")
 	public ResponseEntity<SuccessResponse<ActivitySummaryResponse>> getActivitySummary(
 		@AuthenticationPrincipal Long memberId,
 		@RequestParam(name = "year", required = true) Integer year,
-		@RequestParam(name = "month", required = true) Integer month
+		@Min(1) @Max(12) @RequestParam(name = "month", required = true) Integer month
 	) {
 		ActivitySummaryResult result = memberService.getActivitySummary(memberId, year, month);
 

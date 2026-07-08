@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Tag(name = "Member", description = "회원 API")
 public interface MemberControllerDocs {
@@ -146,6 +148,6 @@ public interface MemberControllerDocs {
 		@Parameter(description = "조회할 연도", example = "2026", required = true)
 		@RequestParam("year") Integer year,
 		@Parameter(description = "조회할 월", example = "7", required = true)
-		@RequestParam("month") Integer month
+		@Min(1) @Max(12) @RequestParam("month") Integer month
 	);
 }
