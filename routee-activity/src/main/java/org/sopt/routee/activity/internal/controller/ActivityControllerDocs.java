@@ -84,7 +84,7 @@ public interface ActivityControllerDocs {
 	})
 	ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
 		Long memberId,
-		@PathVariable Long activityId,
+		@PathVariable(name = "activityId") Long activityId,
 		@Valid @RequestBody ImageUrlRequest request
 	);
 }

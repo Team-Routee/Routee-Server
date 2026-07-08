@@ -52,7 +52,7 @@ public class ActivityController implements ActivityControllerDocs {
 	@PostMapping("/{activityId}/image-url")
 	public ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
 		@AuthenticationPrincipal Long memberId,
-		@PathVariable Long activityId,
+		@PathVariable(name = "activityId") Long activityId,
 		@Valid @RequestBody ImageUrlRequest request
 	) {
 		ImageUrlResult result = activityImageUrlService.generateImageUploadUrl(activityId, memberId,
