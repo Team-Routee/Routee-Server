@@ -18,11 +18,11 @@ public class TimelineMapper {
 	public static Timeline toEntity(CreateTimelineCommand command, Activity activity, Instant recordedAt) {
 		return Timeline.builder()
 			.title(command.title())
-			.timelineStatus(command.status())
-			.timelineImageObjectKey(command.objectKey())
+정			.timelineImageObjectKey(command.objectKey())
 			.createdAt(recordedAt)
 			.trackPointIndex(command.trackPointIndex())
 			.location(toPoint(command))
+			.timelineStatus(command.status())
 			.activity(activity)
 			.build();
 	}
