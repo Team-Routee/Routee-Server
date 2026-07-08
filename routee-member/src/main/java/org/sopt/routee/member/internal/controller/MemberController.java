@@ -3,10 +3,12 @@ package org.sopt.routee.member.internal.controller;
 import java.time.ZoneId;
 
 import org.sopt.routee.member.internal.code.SuccessCode;
+import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
+import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -29,12 +32,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/member")
+@RequestMapping(path = "/api/v1")
 public class MemberController implements MemberControllerDocs {
 
 	private final MemberService memberService;
 
-	@PostMapping("/register")
+	@PostMapping(path = "/member/register")
 	public ResponseEntity<SuccessResponse<Void>> register(
 		@Valid @RequestBody RegisterRequest request
 	) {
@@ -44,7 +47,7 @@ public class MemberController implements MemberControllerDocs {
 			.body(ApiResponse.success(SuccessCode.MEMBER_REGISTER));
 	}
 
-	@DeleteMapping("/withdraw")
+	@DeleteMapping(path = "/member/withdraw")
 	public ResponseEntity<SuccessResponse<Void>> withdraw(
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader(name = HttpHeaders.AUTHORIZATION) String accessTokenWithBearer,
@@ -59,7 +62,7 @@ public class MemberController implements MemberControllerDocs {
 			.body(ApiResponse.success(SuccessCode.MEMBER_WITHDRAW));
 	}
 
-	@GetMapping("/profile")
+	@GetMapping(path = "/member/profile")
 	public ResponseEntity<SuccessResponse<MemberInfoResponse>> getMemberInfo(
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader(name = "Time-Zone") ZoneId timeZone
@@ -68,5 +71,17 @@ public class MemberController implements MemberControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberInfoResponse.from(result)));
+	}
+
+	@GetMapping(path = "/archieve/activity-summary")
+	public ResponseEntity<SuccessResponse<ActivitySummaryResponse>> getActivitySummary(
+		@AuthenticationPrincipal Long memberId,
+		@RequestParam(name = "year", required = true) Integer year,
+		@RequestParam(name = "month", required = true) Integer month
+	) {
+		ActivitySummaryResult result = memberService.getActivitySummary(memberId, year, month);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_SUMMARY_FOUND, ActivitySummaryResponse.from(result)));
 	}
 }

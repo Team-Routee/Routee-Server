@@ -1,11 +1,16 @@
 package org.sopt.routee.member.internal.service;
 
+import java.time.YearMonth;
 import java.time.ZoneId;
+import java.util.List;
 
+import org.sopt.routee.activity.api.result.ActivityDailySummaryResult;
+import org.sopt.routee.activity.api.usecase.ActivityUseCase;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
+import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.usecase.MemberUseCase;
@@ -25,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class MemberService implements MemberUseCase {
 
 	private final OidcVerifyPort oidcVerifyPort;
+	private final ActivityUseCase activityUseCase;
 	private final MemberRepository memberRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -62,5 +68,17 @@ public class MemberService implements MemberUseCase {
 			.orElseThrow(MemberNotFoundException::new);
 
 		return MemberMapper.toMemberInfoResult(member, zoneId);
+	}
+
+	@Transactional(readOnly = true)
+	public ActivitySummaryResult getActivitySummary(long memberId, int year, int month) {
+		if (!memberRepository.existsById(memberId)) {
+			throw new MemberNotFoundException();
+		}
+
+		List<ActivityDailySummaryResult> summaries =
+			activityUseCase.getMonthlySummaries(memberId, YearMonth.of(year, month));
+
+		return MemberMapper.toActivitySummaryResult(summaries, year, month);
 	}
 }

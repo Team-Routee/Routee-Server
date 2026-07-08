@@ -3,8 +3,12 @@ package org.sopt.routee.member.internal.mapper;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
+import org.sopt.routee.activity.api.result.ActivityDailySummaryResult;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
+import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
+import org.sopt.routee.member.internal.service.dto.result.DailySummary;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.type.MemberRole;
@@ -41,6 +45,25 @@ public class MemberMapper {
 			joinDate,
 			daysSinceJoining + 1,
 			member.getTotalActivityCount()
+		);
+	}
+
+	public static ActivitySummaryResult toActivitySummaryResult(
+		List<ActivityDailySummaryResult> summaries, int year, int month
+	) {
+		List<DailySummary> converted = summaries.stream()
+			.map(MemberMapper::toDailySummary)
+			.toList();
+
+		return new ActivitySummaryResult(converted, year, month);
+	}
+
+	private static DailySummary toDailySummary(ActivityDailySummaryResult summary) {
+		return new DailySummary(
+			summary.activityDate(),
+			summary.totalDurationSeconds(),
+			summary.activityCount(),
+			summary.coverImageUrl()
 		);
 	}
 }
