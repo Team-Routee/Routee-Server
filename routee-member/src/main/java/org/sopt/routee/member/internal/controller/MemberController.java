@@ -4,8 +4,8 @@ import java.time.ZoneId;
 
 import org.sopt.routee.member.internal.code.SuccessCode;
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
-import org.sopt.routee.member.internal.controller.dto.RegisterRequest;
-import org.sopt.routee.member.internal.controller.dto.WithdrawRequest;
+import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
+import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.response.ApiResponse;

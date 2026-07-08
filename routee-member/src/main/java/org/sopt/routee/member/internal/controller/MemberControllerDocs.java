@@ -3,8 +3,8 @@ package org.sopt.routee.member.internal.controller;
 import java.time.ZoneId;
 
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
-import org.sopt.routee.member.internal.controller.dto.RegisterRequest;
-import org.sopt.routee.member.internal.controller.dto.WithdrawRequest;
+import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
+import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
