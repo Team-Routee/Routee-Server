@@ -64,8 +64,6 @@ public interface ActivityControllerDocs {
 				examples = {
 					@ExampleObject(name = "INVALID_INPUT_VALUE",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"fileName은 필수입니다.\"}"),
-					@ExampleObject(name = "INVALID_IMAGE_FILE_NAME",
-						value = "{\"status\":400,\"code\":\"INVALID_IMAGE_FILE_NAME\",\"message\":\"이미지 파일명이 올바르지 않습니다.\"}"),
 					@ExampleObject(name = "UNSUPPORTED_IMAGE_FILE_EXTENSION",
 						value = "{\"status\":400,\"code\":\"UNSUPPORTED_IMAGE_FILE_EXTENSION\",\"message\":\"지원하지 않는 이미지 파일 확장자입니다.\"}")
 				})),

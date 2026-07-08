@@ -25,7 +25,6 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 	public FileUploadPresignResult generatePutPresignedUrl(FileUploadPresignCommand command) {
 		String objectKey = generateStoredObjectKey(
 			command.resourceId(),
-			command.sanitizedBaseName(),
 			command.extension()
 		);
 		String presignedObjectKey = assemblePresignedObjectKey(
@@ -38,10 +37,10 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 		return new FileUploadPresignResult(presignedUrl, objectKey);
 	}
 
-	private String generateStoredObjectKey(String resourceId, String sanitizedBaseName, String extension) {
+	private String generateStoredObjectKey(String resourceId, String extension) {
 		String uuid = UUID.randomUUID().toString().replace("-", "");
-		return "%s/%s%s.%s"
-			.formatted(resourceId, uuid, sanitizedBaseName, extension);
+		return "%s/%s.%s"
+			.formatted(resourceId, uuid, extension);
 	}
 
 	private String assemblePresignedObjectKey(String directoryPath, String imageSizePath, String storedObjectKey) {

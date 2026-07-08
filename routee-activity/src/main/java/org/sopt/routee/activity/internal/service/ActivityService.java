@@ -13,6 +13,7 @@ import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityExce
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
+import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileName;
@@ -62,20 +63,19 @@ public class ActivityService {
 	}
 
 	@Transactional(readOnly = true)
-	public ImageUrlResult generateImageUploadUrl(Long activityId, Long memberId, String fileName) {
-		if (!activityRepository.existsByIdAndMemberId(activityId, memberId)) {
+	public ImageUrlResult generateImageUploadUrl(ImageUploadUrlCommand command) {
+		if (!activityRepository.existsByIdAndMemberId(command.activityId(), command.memberId())) {
 			throw new ActivityNotFoundException();
 		}
 
-		ActivityImageFileName activityImageFileName = activityImageFileNameValidator.validate(fileName);
-		FileUploadPresignCommand command = new FileUploadPresignCommand(
+		ActivityImageFileName activityImageFileName = activityImageFileNameValidator.validate(command.fileName());
+		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
 			FileUploadDirectory.ACTIVITY,
 			FileUploadImageSize.ORIGINAL,
-			activityId.toString(),
-			activityImageFileName.sanitizedBaseName(),
+			command.activityId().toString(),
 			activityImageFileName.extension()
 		);
-		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(command);
+		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
 	}

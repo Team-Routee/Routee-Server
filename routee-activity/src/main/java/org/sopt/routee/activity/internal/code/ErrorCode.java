@@ -14,7 +14,6 @@ public enum ErrorCode implements ErrorResultCode {
 	ACTIVITY_NOT_FOUND(HttpStatus.NOT_FOUND, "활동 기록이 존재하지 않습니다."),
 	ROUTE_ALREADY_EXISTS(HttpStatus.CONFLICT, "루트 목록이 이미 존재합니다."),
 	INVALID_TIME_ZONE(HttpStatus.BAD_REQUEST, "Time-Zone 헤더 값이 올바르지 않습니다."),
-	INVALID_IMAGE_FILE_NAME(HttpStatus.BAD_REQUEST, "이미지 파일명이 올바르지 않습니다."),
 	UNSUPPORTED_IMAGE_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 파일 확장자입니다.");
 
 	private final HttpStatus status;

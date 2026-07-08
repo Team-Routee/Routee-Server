@@ -53,8 +53,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@PathVariable(name = "activityId") Long activityId,
 		@Valid @RequestBody ImageUrlRequest request
 	) {
-		ImageUrlResult result = activityService.generateImageUploadUrl(activityId, memberId,
-			request.fileName());
+		ImageUrlResult result = activityService.generateImageUploadUrl(request.toCommand(activityId, memberId));
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.IMAGE_UPLOAD_URL_CREATED, ImageUrlResponse.of(result)));
