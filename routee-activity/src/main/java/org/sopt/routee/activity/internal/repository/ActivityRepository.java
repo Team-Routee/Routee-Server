@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.repository;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
@@ -10,4 +11,6 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	boolean existsByMemberIdAndActivityStatusIn(Long memberId, Collection<ActivityStatus> activityStatuses);
 
 	boolean existsByIdAndMemberId(Long id, Long memberId);
+
+	Optional<Activity> findByIdAndMemberId(Long id, Long memberId);
 }
