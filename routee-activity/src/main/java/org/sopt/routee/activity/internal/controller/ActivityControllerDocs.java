@@ -1,10 +1,13 @@
 package org.sopt.routee.activity.internal.controller;
 
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
@@ -50,5 +53,36 @@ public interface ActivityControllerDocs {
 			content = @Content(schema = @Schema(implementation = ActivityCreateRequest.class),
 				examples = @ExampleObject(value = "{\"activityType\":\"HIKING\",\"startedAt\":\"2026-07-07T15:30:00\"}")))
 		@Valid @RequestBody ActivityCreateRequest request
+	);
+
+	@Operation(summary = "활동 이미지 업로드 URL 발급", description = "활동 이미지 원본 업로드를 위한 S3 presigned URL을 발급합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "이미지 업로드 URL 발급 성공",
+			content = @Content(schema = @Schema(implementation = ImageUrlResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"fileName은 필수입니다.\"}"),
+					@ExampleObject(name = "UNSUPPORTED_IMAGE_FILE_EXTENSION",
+						value = "{\"status\":400,\"code\":\"UNSUPPORTED_IMAGE_FILE_EXTENSION\",\"message\":\"지원하지 않는 이미지 파일 확장자입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "UNAUTHORIZED",
+						value = "{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증되지 않은 사용자입니다.\"}"),
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "활동 기록 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록을 찾을 수 없습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
+		Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@Valid @RequestBody ImageUrlRequest request
 	);
 }

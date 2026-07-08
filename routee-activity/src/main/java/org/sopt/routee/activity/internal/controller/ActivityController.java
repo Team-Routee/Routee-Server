@@ -6,15 +6,19 @@ import java.time.ZoneOffset;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
+import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,6 +45,18 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_CREATED, ActivityCreateResponse.from(result)));
+	}
+
+	@PostMapping("/{activityId}/image-url")
+	public ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@Valid @RequestBody ImageUrlRequest request
+	) {
+		ImageUrlResult result = activityService.generateImageUploadUrl(request.toCommand(activityId, memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.IMAGE_UPLOAD_URL_CREATED, ImageUrlResponse.of(result)));
 	}
 
 	private ZoneId parseTimeZone(String timeZone) {

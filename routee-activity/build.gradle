@@ -1,5 +1,6 @@
 dependencies {
     implementation project(':routee-common')
+    implementation project(':routee-external')
 
     // Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
