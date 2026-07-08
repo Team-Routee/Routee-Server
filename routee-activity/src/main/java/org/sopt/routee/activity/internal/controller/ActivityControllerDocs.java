@@ -4,6 +4,7 @@ import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRe
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
