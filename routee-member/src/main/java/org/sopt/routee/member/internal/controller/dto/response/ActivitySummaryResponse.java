@@ -23,7 +23,7 @@ public record ActivitySummaryResponse(
 		LocalDate activityDate,
 		int totalDurationMinutes,
 		int activityCount,
-		String coverImage
+		String coverImageUrl
 	) {
 		public static ActivitySummaryItem from(DailySummary summary) {
 			return new ActivitySummaryItem(
