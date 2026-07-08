@@ -1,11 +1,9 @@
 package org.sopt.routee.activity.internal.controller;
 
-import java.security.Principal;
-
-import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
-import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -85,8 +83,8 @@ public interface ActivityControllerDocs {
 					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록을 찾을 수 없습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
+		Long memberId,
 		@PathVariable Long activityId,
-		@Valid @RequestBody ImageUrlRequest request,
-		Principal principal
+		@Valid @RequestBody ImageUrlRequest request
 	);
 }
