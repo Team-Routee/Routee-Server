@@ -23,7 +23,7 @@ public final class TimeZoneUtils {
 		return localDate.atStartOfDay(zoneId).toInstant();
 	}
 
-	public static Instant toUtcInstant(LocalDateTime localDateTime, ZoneId zoneId) {
+	public static Instant toUtcInstantTime(LocalDateTime localDateTime, ZoneId zoneId) {
 		return localDateTime.atZone(zoneId).toInstant();
 	}
 }
