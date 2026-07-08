@@ -1,6 +1,7 @@
 package org.sopt.routee.external.internal.s3.adapter;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
@@ -25,7 +26,7 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 	public FileUploadPresignResult generatePutPresignedUrl(FileUploadPresignCommand command) {
 		String objectKey = generateStoredObjectKey(
 			command.resourceId(),
-			command.extension()
+			parseExtension(command.fileName())
 		);
 		String presignedObjectKey = assemblePresignedObjectKey(
 			command.directory().path(),
@@ -41,6 +42,11 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 		String uuid = UUID.randomUUID().toString().replace("-", "");
 		return "%s/%s.%s"
 			.formatted(resourceId, uuid, extension);
+	}
+
+	private String parseExtension(String fileName) {
+		return fileName.substring(fileName.lastIndexOf('.') + 1)
+			.toLowerCase(Locale.ROOT);
 	}
 
 	private String assemblePresignedObjectKey(String directoryPath, String imageSizePath, String storedObjectKey) {

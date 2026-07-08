@@ -7,6 +7,6 @@ public record FileUploadPresignCommand(
 	FileUploadDirectory directory,
 	FileUploadImageSize imageSize,
 	String resourceId,
-	String extension
+	String fileName
 ) {
 }

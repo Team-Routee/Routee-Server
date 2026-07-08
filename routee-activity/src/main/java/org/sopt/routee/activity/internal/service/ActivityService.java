@@ -10,13 +10,13 @@ import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityException;
+import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
-import org.sopt.routee.activity.internal.service.validator.ActivityImageFileName;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
@@ -68,12 +68,15 @@ public class ActivityService {
 			throw new ActivityNotFoundException();
 		}
 
-		ActivityImageFileName activityImageFileName = activityImageFileNameValidator.validate(command.fileName());
+		if (!activityImageFileNameValidator.validate(command.fileName())) {
+			throw new UnsupportedImageFileExtensionException();
+		}
+
 		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
 			FileUploadDirectory.ACTIVITY,
 			FileUploadImageSize.ORIGINAL,
 			command.activityId().toString(),
-			activityImageFileName.extension()
+			command.fileName()
 		);
 		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
