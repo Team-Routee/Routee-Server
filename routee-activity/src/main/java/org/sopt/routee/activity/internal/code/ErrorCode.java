@@ -17,7 +17,8 @@ public enum ErrorCode implements ErrorResultCode {
 	UNSUPPORTED_IMAGE_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 파일 확장자입니다."),
 	INVALID_ACTIVITY_STATUS_TRANSITION(HttpStatus.CONFLICT, "변경할 수 없는 활동 상태입니다."),
 	ACTIVITY_STATUS_ALREADY_SAME(HttpStatus.CONFLICT, "이미 동일한 활동 상태입니다."),
-	ACTIVITY_ALREADY_COMPLETED(HttpStatus.CONFLICT, "이미 완료된 활동입니다.");
+	ACTIVITY_ALREADY_COMPLETED(HttpStatus.CONFLICT, "이미 완료된 활동입니다."),
+	INVALID_TRACK(HttpStatus.BAD_REQUEST, "경로 정보가 올바르지 않습니다.");
 
 	private final HttpStatus status;
 	private final String message;
