@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
@@ -23,6 +24,8 @@ import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatu
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
@@ -120,5 +123,21 @@ public class ActivityService {
 
 		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
 		return ActivityMapper.toStatisticsResult(activity, activityDate.format(DATE_FORMATTER));
+	}
+
+	@Transactional(readOnly = true)
+	public ActivitiesByDateResult getActivitiesByDate(Long memberId, LocalDate date, ZoneId timeZone) {
+		Instant startedAtFrom = TimeZoneUtils.toUtcInstant(date, timeZone);
+		Instant startedAtTo = TimeZoneUtils.toUtcInstant(date.plusDays(1), timeZone).minusNanos(1);
+
+		List<ActivityPreviewResult> activities = activityRepository
+			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtAsc(
+				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
+			)
+			.stream()
+			.map(activity -> ActivityMapper.toActivityPreviewResult(activity, null))
+			.toList();
+
+		return new ActivitiesByDateResult(date.format(DATE_FORMATTER), activities);
 	}
 }
