@@ -106,20 +106,6 @@ public class ActivityService {
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
 	}
 
-	private String generateThumbnailUrl(Activity activity) {
-		if (activity.getCoverImageObjectKey() == null) {
-			return null;
-		}
-
-		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
-				FileUploadDirectory.TIMELINE,
-				FileUploadImageSize.SMALL,
-				activity.getId().toString(),
-				activity.getCoverImageObjectKey()
-		);
-		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
-	}
-
 	@Transactional
 	public UpdateActivityStatusResult updateStatus(UpdateActivityStatusCommand command) {
 		if (!command.status().isChangeableRequestStatus()) {
@@ -203,6 +189,20 @@ public class ActivityService {
 			.toList();
 
 		return new ActivityTrackResult(activityId, trackPointResults, timelineMarkers);
+	}
+
+	private String generateThumbnailUrl(Activity activity) {
+		if (activity.getCoverImageObjectKey() == null) {
+			return null;
+		}
+
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+				FileUploadDirectory.TIMELINE,
+				FileUploadImageSize.SMALL,
+				activity.getId().toString(),
+				activity.getCoverImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
 	private String generateTimelineThumbnailUrl(Long activityId, Timeline timeline) {
