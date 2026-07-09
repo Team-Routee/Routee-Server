@@ -25,7 +25,6 @@ import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
-import org.sopt.routee.activity.internal.service.validator.ActivityStatusValidator;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
@@ -49,7 +48,6 @@ public class ActivityService {
 
 	private final ActivityRepository activityRepository;
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
-	private final ActivityStatusValidator activityStatusValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
 
 	@Transactional
@@ -94,7 +92,8 @@ public class ActivityService {
 
 	@Transactional
 	public UpdateActivityStatusResult updateStatus(UpdateActivityStatusCommand command) {
-		if (!activityStatusValidator.validate(command.status())) {
+		if (command.status() != ActivityStatus.ACTIVITY_IN_PROGRESS
+			&& command.status() != ActivityStatus.ACTIVITY_PAUSED) {
 			throw new InvalidActivityStatusTransitionException();
 		}
 
