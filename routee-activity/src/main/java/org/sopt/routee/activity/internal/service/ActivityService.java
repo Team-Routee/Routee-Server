@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.Set;
 
-import org.locationtech.jts.geom.LineString;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.exception.ActivityAlreadyCompletedException;
@@ -118,21 +117,16 @@ public class ActivityService {
 		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
 
-		Instant startedAt = TimeZoneUtils.toUtcInstantTime(command.startedAt(), command.timeZone());
 		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
-		LineString track = ActivityMapper.toLineString(command.track());
 
 		activity.updateCompletedData(
 			command.title(),
-			command.activityType(),
-			command.status(),
 			command.distance(),
 			command.durationSec(),
 			command.maxElevation(),
 			command.mapImageUrl(),
 			command.coverImageObjectKey(),
-			track,
-			startedAt,
+			ActivityMapper.toLineString(command.track()),
 			endedAt
 		);
 	}

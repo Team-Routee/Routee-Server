@@ -85,27 +85,22 @@ public class Activity {
 
 	public void updateCompletedData(
 		String title,
-		ActivityType activityType,
-		ActivityStatus activityStatus,
 		Integer distance,
 		Integer durationSec,
 		Integer maxElevation,
 		String mapImageUrl,
 		String coverImageObjectKey,
 		LineString track,
-		Instant startedAt,
 		Instant endedAt
 	) {
 		this.title = title;
-		this.activityType = activityType;
-		this.activityStatus = activityStatus;
+		this.activityStatus = ActivityStatus.ACTIVITY_COMPLETED;
 		this.distance = distance;
 		this.durationSec = durationSec;
 		this.maxElevation = maxElevation;
 		this.mapImageUrl = mapImageUrl;
 		this.coverImageObjectKey = coverImageObjectKey;
 		this.track = track;
-		this.startedAt = startedAt;
 		this.endedAt = endedAt;
 	}
 }
