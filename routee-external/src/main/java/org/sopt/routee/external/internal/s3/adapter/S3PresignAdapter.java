@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.sopt.routee.external.api.command.FileUploadGetPresignCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
@@ -11,8 +12,10 @@ import org.sopt.routee.external.internal.s3.config.S3Properties;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 @Component
@@ -36,6 +39,17 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 		String presignedUrl = generatePutPresignedUrl(presignedObjectKey);
 
 		return new FileUploadPresignResult(presignedUrl, objectKey);
+	}
+
+	@Override
+	public String generateGetPresignedUrl(FileUploadGetPresignCommand command) {
+		String presignedObjectKey = assemblePresignedObjectKey(
+			command.directory().path(),
+			command.imageSize().path(),
+			command.objectKey()
+		);
+
+		return generateGetPresignedUrl(presignedObjectKey);
 	}
 
 	private String generateStoredObjectKey(String resourceId, String extension) {
@@ -65,6 +79,22 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 			.build();
 
 		return s3Presigner.presignPutObject(presignRequest)
+			.url()
+			.toString();
+	}
+
+	private String generateGetPresignedUrl(String objectKey) {
+		GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+			.bucket(properties.bucket())
+			.key(objectKey)
+			.build();
+
+		GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+			.signatureDuration(Duration.ofMinutes(properties.presignedUrlExpiryMinutes()))
+			.getObjectRequest(getObjectRequest)
+			.build();
+
+		return s3Presigner.presignGetObject(presignRequest)
 			.url()
 			.toString();
 	}
