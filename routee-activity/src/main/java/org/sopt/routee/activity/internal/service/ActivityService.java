@@ -9,16 +9,23 @@ import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
+import org.sopt.routee.activity.internal.exception.ActivityAlreadyCompletedException;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
+import org.sopt.routee.activity.internal.exception.ActivityStatusAlreadySameException;
 import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityException;
+import org.sopt.routee.activity.internal.exception.InvalidActivityStatusTransitionException;
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
+import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
@@ -83,6 +90,27 @@ public class ActivityService {
 		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
+	}
+
+	@Transactional
+	public UpdateActivityStatusResult updateStatus(UpdateActivityStatusCommand command) {
+		if (!command.status().isChangeableRequestStatus()) {
+			throw new InvalidActivityStatusTransitionException();
+		}
+
+		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
+			.orElseThrow(ActivityNotFoundException::new);
+
+		if (activity.getActivityStatus().isCompleted()) {
+			throw new ActivityAlreadyCompletedException();
+		}
+
+		if (activity.getActivityStatus().isSameAs(command.status())) {
+			throw new ActivityStatusAlreadySameException();
+		}
+
+		activity.updateStatus(command.status());
+		return ActivityMapper.toStatusUpdateResult(activity);
 	}
 
 	@Transactional(readOnly = true)

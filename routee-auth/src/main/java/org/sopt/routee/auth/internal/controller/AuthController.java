@@ -7,10 +7,11 @@ import org.sopt.routee.auth.internal.controller.dto.response.TokenResponse;
 import org.sopt.routee.auth.internal.controller.dto.request.LoginRequest;
 import org.sopt.routee.auth.internal.controller.dto.request.LogoutRequest;
 import org.sopt.routee.auth.internal.controller.dto.request.ReissueRequest;
+import org.sopt.routee.auth.internal.exception.InvalidTokenException;
 import org.sopt.routee.auth.internal.service.dto.result.TokenResult;
-import org.sopt.routee.auth.security.util.TokenExtractor;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
+import org.sopt.routee.util.TokenExtractor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +55,12 @@ public class AuthController implements AuthControllerDocs {
 		@RequestHeader(name = HttpHeaders.AUTHORIZATION) String accessTokenWithBearer,
 		@Valid @RequestBody LogoutRequest logoutRequest
 	) {
-		authService.logout(TokenExtractor.extract(accessTokenWithBearer), logoutRequest.refreshToken());
+		String accessToken = TokenExtractor.extract(accessTokenWithBearer);
+		if (accessToken == null) {
+			throw new InvalidTokenException();
+		}
+
+		authService.logout(accessToken, logoutRequest.refreshToken());
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.LOGOUT_SUCCESS));
