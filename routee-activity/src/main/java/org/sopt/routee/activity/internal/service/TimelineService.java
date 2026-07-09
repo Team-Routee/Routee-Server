@@ -4,17 +4,12 @@ import java.time.Instant;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
-import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.mapper.TimelineMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineCommand;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
-import org.sopt.routee.external.api.command.FileUploadGetPresignCommand;
-import org.sopt.routee.external.api.port.FileUploadPresignPort;
-import org.sopt.routee.external.api.type.FileUploadDirectory;
-import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +22,6 @@ public class TimelineService {
 
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
-	private final FileUploadPresignPort fileUploadPresignPort;
 
 	@Transactional
 	public void create(CreateTimelineCommand command) {
@@ -46,16 +40,7 @@ public class TimelineService {
 		}
 
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
-			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(timeline)))
+			.map(TimelineMapper::toTimelineResult)
 			.toList();
-	}
-
-	private String generateImageUrl(Timeline timeline) {
-		FileUploadGetPresignCommand command = new FileUploadGetPresignCommand(
-			FileUploadDirectory.ACTIVITY,
-			FileUploadImageSize.LARGE,
-			timeline.getTimelineImageObjectKey()
-		);
-		return fileUploadPresignPort.generateGetPresignedUrl(command);
 	}
 }
