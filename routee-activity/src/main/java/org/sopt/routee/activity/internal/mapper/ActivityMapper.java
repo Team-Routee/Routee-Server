@@ -9,9 +9,12 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
+import org.sopt.routee.activity.internal.entity.route.Route;
 import org.sopt.routee.activity.internal.exception.InvalidTrackException;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.TrackPoint;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapRouteResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
@@ -53,6 +56,20 @@ public class ActivityMapper {
 
 	public static ActivityPreviewResult toActivityPreviewResult(Activity activity, String thumbnailUrl) {
 		return new ActivityPreviewResult(activity.getId(), activity.getTitle(), thumbnailUrl);
+	}
+
+	public static ActivityRecapResult toRecapResult(Activity activity, List<Route> routes) {
+		List<ActivityRecapRouteResult> routeResults = routes.stream()
+			.map(route -> new ActivityRecapRouteResult(route.getSequence(), route.getName()))
+			.toList();
+
+		return new ActivityRecapResult(
+			activity.getDistance(),
+			activity.getDurationSec(),
+			activity.getMaxElevation(),
+			activity.getMapImageUrl(),
+			routeResults
+		);
 	}
 
 	public static LineString toLineString(List<TrackPoint> trackPoints) {

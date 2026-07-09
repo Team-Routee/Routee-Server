@@ -8,6 +8,7 @@ import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUp
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
@@ -233,6 +234,22 @@ public interface ActivityControllerDocs {
 		@PathVariable(name = "activityId") Long activityId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") String timeZone
+	);
+
+	@Operation(summary = "활동 리캡 조회", description = "인증된 사용자의 활동 리캡 정보를 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "활동 리캡 조회 성공",
+			content = @Content(schema = @Schema(implementation = ActivityRecapResponse.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ActivityRecapResponse>> getRecap(
+		Long memberId,
+		@PathVariable(name = "activityId") Long activityId
 	);
 
 	@Operation(summary = "특정 날짜의 활동 목록 조회", description = "인증된 사용자의 특정 날짜에 완료된 활동 목록을 조회합니다.")
