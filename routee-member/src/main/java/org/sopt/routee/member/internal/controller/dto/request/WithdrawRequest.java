@@ -1,4 +1,4 @@
-package org.sopt.routee.member.internal.controller.dto;
+package org.sopt.routee.member.internal.controller.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

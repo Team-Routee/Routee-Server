@@ -11,6 +11,7 @@ public enum ErrorCode implements ErrorResultCode {
 
 	MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "필수 요청 파라미터가 누락되었습니다."),
 	MISSING_REQUEST_HEADER(HttpStatus.BAD_REQUEST, "필수 요청 헤더가 누락되었습니다."),
+	INVALID_HEADER(HttpStatus.BAD_REQUEST, "헤더값이 올바르지 않습니다."),
 	INVALID_REQUEST_BODY(HttpStatus.BAD_REQUEST, "요청 바디를 읽을 수 없습니다."),
 	INVALID_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "요청 파라미터 타입이 올바르지 않습니다."),
 	INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
