@@ -1,7 +1,10 @@
 package org.sopt.routee.external.api.type;
 
 public enum FileUploadImageSize {
-	ORIGINAL("original");
+	ORIGINAL("original"),
+	SMALL("small"),
+	MEDIUM("medium"),
+	LARGE("large");
 
 	private final String path;
 
