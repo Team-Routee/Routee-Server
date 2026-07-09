@@ -14,7 +14,6 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatist
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
-import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
@@ -63,7 +62,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@Valid @RequestBody ImageUrlRequest request
 	) {
 		ImageUrlResult result = activityService.generateImageUploadUrl(
-			new ImageUploadUrlCommand(activityId, memberId, request.fileName(), FileUploadImageType.ORIGINAL)
+			request.toCommand(activityId, memberId, FileUploadImageType.ORIGINAL)
 		);
 
 		return ResponseEntity.status(HttpStatus.OK)
@@ -77,7 +76,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@Valid @RequestBody ImageUrlRequest request
 	) {
 		ImageUrlResult result = activityService.generateImageUploadUrl(
-			new ImageUploadUrlCommand(activityId, memberId, request.fileName(), FileUploadImageType.RECAP)
+			request.toCommand(activityId, memberId, FileUploadImageType.RECAP)
 		);
 
 		return ResponseEntity.status(HttpStatus.OK)
