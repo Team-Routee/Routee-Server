@@ -11,6 +11,7 @@ import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRe
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
@@ -18,6 +19,8 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackRe
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
+import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
@@ -139,6 +142,17 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_TRACK_GET_SUCCESS, ActivityTrackResponse.from(result)));
+	}
+
+	@GetMapping("/activity/{activityId}/recap")
+	public ResponseEntity<SuccessResponse<ActivityRecapResponse>> getRecap(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId
+	) {
+		ActivityRecapResult result = activityService.getRecap(GetActivityRecapCommand.of(activityId, memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_RECAP_GET_SUCCESS, ActivityRecapResponse.from(result)));
 	}
 
 	@GetMapping("/archive/activity")
