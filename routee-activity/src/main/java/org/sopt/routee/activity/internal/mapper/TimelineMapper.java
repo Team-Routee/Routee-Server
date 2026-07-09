@@ -28,11 +28,11 @@ public class TimelineMapper {
 			.build();
 	}
 
-	public static TimelineResult toTimelineResult(Timeline timeline) {
+	public static TimelineResult toTimelineResult(Timeline timeline, String imageUrl) {
 		return new TimelineResult(
 			timeline.getId(),
 			timeline.getTitle(),
-			null,
+			imageUrl,
 			timeline.getCreatedAt()
 		);
 	}
