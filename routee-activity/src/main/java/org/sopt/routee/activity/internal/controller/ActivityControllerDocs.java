@@ -1,15 +1,15 @@
 package org.sopt.routee.activity.internal.controller;
 
-import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import java.time.LocalDate;
 
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
-import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -192,7 +192,7 @@ public interface ActivityControllerDocs {
 					@ExampleObject(name = "INVALID_TIME_ZONE",
 						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}"),
 					@ExampleObject(name = "INVALID_TRACK",
-						value = "{\"status\":400,\"code\":\"INVALID_TRACK\",\"message\":\"트랙 정보가 올바르지 않습니다.\"}")
+						value = "{\"status\":400,\"code\":\"INVALID_TRACK\",\"message\":\"경로 정보가 올바르지 않습니다.\"}")
 				})),
 		@ApiResponse(responseCode = "401", description = "인증 실패",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
