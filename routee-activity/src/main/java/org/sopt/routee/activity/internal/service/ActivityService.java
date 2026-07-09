@@ -28,9 +28,13 @@ import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
+import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
+import org.sopt.routee.external.api.type.FileUploadDirectory;
+import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +54,7 @@ public class ActivityService {
 	private final ActivityRepository activityRepository;
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
+	private final FileImageAccessUrlPort fileImageAccessUrlPort;
 
 	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
@@ -89,6 +94,20 @@ public class ActivityService {
 		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
+	}
+
+	private String generateThumbnailUrl(Activity activity) {
+		if (activity.getCoverImageObjectKey() == null) {
+			return null;
+		}
+
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+				FileUploadDirectory.TIMELINE,
+				FileUploadImageSize.SMALL,
+				activity.getId().toString(),
+				activity.getCoverImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
 	@Transactional
@@ -131,7 +150,7 @@ public class ActivityService {
 				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
 			)
 			.stream()
-			.map(activity -> ActivityMapper.toActivityPreviewResult(activity, null))
+			.map(activity -> ActivityMapper.toActivityPreviewResult(activity, generateThumbnailUrl(activity)))
 			.toList();
 
 		return new ActivitiesByDateResult(date.format(DATE_FORMATTER), activities);
