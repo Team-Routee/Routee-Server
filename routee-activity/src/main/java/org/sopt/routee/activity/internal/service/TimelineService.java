@@ -46,7 +46,7 @@ public class TimelineService {
 		}
 
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
-			.map(timeline -> TimelineMapper.toResult(timeline, generateImageUrl(timeline)))
+			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(timeline)))
 			.toList();
 	}
 

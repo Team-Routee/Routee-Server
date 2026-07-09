@@ -28,7 +28,7 @@ public class TimelineMapper {
 			.build();
 	}
 
-	public static TimelineResult toResult(Timeline timeline, String imageUrl) {
+	public static TimelineResult toTimelineResult(Timeline timeline, String imageUrl) {
 		return new TimelineResult(
 			timeline.getId(),
 			timeline.getTitle(),
