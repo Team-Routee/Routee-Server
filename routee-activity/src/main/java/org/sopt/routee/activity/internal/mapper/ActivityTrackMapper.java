@@ -50,7 +50,8 @@ public class ActivityTrackMapper {
 			timeline.getId(),
 			thumbnailUrl,
 			location.getY(),
-			location.getX()
+			location.getX(),
+			timeline.getTrackPointIndex()
 		);
 	}
 }
