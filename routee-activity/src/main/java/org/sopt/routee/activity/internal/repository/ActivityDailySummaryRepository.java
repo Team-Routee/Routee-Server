@@ -11,4 +11,6 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 	List<ActivityDailySummary> findByMemberIdAndActivityDateBetweenOrderByActivityDateAsc(
 		Long memberId, LocalDate startDate, LocalDate endDate
 	);
+
+	void deleteByMemberId(Long memberId);
 }

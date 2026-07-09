@@ -22,4 +22,6 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 		Instant startedAtFrom,
 		Instant startedAtTo
 	);
+
+	void deleteByMemberId(Long memberId);
 }

@@ -3,8 +3,7 @@ package org.sopt.routee.activity.internal.service;
 import java.time.YearMonth;
 import java.util.List;
 
-import org.sopt.routee.activity.api.result.ActivityDailySummaryResult;
-import org.sopt.routee.activity.api.usecase.ActivityUseCase;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityDailySummaryResult;
 import org.sopt.routee.activity.internal.mapper.ActivityDailySummaryMapper;
 import org.sopt.routee.activity.internal.repository.ActivityDailySummaryRepository;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ActivityDailySummaryService implements ActivityUseCase {
+public class ActivityDailySummaryService {
 
 	private final ActivityDailySummaryRepository activityDailySummaryRepository;
 
@@ -26,5 +25,10 @@ public class ActivityDailySummaryService implements ActivityUseCase {
 			.stream()
 			.map(ActivityDailySummaryMapper::toResult)
 			.toList();
+	}
+
+	@Transactional
+	public void deleteActivityDailySummaries(long memberId) {
+		activityDailySummaryRepository.deleteByMemberId(memberId);
 	}
 }
