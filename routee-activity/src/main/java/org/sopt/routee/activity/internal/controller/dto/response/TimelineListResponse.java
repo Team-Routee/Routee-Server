@@ -10,7 +10,7 @@ public record TimelineListResponse(
 ) {
 	public static TimelineListResponse of(Long activityId, List<TimelineResult> results) {
 		List<TimelineResponse> timelines = results.stream()
-			.map(TimelineResponse::of)
+			.map(TimelineResponse::from)
 			.toList();
 		return new TimelineListResponse(activityId, timelines);
 	}

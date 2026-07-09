@@ -10,7 +10,7 @@ public record TimelineResponse(
 	String imageUrl,
 	Instant createdAt
 ) {
-	public static TimelineResponse of(TimelineResult result) {
+	public static TimelineResponse from(TimelineResult result) {
 		return new TimelineResponse(result.timelineId(), result.title(), result.imageUrl(), result.createdAt());
 	}
 }
