@@ -78,4 +78,8 @@ public class Activity {
 
 	@Column(name = "member_id", nullable = false, updatable = false)
 	private Long memberId;
+
+	public void updateStatus(ActivityStatus status) {
+		this.activityStatus = status;
+	}
 }
