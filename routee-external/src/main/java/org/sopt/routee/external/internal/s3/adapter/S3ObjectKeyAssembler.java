@@ -7,6 +7,8 @@ import org.sopt.routee.external.api.type.FileUploadImageSize;
 
 final class S3ObjectKeyAssembler {
 
+	private static final String ACTIVITY_ROOT_PATH = "activity";
+
 	private S3ObjectKeyAssembler() {
 	}
 
@@ -29,5 +31,17 @@ final class S3ObjectKeyAssembler {
 				objectKey
 			);
 		};
+	}
+
+	static String assembleUploadObjectKey(
+		FileUploadDirectory directory,
+		FileUploadImageSize imageSize,
+		String activityId,
+		String objectKey
+	) {
+		return "%s/%s".formatted(
+			ACTIVITY_ROOT_PATH,
+			assemble(directory, imageSize, activityId, objectKey)
+		);
 	}
 }
