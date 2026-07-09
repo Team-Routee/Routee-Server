@@ -30,7 +30,7 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 		);
 		String presignedObjectKey = assemblePresignedObjectKey(
 			command.directory().path(),
-			command.imageSize().path(),
+			command.imageType().path(),
 			objectKey
 		);
 		String presignedUrl = generatePutPresignedUrl(presignedObjectKey);
@@ -49,8 +49,8 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 			.toLowerCase(Locale.ROOT);
 	}
 
-	private String assemblePresignedObjectKey(String directoryPath, String imageSizePath, String storedObjectKey) {
-		return "%s/%s/%s".formatted(directoryPath, imageSizePath, storedObjectKey);
+	private String assemblePresignedObjectKey(String directoryPath, String imageTypePath, String storedObjectKey) {
+		return "%s/%s/%s".formatted(directoryPath, imageTypePath, storedObjectKey);
 	}
 
 	private String generatePutPresignedUrl(String objectKey) {

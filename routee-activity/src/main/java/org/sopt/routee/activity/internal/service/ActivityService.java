@@ -21,8 +21,6 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateActivityComma
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
-import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
-import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
@@ -31,7 +29,6 @@ import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
-import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,7 +80,7 @@ public class ActivityService {
 
 		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
 			FileUploadDirectory.ACTIVITY,
-			FileUploadImageSize.ORIGINAL,
+			command.imageType(),
 			command.activityId().toString(),
 			command.fileName()
 		);
