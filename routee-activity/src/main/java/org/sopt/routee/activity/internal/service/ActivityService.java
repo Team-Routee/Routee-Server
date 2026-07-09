@@ -10,6 +10,8 @@ import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
+import org.sopt.routee.activity.internal.entity.timeline.Timeline;
+import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityAlreadyCompletedException;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.ActivityStatusAlreadySameException;
@@ -17,7 +19,10 @@ import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityExce
 import org.sopt.routee.activity.internal.exception.InvalidActivityStatusTransitionException;
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
+import org.sopt.routee.activity.internal.mapper.ActivityTrackMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
+import org.sopt.routee.activity.internal.repository.TimelineRepository;
+import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
@@ -26,10 +31,13 @@ import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlComma
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
+import org.sopt.routee.activity.internal.service.dto.result.TimelineMarkerResult;
+import org.sopt.routee.activity.internal.service.dto.result.TrackPointResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
@@ -56,6 +64,7 @@ public class ActivityService {
 	);
 
 	private final ActivityRepository activityRepository;
+	private final TimelineRepository timelineRepository;
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
@@ -99,20 +108,6 @@ public class ActivityService {
 		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
-	}
-
-	private String generateThumbnailUrl(Activity activity) {
-		if (activity.getCoverImageObjectKey() == null) {
-			return null;
-		}
-
-		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
-				FileUploadDirectory.TIMELINE,
-				FileUploadImageSize.SMALL,
-				activity.getId().toString(),
-				activity.getCoverImageObjectKey()
-		);
-		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
 	@Transactional
@@ -189,5 +184,49 @@ public class ActivityService {
 			.toList();
 
 		return new ActivitiesByDateResult(date.format(DATE_FORMATTER), activities);
+	}
+
+	@Transactional(readOnly = true)
+	public ActivityTrackResult getTrack(Long activityId, Long memberId) {
+		Activity activity = activityRepository.findByIdAndMemberId(activityId, memberId)
+			.orElseThrow(ActivityNotFoundException::new);
+
+		List<TrackPoint> trackPoints = ActivityTrackMapper.toTrackPoints(activity.getTrack());
+		List<TrackPointResult> trackPointResults = trackPoints.stream()
+			.map(ActivityTrackMapper::toTrackPointResult)
+			.toList();
+
+		List<Timeline> timelines = timelineRepository.findByActivityIdAndTimelineStatus(
+			activityId, TimelineStatus.SUCCESSFUL_CREATED
+		);
+		List<TimelineMarkerResult> timelineMarkers = timelines.stream()
+			.map(timeline -> ActivityTrackMapper.toTimelineMarker(timeline, generateTimelineThumbnailUrl(activityId, timeline)))
+			.toList();
+
+		return new ActivityTrackResult(activityId, trackPointResults, timelineMarkers);
+	}
+
+	private String generateThumbnailUrl(Activity activity) {
+		if (activity.getCoverImageObjectKey() == null) {
+			return null;
+		}
+
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+				FileUploadDirectory.TIMELINE,
+				FileUploadImageSize.SMALL,
+				activity.getId().toString(),
+				activity.getCoverImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
+	}
+
+	private String generateTimelineThumbnailUrl(Long activityId, Timeline timeline) {
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+			FileUploadDirectory.TIMELINE,
+			FileUploadImageSize.SMALL,
+			activityId.toString(),
+			timeline.getTimelineImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 }

@@ -1,6 +1,6 @@
 package org.sopt.routee.activity.internal.controller.dto.request;
 
-import org.sopt.routee.activity.internal.service.dto.command.TrackPoint;
+import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

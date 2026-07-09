@@ -11,6 +11,7 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateR
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -273,5 +274,21 @@ public interface ActivityControllerDocs {
 		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") String timeZone
+	);
+
+	@Operation(summary = "활동 경로 데이터 조회", description = "활동 기록에 속하는 경로 좌표와 타임라인 좌표 목록을 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "활동 경로 데이터 조회 성공",
+			content = @Content(schema = @Schema(implementation = ActivityTrackResponse.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ActivityTrackResponse>> getTrack(
+		Long memberId,
+		@PathVariable(name = "activityId") Long activityId
 	);
 }
