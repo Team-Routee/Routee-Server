@@ -1,12 +1,14 @@
 package org.sopt.routee.external.api.type;
 
-public enum FileUploadImageType {
+public enum FileUploadImageSize {
 	ORIGINAL("original"),
-	RECAP("recap");
+	SMALL("small"),
+	MEDIUM("medium"),
+	LARGE("large");
 
 	private final String path;
 
-	FileUploadImageType(String path) {
+	FileUploadImageSize(String path) {
 		this.path = path;
 	}
 

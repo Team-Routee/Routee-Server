@@ -18,7 +18,8 @@ import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsRe
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
-import org.sopt.routee.external.api.type.FileUploadImageType;
+import org.sopt.routee.external.api.type.FileUploadDirectory;
+import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.HttpStatus;
@@ -62,7 +63,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@Valid @RequestBody ImageUrlRequest request
 	) {
 		ImageUrlResult result = activityService.generateImageUploadUrl(
-			request.toCommand(activityId, memberId, FileUploadImageType.ORIGINAL)
+			request.toCommand(activityId, memberId, FileUploadDirectory.TIMELINE, FileUploadImageSize.ORIGINAL)
 		);
 
 		return ResponseEntity.status(HttpStatus.OK)
@@ -76,7 +77,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@Valid @RequestBody ImageUrlRequest request
 	) {
 		ImageUrlResult result = activityService.generateImageUploadUrl(
-			request.toCommand(activityId, memberId, FileUploadImageType.RECAP)
+			request.toCommand(activityId, memberId, FileUploadDirectory.RECAP, null)
 		);
 
 		return ResponseEntity.status(HttpStatus.OK)

@@ -54,7 +54,7 @@ public interface TimelineControllerDocs {
 		@RequestHeader("Time-Zone") String timeZone,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = CreateTimelineRequest.class),
-				examples = @ExampleObject(value = "{\"title\":\"정상 도착\",\"objectKey\":\"timelines/1/550e8400-summit.jpg\",\"recordedAt\":\"2026-07-02T10:45:00\",\"trackPointIndex\":35,\"location\":{\"longitude\":127.123456,\"latitude\":37.123456,\"altitude\":542.3,\"measure\":35},\"status\":\"SUCCESSFUL_CREATED\"}")))
+				examples = @ExampleObject(value = "{\"title\":\"정상 도착\",\"objectKey\":\"550e8400-summit.jpg\",\"recordedAt\":\"2026-07-02T10:45:00\",\"trackPointIndex\":35,\"location\":{\"longitude\":127.123456,\"latitude\":37.123456,\"altitude\":542.3,\"measure\":35},\"status\":\"SUCCESSFUL_CREATED\"}")))
 		@Valid @RequestBody CreateTimelineRequest request
 	);
 }

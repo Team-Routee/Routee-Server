@@ -41,4 +41,5 @@ jwt:
 s3:
   bucket: ${S3_BUCKET}
   region: ${AWS_REGION}
+  endpoint: ${S3_ENDPOINT}
   presigned-url-expiry-minutes: ${S3_PRESIGNED_URL_EXPIRY_MINUTES:10}

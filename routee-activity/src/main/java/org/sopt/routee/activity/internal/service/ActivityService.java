@@ -28,7 +28,6 @@ import org.sopt.routee.activity.internal.service.validator.ActivityImageFileName
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
-import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,8 +78,8 @@ public class ActivityService {
 		}
 
 		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
-			FileUploadDirectory.ACTIVITY,
-			command.imageType(),
+			command.directory(),
+			command.imageSize(),
 			command.activityId().toString(),
 			command.fileName()
 		);
