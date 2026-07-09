@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,11 +42,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 public class ActivityController implements ActivityControllerDocs {
 
 	private final ActivityService activityService;
 
-	@PostMapping("/api/v1/activity")
+	@PostMapping("/activity")
 	public ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader("Time-Zone") String timeZone,
@@ -57,7 +59,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_CREATED, ActivityCreateResponse.from(result)));
 	}
 
-	@PostMapping("/api/v1/activity/{activityId}/image-url")
+	@PostMapping("/activity/{activityId}/image-url")
 	public ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
@@ -69,7 +71,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.IMAGE_UPLOAD_URL_CREATED, ImageUrlResponse.of(result)));
 	}
 
-	@PatchMapping("/api/v1/activity/{activityId}/status")
+	@PatchMapping("/activity/{activityId}/status")
 	public ResponseEntity<SuccessResponse<ActivityStatusResponse>> updateStatus(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
@@ -81,7 +83,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATUS_UPDATED, ActivityStatusResponse.from(result)));
 	}
 
-	@GetMapping("/api/v1/activity/{activityId}/statistics")
+	@GetMapping("/activity/{activityId}/statistics")
 	public ResponseEntity<SuccessResponse<ActivityStatisticsResponse>> getStatistics(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
@@ -93,7 +95,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS, ActivityStatisticsResponse.from(result)));
 	}
 
-	@GetMapping("/api/v1/archive/activity")
+	@GetMapping("/archive/activity")
 	public ResponseEntity<SuccessResponse<ActivitiesByDateResponse>> getActivitiesByDate(
 		@AuthenticationPrincipal Long memberId,
 		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
