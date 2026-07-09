@@ -25,11 +25,10 @@ public class ActivityTrackMapper {
 		CoordinateSequence sequence = track.getCoordinateSequence();
 		List<TrackPoint> trackPoints = new ArrayList<>(sequence.size());
 		for (int i = 0; i < sequence.size(); i++) {
-			double elevation = sequence.getZ(i);
 			trackPoints.add(new TrackPoint(
 				sequence.getY(i),
 				sequence.getX(i),
-				Double.isNaN(elevation) ? null : elevation,
+				(int) sequence.getZ(i),
 				(int) sequence.getM(i)
 			));
 		}

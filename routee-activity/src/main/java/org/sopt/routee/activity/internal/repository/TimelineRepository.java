@@ -9,5 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 	boolean existsByActivityIdAndTrackPointIndex(Long activityId, Integer trackPointIndex);
 
+	List<Timeline> findByActivityIdOrderByCreatedAtAsc(Long activityId);
+
 	List<Timeline> findByActivityIdAndTimelineStatus(Long activityId, TimelineStatus timelineStatus);
 }

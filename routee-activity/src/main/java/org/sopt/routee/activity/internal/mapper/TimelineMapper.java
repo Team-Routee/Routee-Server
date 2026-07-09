@@ -9,6 +9,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineCommand;
+import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
 
 public class TimelineMapper {
 
@@ -25,6 +26,15 @@ public class TimelineMapper {
 			.timelineStatus(command.status())
 			.activity(activity)
 			.build();
+	}
+
+	public static TimelineResult toTimelineResult(Timeline timeline, String imageUrl) {
+		return new TimelineResult(
+			timeline.getId(),
+			timeline.getTitle(),
+			imageUrl,
+			timeline.getCreatedAt()
+		);
 	}
 
 	private static Point toPoint(CreateTimelineCommand command) {
