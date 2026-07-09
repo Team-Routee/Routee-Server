@@ -1,18 +1,23 @@
 package org.sopt.routee.activity.internal.controller;
 
+import java.time.LocalDate;
+
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -183,6 +188,29 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<ActivityStatisticsResponse>> getStatistics(
 		Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
+		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
+		@RequestHeader("Time-Zone") String timeZone
+	);
+
+	@Operation(summary = "특정 날짜의 활동 목록 조회", description = "인증된 사용자의 특정 날짜에 완료된 활동 목록을 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "특정 날짜의 활동 목록 조회 성공",
+			content = @Content(schema = @Schema(implementation = ActivitiesByDateResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_PARAMETER_TYPE",
+						value = "{\"status\":400,\"code\":\"INVALID_PARAMETER_TYPE\",\"message\":\"요청 파라미터 타입이 올바르지 않습니다.\"}"),
+					@ExampleObject(name = "INVALID_TIME_ZONE",
+						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class)))
+	})
+	ResponseEntity<SuccessResponse<ActivitiesByDateResponse>> getActivitiesByDate(
+		Long memberId,
+		@Parameter(description = "조회할 날짜", example = "2026-07-02", required = true)
+		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") String timeZone
 	);

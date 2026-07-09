@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.controller;
 
 import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
@@ -11,10 +12,12 @@ import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
@@ -22,6 +25,7 @@ import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +36,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -39,12 +44,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/activity")
+@RequestMapping("/api/v1")
 public class ActivityController implements ActivityControllerDocs {
 
 	private final ActivityService activityService;
 
-	@PostMapping
+	@PostMapping("/activity")
 	public ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader("Time-Zone") String timeZone,
@@ -56,7 +61,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_CREATED, ActivityCreateResponse.from(result)));
 	}
 
-	@PostMapping("/{activityId}/image-url")
+	@PostMapping("/activity/{activityId}/image-url")
 	public ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
@@ -84,7 +89,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.IMAGE_UPLOAD_URL_CREATED, ImageUrlResponse.of(result)));
 	}
 
-	@PatchMapping("/{activityId}/status")
+	@PatchMapping("/activity/{activityId}/status")
 	public ResponseEntity<SuccessResponse<ActivityStatusResponse>> updateStatus(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
@@ -96,7 +101,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATUS_UPDATED, ActivityStatusResponse.from(result)));
 	}
 
-	@GetMapping("/{activityId}/statistics")
+	@GetMapping("/activity/{activityId}/statistics")
 	public ResponseEntity<SuccessResponse<ActivityStatisticsResponse>> getStatistics(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
@@ -106,6 +111,18 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS, ActivityStatisticsResponse.from(result)));
+	}
+
+	@GetMapping("/archive/activity")
+	public ResponseEntity<SuccessResponse<ActivitiesByDateResponse>> getActivitiesByDate(
+		@AuthenticationPrincipal Long memberId,
+		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+		@RequestHeader("Time-Zone") String timeZone
+	) {
+		ActivitiesByDateResult result = activityService.getActivitiesByDate(memberId, date, parseTimeZone(timeZone));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ARCHIVE_ACTIVITY_LIST_GET_SUCCESS, ActivitiesByDateResponse.from(result)));
 	}
 
 	private ZoneId parseTimeZone(String timeZone) {

@@ -5,8 +5,7 @@ import java.time.Instant;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
-import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
-import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 
@@ -39,5 +38,9 @@ public class ActivityMapper {
 			activity.getDurationSec(),
 			activity.getMaxElevation()
 		);
+	}
+
+	public static ActivityPreviewResult toActivityPreviewResult(Activity activity, String thumbnailUrl) {
+		return new ActivityPreviewResult(activity.getId(), activity.getTitle(), thumbnailUrl);
 	}
 }
