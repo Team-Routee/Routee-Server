@@ -1,6 +1,6 @@
 package org.sopt.routee.activity.internal.mapper;
 
-import org.sopt.routee.activity.api.result.ActivityDailySummaryResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityDailySummaryResult;
 import org.sopt.routee.activity.internal.entity.summary.ActivityDailySummary;
 
 import lombok.AccessLevel;

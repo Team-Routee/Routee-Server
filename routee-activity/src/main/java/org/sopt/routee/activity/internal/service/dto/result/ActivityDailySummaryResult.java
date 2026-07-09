@@ -1,4 +1,4 @@
-package org.sopt.routee.activity.api.result;
+package org.sopt.routee.activity.internal.service.dto.result;
 
 import java.time.LocalDate;
 
