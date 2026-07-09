@@ -9,6 +9,7 @@ import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCom
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -39,6 +40,7 @@ public record ActivityCompleteRequest(
 	String coverImageObjectKey,
 
 	@NotEmpty(message = "track은 필수입니다.")
+	@Valid
 	List<ActivityTrackPoint> track,
 
 	@NotNull(message = "endedAt은 필수입니다.")
