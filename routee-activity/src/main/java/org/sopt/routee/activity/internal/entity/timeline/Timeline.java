@@ -40,7 +40,7 @@ public class Timeline {
 	@Tsid
 	private Long id;
 
-	@Column(name = "title", nullable = false)
+	@Column(name = "title")
 	private String title;
 
 	@Builder.Default
