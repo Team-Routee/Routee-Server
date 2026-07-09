@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
@@ -22,11 +23,15 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateActivityComma
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
+import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
@@ -50,6 +55,7 @@ public class ActivityService {
 	private final ActivityRepository activityRepository;
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
+	private final FileImageAccessUrlPort fileImageAccessUrlPort;
 
 	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
@@ -81,14 +87,28 @@ public class ActivityService {
 		}
 
 		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
-			FileUploadDirectory.ACTIVITY,
-			FileUploadImageSize.ORIGINAL,
+			command.directory(),
+			command.imageSize(),
 			command.activityId().toString(),
 			command.fileName()
 		);
 		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
 
 		return new ImageUrlResult(result.presignedUrl(), result.objectKey());
+	}
+
+	private String generateThumbnailUrl(Activity activity) {
+		if (activity.getCoverImageObjectKey() == null) {
+			return null;
+		}
+
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+				FileUploadDirectory.TIMELINE,
+				FileUploadImageSize.SMALL,
+				activity.getId().toString(),
+				activity.getCoverImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
 	@Transactional
@@ -138,5 +158,21 @@ public class ActivityService {
 
 		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
 		return ActivityMapper.toStatisticsResult(activity, activityDate.format(DATE_FORMATTER));
+	}
+
+	@Transactional(readOnly = true)
+	public ActivitiesByDateResult getActivitiesByDate(Long memberId, LocalDate date, ZoneId timeZone) {
+		Instant startedAtFrom = TimeZoneUtils.toUtcInstant(date, timeZone);
+		Instant startedAtTo = TimeZoneUtils.toUtcInstant(date.plusDays(1), timeZone).minusNanos(1);
+
+		List<ActivityPreviewResult> activities = activityRepository
+			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtAsc(
+				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
+			)
+			.stream()
+			.map(activity -> ActivityMapper.toActivityPreviewResult(activity, generateThumbnailUrl(activity)))
+			.toList();
+
+		return new ActivitiesByDateResult(date.format(DATE_FORMATTER), activities);
 	}
 }

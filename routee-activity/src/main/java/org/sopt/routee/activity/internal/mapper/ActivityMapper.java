@@ -13,6 +13,7 @@ import org.sopt.routee.activity.internal.exception.InvalidTrackException;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.TrackPoint;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 
 import lombok.AccessLevel;
@@ -48,6 +49,10 @@ public class ActivityMapper {
 			activity.getDurationSec(),
 			activity.getMaxElevation()
 		);
+	}
+
+	public static ActivityPreviewResult toActivityPreviewResult(Activity activity, String thumbnailUrl) {
+		return new ActivityPreviewResult(activity.getId(), activity.getTitle(), thumbnailUrl);
 	}
 
 	public static LineString toLineString(List<TrackPoint> trackPoints) {
