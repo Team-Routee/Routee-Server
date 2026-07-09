@@ -13,7 +13,6 @@ import org.sopt.routee.activity.internal.entity.route.Route;
 import org.sopt.routee.activity.internal.exception.InvalidTrackException;
 import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
-import org.sopt.routee.activity.internal.service.dto.command.TrackPoint;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapRouteResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
