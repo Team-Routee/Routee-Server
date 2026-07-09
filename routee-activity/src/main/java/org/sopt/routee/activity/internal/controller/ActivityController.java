@@ -11,10 +11,12 @@ import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
@@ -106,6 +108,17 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS, ActivityStatisticsResponse.from(result)));
+	}
+
+	@GetMapping("/{activityId}/track")
+	public ResponseEntity<SuccessResponse<ActivityTrackResponse>> getTrack(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId
+	) {
+		ActivityTrackResult result = activityService.getTrack(activityId, memberId);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_TRACK_GET_SUCCESS, ActivityTrackResponse.from(result)));
 	}
 
 	private ZoneId parseTimeZone(String timeZone) {
