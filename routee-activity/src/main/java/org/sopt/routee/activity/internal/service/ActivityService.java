@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
+import org.sopt.routee.activity.internal.exception.ActivityAlreadyCompletedException;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.ActivityStatusAlreadySameException;
 import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityException;
@@ -99,6 +100,10 @@ public class ActivityService {
 
 		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
+
+		if (activity.getActivityStatus() == ActivityStatus.ACTIVITY_COMPLETED) {
+			throw new ActivityAlreadyCompletedException();
+		}
 
 		if (activity.getActivityStatus() == command.status()) {
 			throw new ActivityStatusAlreadySameException();

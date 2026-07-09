@@ -120,7 +120,9 @@ public interface ActivityControllerDocs {
 					@ExampleObject(name = "INVALID_ACTIVITY_STATUS_TRANSITION",
 						value = "{\"status\":409,\"code\":\"INVALID_ACTIVITY_STATUS_TRANSITION\",\"message\":\"변경할 수 없는 활동 상태입니다.\"}"),
 					@ExampleObject(name = "ACTIVITY_STATUS_ALREADY_SAME",
-						value = "{\"status\":409,\"code\":\"ACTIVITY_STATUS_ALREADY_SAME\",\"message\":\"이미 요청한 활동 상태입니다.\"}")
+						value = "{\"status\":409,\"code\":\"ACTIVITY_STATUS_ALREADY_SAME\",\"message\":\"이미 요청한 활동 상태입니다.\"}"),
+					@ExampleObject(name = "ACTIVITY_ALREADY_COMPLETED",
+						value = "{\"status\":409,\"code\":\"ACTIVITY_ALREADY_COMPLETED\",\"message\":\"이미 완료된 활동입니다.\"}")
 				}))
 	})
 	ResponseEntity<SuccessResponse<ActivityStatusResponse>> updateStatus(
