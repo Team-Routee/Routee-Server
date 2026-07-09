@@ -7,7 +7,7 @@ import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
-import org.sopt.routee.activity.internal.service.dto.command.TrackPoint;
+import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineMarkerResult;
 import org.sopt.routee.activity.internal.service.dto.result.TrackPointResult;
 

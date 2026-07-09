@@ -1,4 +1,4 @@
-package org.sopt.routee.activity.internal.service.dto.command;
+package org.sopt.routee.activity.internal.service.dto.vo;
 
 public record TrackPoint(
 	double latitude,
