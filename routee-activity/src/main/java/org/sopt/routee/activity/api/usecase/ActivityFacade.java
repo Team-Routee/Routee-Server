@@ -9,6 +9,7 @@ import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.RouteService;
 import org.sopt.routee.activity.internal.service.TimelineService;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,11 +27,11 @@ public class ActivityFacade implements ActivityUseCase {
 			.toList();
 	}
 
-	@Override
+	@Transactional
 	public void deleteForMemberWithdrawal(long memberId) {
-		activityService.deleteActivitiesByMemberId(memberId);
 		routeService.deleteRoutesByMemberId(memberId);
 		activityDailySummaryService.deleteActivityDailySummaries(memberId);
 		timelineService.deleteTimelinesByMemberId(memberId);
+		activityService.deleteActivitiesByMemberId(memberId);
 	}
 }
