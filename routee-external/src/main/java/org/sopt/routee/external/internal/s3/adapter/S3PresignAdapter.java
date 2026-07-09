@@ -25,12 +25,12 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 	@Override
 	public FileUploadPresignResult generatePutPresignedUrl(FileUploadPresignCommand command) {
 		String objectKey = generateStoredObjectKey(
-			command.resourceId(),
 			parseExtension(command.fileName())
 		);
-		String presignedObjectKey = assemblePresignedObjectKey(
-			command.directory().path(),
-			command.imageSize().path(),
+		String presignedObjectKey = S3ObjectKeyAssembler.assembleUploadObjectKey(
+			command.directory(),
+			command.imageSize(),
+			command.activityId(),
 			objectKey
 		);
 		String presignedUrl = generatePutPresignedUrl(presignedObjectKey);
@@ -38,19 +38,14 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 		return new FileUploadPresignResult(presignedUrl, objectKey);
 	}
 
-	private String generateStoredObjectKey(String resourceId, String extension) {
+	private String generateStoredObjectKey(String extension) {
 		String uuid = UUID.randomUUID().toString().replace("-", "");
-		return "%s/%s.%s"
-			.formatted(resourceId, uuid, extension);
+		return "%s.%s".formatted(uuid, extension);
 	}
 
 	private String parseExtension(String fileName) {
 		return fileName.substring(fileName.lastIndexOf('.') + 1)
 			.toLowerCase(Locale.ROOT);
-	}
-
-	private String assemblePresignedObjectKey(String directoryPath, String imageSizePath, String storedObjectKey) {
-		return "%s/%s/%s".formatted(directoryPath, imageSizePath, storedObjectKey);
 	}
 
 	private String generatePutPresignedUrl(String objectKey) {
