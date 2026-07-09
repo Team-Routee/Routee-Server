@@ -42,7 +42,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ActivityService {
 
-	private static final DateTimeFormatter TITLE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 	private static final Set<ActivityStatus> ACTIVE_STATUSES = EnumSet.of(
 		ActivityStatus.ACTIVITY_IN_PROGRESS,
 		ActivityStatus.ACTIVITY_PAUSED
@@ -65,7 +65,7 @@ public class ActivityService {
 			.atZone(command.timeZone())
 			.toInstant();
 		LocalDate activityDate = TimeZoneUtils.toLocalDate(startedAt, command.timeZone());
-		String title = activityDate.format(TITLE_DATE_FORMATTER) + " 기록";
+		String title = activityDate.format(DATE_FORMATTER) + " 기록";
 		Activity activity = ActivityMapper.toEntity(command, title, startedAt);
 		Activity savedActivity = activityRepository.save(activity);
 		return new CreateActivityResult(savedActivity.getId(), title);
