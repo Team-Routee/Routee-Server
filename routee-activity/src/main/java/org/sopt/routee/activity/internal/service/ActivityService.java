@@ -92,19 +92,18 @@ public class ActivityService {
 
 	@Transactional
 	public UpdateActivityStatusResult updateStatus(UpdateActivityStatusCommand command) {
-		if (command.status() != ActivityStatus.ACTIVITY_IN_PROGRESS
-			&& command.status() != ActivityStatus.ACTIVITY_PAUSED) {
+		if (!command.status().isChangeableRequestStatus()) {
 			throw new InvalidActivityStatusTransitionException();
 		}
 
 		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
 
-		if (activity.getActivityStatus() == ActivityStatus.ACTIVITY_COMPLETED) {
+		if (activity.getActivityStatus().isCompleted()) {
 			throw new ActivityAlreadyCompletedException();
 		}
 
-		if (activity.getActivityStatus() == command.status()) {
+		if (activity.getActivityStatus().isSameAs(command.status())) {
 			throw new ActivityStatusAlreadySameException();
 		}
 
