@@ -4,7 +4,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
 
-import org.sopt.routee.activity.api.result.ActivityDailySummaryResult;
+import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
 import org.sopt.routee.activity.api.usecase.ActivityUseCase;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
@@ -59,6 +59,8 @@ public class MemberService implements MemberUseCase {
 
 		memberRepository.delete(member);
 
+		activityUseCase.deleteForMemberWithdrawal(memberId);
+
 		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
 	}
 
@@ -76,7 +78,7 @@ public class MemberService implements MemberUseCase {
 			throw new MemberNotFoundException();
 		}
 
-		List<ActivityDailySummaryResult> summaries =
+		List<MonthlyActivityDailySummaryResult> summaries =
 			activityUseCase.getMonthlySummaries(memberId, YearMonth.of(year, month));
 
 		return MemberMapper.toActivitySummaryResult(summaries, year, month);
