@@ -5,6 +5,7 @@ import java.time.Instant;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 
 import lombok.AccessLevel;
@@ -21,6 +22,10 @@ public class ActivityMapper {
 			.startedAt(startedAt)
 			.memberId(command.memberId())
 			.build();
+	}
+
+	public static UpdateActivityStatusResult toStatusUpdateResult(Activity activity) {
+		return new UpdateActivityStatusResult(activity.getId(), activity.getActivityStatus());
 	}
 
 	public static ActivityStatisticsResult toStatisticsResult(Activity activity, String activityDate) {
