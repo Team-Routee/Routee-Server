@@ -18,6 +18,7 @@ import org.sopt.routee.activity.internal.exception.InvalidActivityStatusTransiti
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
+import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
@@ -129,6 +130,25 @@ public class ActivityService {
 
 		activity.updateStatus(command.status());
 		return ActivityMapper.toStatusUpdateResult(activity);
+	}
+
+	@Transactional
+	public void complete(CompleteActivityCommand command) {
+		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
+			.orElseThrow(ActivityNotFoundException::new);
+
+		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
+
+		activity.updateCompletedData(
+			command.title(),
+			command.distance(),
+			command.durationSec(),
+			command.maxElevation(),
+			command.mapImageUrl(),
+			command.coverImageObjectKey(),
+			ActivityMapper.toLineString(command.track()),
+			endedAt
+		);
 	}
 
 	@Transactional(readOnly = true)
