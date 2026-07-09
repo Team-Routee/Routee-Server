@@ -18,10 +18,13 @@ import org.sopt.routee.activity.internal.exception.InvalidActivityStatusTransiti
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
+import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
+import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
@@ -56,6 +59,7 @@ public class ActivityService {
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
+	private final RouteRepository routeRepository;
 
 	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
@@ -158,6 +162,17 @@ public class ActivityService {
 
 		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
 		return ActivityMapper.toStatisticsResult(activity, activityDate.format(DATE_FORMATTER));
+	}
+
+	@Transactional(readOnly = true)
+	public ActivityRecapResult getRecap(GetActivityRecapCommand command) {
+		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
+			.orElseThrow(ActivityNotFoundException::new);
+
+		return ActivityMapper.toRecapResult(
+			activity,
+			routeRepository.findByActivityIdOrderBySequenceAsc(command.activityId())
+		);
 	}
 
 	@Transactional(readOnly = true)
