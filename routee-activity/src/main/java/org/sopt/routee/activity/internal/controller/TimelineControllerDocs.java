@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.controller;
 
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -56,5 +57,23 @@ public interface TimelineControllerDocs {
 			content = @Content(schema = @Schema(implementation = CreateTimelineRequest.class),
 				examples = @ExampleObject(value = "{\"title\":\"정상 도착\",\"objectKey\":\"550e8400-summit.jpg\",\"recordedAt\":\"2026-07-02T10:45:00\",\"trackPointIndex\":35,\"location\":{\"longitude\":127.123456,\"latitude\":37.123456,\"altitude\":542.3,\"measure\":35},\"status\":\"SUCCESSFUL_CREATED\"}")))
 		@Valid @RequestBody CreateTimelineRequest request
+	);
+
+	@Operation(summary = "타임라인 목록 조회", description = "인증된 사용자의 활동 기록에 속한 타임라인 목록을 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "타임라인 목록 조회 성공",
+			content = @Content(schema = @Schema(implementation = TimelineListResponse.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<TimelineListResponse>> getTimelines(
+		@Parameter(hidden = true)
+		Long memberId,
+		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
+		@PathVariable(name = "activityId") Long activityId
 	);
 }
