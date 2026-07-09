@@ -199,9 +199,19 @@ public class ActivityService {
 			activityId, TimelineStatus.SUCCESSFUL_CREATED
 		);
 		List<TimelineMarkerResult> timelineMarkers = timelines.stream()
-			.map(timeline -> ActivityTrackMapper.toTimelineMarker(timeline, null))
+			.map(timeline -> ActivityTrackMapper.toTimelineMarker(timeline, generateTimelineThumbnailUrl(activityId, timeline)))
 			.toList();
 
 		return new ActivityTrackResult(activityId, trackPointResults, timelineMarkers);
+	}
+
+	private String generateTimelineThumbnailUrl(Long activityId, Timeline timeline) {
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+			FileUploadDirectory.TIMELINE,
+			FileUploadImageSize.SMALL,
+			activityId.toString(),
+			timeline.getTimelineImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 }

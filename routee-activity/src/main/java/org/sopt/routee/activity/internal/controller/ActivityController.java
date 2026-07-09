@@ -130,7 +130,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS, ActivityStatisticsResponse.from(result)));
 	}
 
-	@GetMapping("/{activityId}/track")
+	@GetMapping("/activity/{activityId}/track")
 	public ResponseEntity<SuccessResponse<ActivityTrackResponse>> getTrack(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId
