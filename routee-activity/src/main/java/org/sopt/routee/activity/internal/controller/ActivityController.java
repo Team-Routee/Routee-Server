@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -76,6 +78,19 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATUS_UPDATED, ActivityStatusResponse.from(result)));
+	}
+
+	@PutMapping("/{activityId}")
+	public ResponseEntity<SuccessResponse<Void>> complete(
+		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("Time-Zone") String timeZone,
+		@PathVariable(name = "activityId") Long activityId,
+		@Valid @RequestBody ActivityCompleteRequest request
+	) {
+		activityService.complete(request.toCommand(activityId, memberId, parseTimeZone(timeZone)));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_COMPLETED));
 	}
 
 	@GetMapping("/{activityId}/statistics")

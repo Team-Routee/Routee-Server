@@ -12,6 +12,7 @@ public enum SuccessCode implements SuccessResultCode {
 
 	ACTIVITY_CREATED(HttpStatus.CREATED, "활동 기록 생성에 성공했습니다."),
 	ACTIVITY_STATISTICS_GET_SUCCESS(HttpStatus.OK, "활동 통계 기록 조회에 성공했습니다."),
+	ACTIVITY_COMPLETED(HttpStatus.OK, "활동 기록 저장에 성공했습니다."),
 	TIMELINE_CREATED(HttpStatus.CREATED, "타임라인 생성에 성공했습니다."),
 
 	ROUTE_LIST_CREATE_SUCCESS(HttpStatus.CREATED, "루트 목록 생성에 성공했습니다."),

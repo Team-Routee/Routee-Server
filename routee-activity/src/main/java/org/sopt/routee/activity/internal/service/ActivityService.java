@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.Set;
 
+import org.locationtech.jts.geom.LineString;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.exception.ActivityAlreadyCompletedException;
@@ -17,10 +18,9 @@ import org.sopt.routee.activity.internal.exception.InvalidActivityStatusTransiti
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
+import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
-import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
-import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
@@ -111,6 +111,30 @@ public class ActivityService {
 
 		activity.updateStatus(command.status());
 		return ActivityMapper.toStatusUpdateResult(activity);
+	}
+
+	@Transactional
+	public void complete(CompleteActivityCommand command) {
+		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
+			.orElseThrow(ActivityNotFoundException::new);
+
+		Instant startedAt = TimeZoneUtils.toUtcInstantTime(command.startedAt(), command.timeZone());
+		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
+		LineString track = ActivityMapper.toLineString(command.track());
+
+		activity.updateCompletedData(
+			command.title(),
+			command.activityType(),
+			command.status(),
+			command.distance(),
+			command.durationSec(),
+			command.maxElevation(),
+			command.mapImageUrl(),
+			command.coverImageObjectKey(),
+			track,
+			startedAt,
+			endedAt
+		);
 	}
 
 	@Transactional(readOnly = true)

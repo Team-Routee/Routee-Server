@@ -1,11 +1,10 @@
 package org.sopt.routee.activity.internal.controller;
 
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
-import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
-import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
@@ -134,6 +133,38 @@ public interface ActivityControllerDocs {
 			content = @Content(schema = @Schema(implementation = ActivityStatusUpdateRequest.class),
 				examples = @ExampleObject(value = "{\"status\":\"ACTIVITY_PAUSED\"}")))
 		@Valid @RequestBody ActivityStatusUpdateRequest request
+	);
+
+	@Operation(summary = "활동 종료 데이터 저장", description = "인증된 사용자의 활동 종료 데이터를 기존 활동 기록에 저장합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "활동 기록 저장 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 필수입니다.\"}"),
+					@ExampleObject(name = "INVALID_TIME_ZONE",
+						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}"),
+					@ExampleObject(name = "INVALID_TRACK",
+						value = "{\"status\":400,\"code\":\"INVALID_TRACK\",\"message\":\"트랙 정보가 올바르지 않습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<Void>> complete(
+		Long memberId,
+		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
+		@RequestHeader("Time-Zone") String timeZone,
+		@PathVariable(name = "activityId") Long activityId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ActivityCompleteRequest.class),
+				examples = @ExampleObject(value = """
+					{"title":"북한산 기록","activityType":"HIKING","status":"ACTIVITY_COMPLETED","distance":5400,"durationSec":3600,"maxElevation":836,"mapImageUrl":"https://example.com/map.png","coverImageObjectKey":"activity/1/cover.png","track":"LINESTRING ZM (126.978 37.566 20 0, 126.979 37.567 25 10)","startedAt":"2026-07-07T15:30:00","endedAt":"2026-07-07T16:30:00"}""")))
+		@Valid @RequestBody ActivityCompleteRequest request
 	);
 
 	@Operation(summary = "활동 통계 기록 조회", description = "인증된 사용자의 활동 통계 기록을 조회합니다.")
