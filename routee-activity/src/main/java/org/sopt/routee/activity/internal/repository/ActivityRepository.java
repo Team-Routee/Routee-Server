@@ -8,6 +8,8 @@ import java.util.Optional;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	boolean existsByMemberIdAndActivityStatusIn(Long memberId, Collection<ActivityStatus> activityStatuses);
@@ -23,5 +25,7 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 		Instant startedAtTo
 	);
 
+	@Modifying
+	@Query("DELETE FROM Activity a WHERE a.memberId = :memberId")
 	void deleteByMemberId(Long memberId);
 }
