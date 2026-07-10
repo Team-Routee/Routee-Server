@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -60,6 +61,7 @@ public interface MemberControllerDocs {
 	ResponseEntity<SuccessResponse<Void>> register(@Valid @RequestBody RegisterRequest request);
 
 	@Operation(summary = "회원 탈퇴", description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다.")
+	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "탈퇴 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
@@ -89,6 +91,7 @@ public interface MemberControllerDocs {
 		summary = "내 정보 조회",
 		description = "인증된 회원의 닉네임, 프로필 이미지 URL, 가입일, 가입 후 경과일, 누적 활동 횟수를 조회합니다."
 	)
+	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "조회 성공",
 			content = @Content(schema = @Schema(implementation = MemberInfoResponse.class))),
@@ -123,6 +126,7 @@ public interface MemberControllerDocs {
 		summary = "월별 활동 요약 조회",
 		description = "인증된 회원의 특정 연/월에 대한 일자별 활동 요약(총 활동 시간, 활동 횟수, 커버 이미지)을 조회합니다."
 	)
+	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "조회 성공",
 			content = @Content(schema = @Schema(implementation = ActivitySummaryResponse.class))),

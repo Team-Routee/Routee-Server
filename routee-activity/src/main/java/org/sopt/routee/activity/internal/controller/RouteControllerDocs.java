@@ -14,10 +14,12 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @Tag(name = "Route", description = "루트 API")
+@SecurityRequirement(name = "bearerAuth")
 public interface RouteControllerDocs {
 
 	@Operation(summary = "루트 목록 생성", description = "활동 기록에 속하는 루트 목록을 생성합니다.")
@@ -32,6 +34,8 @@ public interface RouteControllerDocs {
 					@ExampleObject(name = "ROUTES_TOO_MANY",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트는 최대 12개까지 등록할 수 있습니다.\"}")
 				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
 		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
@@ -50,6 +54,8 @@ public interface RouteControllerDocs {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "루트 목록 조회 성공",
 			content = @Content(schema = @Schema(implementation = RouteListResponse.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
 		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",

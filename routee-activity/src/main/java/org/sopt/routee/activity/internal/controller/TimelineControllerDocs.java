@@ -16,10 +16,12 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @Tag(name = "Timeline", description = "타임라인 API")
+@SecurityRequirement(name = "bearerAuth")
 public interface TimelineControllerDocs {
 
 	@Operation(summary = "타임라인 생성", description = "인증된 사용자의 활동 기록에 타임라인을 생성합니다.")
