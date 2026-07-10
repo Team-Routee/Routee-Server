@@ -13,7 +13,6 @@ import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
-import org.sopt.routee.member.api.usecase.MemberUseCase;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
@@ -27,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class MemberService implements MemberUseCase {
+public class MemberService {
 
 	private final OidcVerifyPort oidcVerifyPort;
 	private final ActivityUseCase activityUseCase;
@@ -40,6 +39,11 @@ public class MemberService implements MemberUseCase {
 			.orElseThrow(MemberNotFoundException::new);
 
 		return MemberMapper.toTokenClaimsResult(member);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean existsById(long memberId) {
+		return memberRepository.existsById(memberId);
 	}
 
 	@Transactional
