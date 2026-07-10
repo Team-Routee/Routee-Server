@@ -30,7 +30,7 @@ public class ActivityFacade implements ActivityUseCase {
 	@Transactional
 	public void deleteForMemberWithdrawal(long memberId) {
 		routeService.deleteRoutesByMemberId(memberId);
-		activityDailySummaryService.deleteActivityDailySummaries(memberId);
+		activityDailySummaryService.deleteActivityDailySummariesByMemberId(memberId);
 		timelineService.deleteTimelinesByMemberId(memberId);
 		activityService.deleteActivitiesByMemberId(memberId);
 	}

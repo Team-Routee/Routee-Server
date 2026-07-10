@@ -28,7 +28,7 @@ public class ActivityDailySummaryService {
 	}
 
 	@Transactional
-	public void deleteActivityDailySummaries(long memberId) {
+	public void deleteActivityDailySummariesByMemberId(long memberId) {
 		activityDailySummaryRepository.deleteByMemberId(memberId);
 	}
 }
