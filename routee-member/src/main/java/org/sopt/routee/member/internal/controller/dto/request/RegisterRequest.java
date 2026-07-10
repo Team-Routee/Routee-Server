@@ -1,4 +1,4 @@
-package org.sopt.routee.member.internal.controller.dto;
+package org.sopt.routee.member.internal.controller.dto.request;
 
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;

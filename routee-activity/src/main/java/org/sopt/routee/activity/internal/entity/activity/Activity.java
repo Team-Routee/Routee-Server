@@ -78,4 +78,29 @@ public class Activity {
 
 	@Column(name = "member_id", nullable = false, updatable = false)
 	private Long memberId;
+
+	public void updateStatus(ActivityStatus status) {
+		this.activityStatus = status;
+	}
+
+	public void updateCompletedData(
+		String title,
+		Integer distance,
+		Integer durationSec,
+		Integer maxElevation,
+		String mapImageUrl,
+		String coverImageObjectKey,
+		LineString track,
+		Instant endedAt
+	) {
+		this.title = title;
+		this.activityStatus = ActivityStatus.ACTIVITY_COMPLETED;
+		this.distance = distance;
+		this.durationSec = durationSec;
+		this.maxElevation = maxElevation;
+		this.mapImageUrl = mapImageUrl;
+		this.coverImageObjectKey = coverImageObjectKey;
+		this.track = track;
+		this.endedAt = endedAt;
+	}
 }

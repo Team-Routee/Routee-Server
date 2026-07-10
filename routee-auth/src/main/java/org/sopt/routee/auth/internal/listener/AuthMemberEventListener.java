@@ -9,12 +9,12 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-class MemberEventListener {
+class AuthMemberEventListener {
 
 	private final AuthService authService;
 
 	@ApplicationModuleListener
-	void handle(MemberWithdrawnEvent event) {
+	void handleMemberWithdrawnEvent(MemberWithdrawnEvent event) {
 		authService.revokeTokens(event.accessTokenHash(), event.refreshTokenHash());
 	}
 }

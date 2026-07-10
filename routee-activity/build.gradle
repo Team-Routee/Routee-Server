@@ -1,5 +1,6 @@
 dependencies {
     implementation project(':routee-common')
+    implementation project(':routee-external')
 
     // Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -20,4 +21,7 @@ dependencies {
 
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Modulith
+    compileOnly 'org.springframework.modulith:spring-modulith-api'
 }

@@ -48,3 +48,6 @@ logs/
 
 ### Local Docker Compose ###
 docker-compose.dev.yml
+
+### Local Configuration ###
+routee-app/src/main/resources/application-local.yml
