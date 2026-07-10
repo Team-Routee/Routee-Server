@@ -23,6 +23,7 @@ public record TimelineLocationRequest(
 	Integer elevation,
 
 	@NotNull(message = "pointIndex는 필수입니다.")
+	@Min(1)
 	Integer pointIndex
 ) {
 }
