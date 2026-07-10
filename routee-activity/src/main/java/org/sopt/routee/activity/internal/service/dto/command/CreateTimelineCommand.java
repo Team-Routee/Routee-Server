@@ -9,13 +9,13 @@ public record CreateTimelineCommand(
 	Long memberId,
 	Long activityId,
 	String title,
-	String objectKey,
-	LocalDateTime recordedAt,
+	String timelineImageObjectKey,
+	LocalDateTime createdAt,
 	Integer trackPointIndex,
 	Double longitude,
 	Double latitude,
-	Double altitude,
-	Integer measure,
+	Integer elevation,
+	Integer pointIndex,
 	TimelineStatus status,
 	ZoneId timeZone
 ) {
