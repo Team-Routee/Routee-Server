@@ -50,6 +50,11 @@ public class TimelineService {
 			.toList();
 	}
 
+	@Transactional
+	public void deleteTimelinesByMemberId(long memberId) {
+		timelineRepository.deleteTimelinesByMemberId(memberId);
+	}
+
 	private String generateImageUrl(Long activityId, Timeline timeline) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,

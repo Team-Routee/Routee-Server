@@ -54,7 +54,7 @@ public class RouteService {
 	}
 
 	@Transactional
-	public void deleteRoutesByMemberId(Long memberId) {
+	public void deleteRoutesByMemberId(long memberId) {
 		routeRepository.deleteByMemberId(memberId);
 	}
 }

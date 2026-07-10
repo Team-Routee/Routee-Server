@@ -5,7 +5,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import org.sopt.routee.activity.api.result.ActivityDailySummaryResult;
+import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.DailySummary;
@@ -49,7 +49,7 @@ public class MemberMapper {
 	}
 
 	public static ActivitySummaryResult toActivitySummaryResult(
-		List<ActivityDailySummaryResult> summaries, int year, int month
+		List<MonthlyActivityDailySummaryResult> summaries, int year, int month
 	) {
 		List<DailySummary> converted = summaries.stream()
 			.map(MemberMapper::toDailySummary)
@@ -58,7 +58,7 @@ public class MemberMapper {
 		return new ActivitySummaryResult(converted, year, month);
 	}
 
-	private static DailySummary toDailySummary(ActivityDailySummaryResult summary) {
+	private static DailySummary toDailySummary(MonthlyActivityDailySummaryResult summary) {
 		return new DailySummary(
 			summary.activityDate(),
 			summary.totalDurationSeconds(),
