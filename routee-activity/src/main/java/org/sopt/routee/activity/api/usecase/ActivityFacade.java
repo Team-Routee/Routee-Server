@@ -23,7 +23,12 @@ public class ActivityFacade implements ActivityUseCase {
 
 	public List<MonthlyActivityDailySummaryResult> getMonthlySummaries(Long memberId, YearMonth yearMonth) {
 		return activityDailySummaryService.getMonthlySummaries(memberId, yearMonth).stream()
-			.map(MonthlyActivityDailySummaryResult::from)
+			.map(ads -> new MonthlyActivityDailySummaryResult(
+				ads.activityDate(),
+				ads.totalDurationSeconds(),
+				ads.activityCount(),
+				ads.coverImageUrl()
+			))
 			.toList();
 	}
 
