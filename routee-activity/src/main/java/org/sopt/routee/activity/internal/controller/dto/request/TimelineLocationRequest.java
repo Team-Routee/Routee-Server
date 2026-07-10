@@ -2,6 +2,8 @@ package org.sopt.routee.activity.internal.controller.dto.request;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 public record TimelineLocationRequest(
@@ -16,9 +18,9 @@ public record TimelineLocationRequest(
 	Double latitude,
 
 	@NotNull(message = "elevation은 필수입니다.")
-	@DecimalMin(value = "-500.0", message = "elevation은 -500.0 이상이어야 합니다.")
-	@DecimalMax(value = "9000.0", message = "elevation은 9000.0 이하여야 합니다.")
-	Double elevation,
+	@Min(value = -500, message = "elevation은 -500 이상이어야 합니다.")
+	@Max(value = 9000, message = "elevation은 9000 이하여야 합니다.")
+	Integer elevation,
 
 	@NotNull(message = "pointIndex는 필수입니다.")
 	Integer pointIndex

@@ -14,7 +14,7 @@ public record CreateTimelineCommand(
 	Integer trackPointIndex,
 	Double longitude,
 	Double latitude,
-	Double elevation,
+	Integer elevation,
 	Integer pointIndex,
 	TimelineStatus status,
 	ZoneId timeZone
