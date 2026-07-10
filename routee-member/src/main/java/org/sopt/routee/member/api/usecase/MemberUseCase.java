@@ -7,4 +7,6 @@ public interface MemberUseCase {
 
 	TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider);
 
+	boolean existsById(long memberId);
+
 }
