@@ -7,6 +7,7 @@ import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 	boolean existsByActivityIdAndTrackPointIndex(Long activityId, Integer trackPointIndex);
@@ -17,5 +18,5 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 
 	@Modifying
 	@Query("DELETE FROM Timeline t WHERE t.activity.memberId = :memberId")
-	void deleteTimelinesByMemberId(Long memberId);
+	void deleteTimelinesByMemberId(@Param("memberId") Long memberId);
 }

@@ -7,6 +7,7 @@ import org.sopt.routee.activity.internal.entity.summary.ActivityDailySummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDailySummary, Long> {
 
@@ -16,5 +17,5 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 
 	@Modifying
 	@Query("DELETE FROM ActivityDailySummary ads WHERE ads.memberId = :memberId")
-	void deleteByMemberId(Long memberId);
+	void deleteByMemberId(@Param("memberId") Long memberId);
 }
