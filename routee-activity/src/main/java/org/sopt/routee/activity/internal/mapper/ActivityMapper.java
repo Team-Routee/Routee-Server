@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.mapper;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.locationtech.jts.geom.Coordinate;
@@ -43,7 +44,7 @@ public class ActivityMapper {
 		return new UpdateActivityStatusResult(activity.getId(), activity.getActivityStatus());
 	}
 
-	public static ActivityStatisticsResult toStatisticsResult(Activity activity, String activityDate) {
+	public static ActivityStatisticsResult toStatisticsResult(Activity activity, LocalDate activityDate) {
 		return new ActivityStatisticsResult(
 			activity.getId(),
 			activity.getTitle(),

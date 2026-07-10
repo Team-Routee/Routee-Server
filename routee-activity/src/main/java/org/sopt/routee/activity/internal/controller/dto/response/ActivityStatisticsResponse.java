@@ -1,11 +1,13 @@
 package org.sopt.routee.activity.internal.controller.dto.response;
 
+import java.time.LocalDate;
+
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 
 public record ActivityStatisticsResponse(
 	Long activityId,
 	String title,
-	String activityDate,
+	LocalDate activityDate,
 	Integer distanceMeter,
 	Integer durationSec,
 	Integer maxElevationMeter
