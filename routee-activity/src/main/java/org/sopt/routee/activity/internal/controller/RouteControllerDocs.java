@@ -14,10 +14,12 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @Tag(name = "Route", description = "루트 API")
+@SecurityRequirement(name = "bearerAuth")
 public interface RouteControllerDocs {
 
 	@Operation(summary = "루트 목록 생성", description = "활동 기록에 속하는 루트 목록을 생성합니다.")

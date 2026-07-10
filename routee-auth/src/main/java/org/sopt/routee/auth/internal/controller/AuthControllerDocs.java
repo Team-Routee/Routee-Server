@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -70,6 +71,7 @@ public interface AuthControllerDocs {
 	ResponseEntity<SuccessResponse<TokenResponse>> reissue(@Valid @RequestBody ReissueRequest request);
 
 	@Operation(summary = "로그아웃", description = "액세스 토큰을 블랙리스트에 등록하고 리프레시 토큰을 무효화합니다.")
+	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "로그아웃 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",

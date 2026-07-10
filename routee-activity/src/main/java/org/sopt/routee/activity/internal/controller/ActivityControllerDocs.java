@@ -29,10 +29,12 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @Tag(name = "Activity", description = "활동 API")
+@SecurityRequirement(name = "bearerAuth")
 public interface ActivityControllerDocs {
 
 	@Operation(summary = "활동 기록 생성", description = "인증된 사용자의 진행 중 활동 기록을 생성합니다.")
