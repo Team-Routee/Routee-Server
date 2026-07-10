@@ -10,6 +10,7 @@ import org.sopt.routee.auth.internal.repository.TokenBlacklistRepository;
 import org.sopt.routee.auth.security.util.AuthWhiteList;
 import org.sopt.routee.exception.BaseException;
 import org.sopt.routee.member.api.type.MemberRole;
+import org.sopt.routee.member.api.usecase.MemberUseCase;
 import org.sopt.routee.util.TokenExtractor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
@@ -32,18 +33,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtValidator jwtValidator;
 	private final JwtParser jwtParser;
 	private final TokenBlacklistRepository tokenBlacklistRepository;
+	private final MemberUseCase memberUseCase;
 	private final HandlerExceptionResolver handlerExceptionResolver;
 
 	public JwtAuthenticationFilter(
 		JwtValidator jwtValidator,
 		JwtParser jwtParser,
 		TokenBlacklistRepository tokenBlacklistRepository,
+		MemberUseCase memberUseCase,
 		@Qualifier("handlerExceptionResolver")
 		HandlerExceptionResolver handlerExceptionResolver
 	) {
 		this.jwtValidator = jwtValidator;
 		this.jwtParser = jwtParser;
 		this.tokenBlacklistRepository = tokenBlacklistRepository;
+		this.memberUseCase = memberUseCase;
 		this.handlerExceptionResolver = handlerExceptionResolver;
 	}
 
@@ -71,6 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 				long memberId = jwtParser.extractMemberId(claims);
 				MemberRole role = jwtParser.extractMemberRole(claims);
+
+				if (!memberUseCase.existsById(memberId)) {
+					throw new InvalidTokenException();
+				}
 
 				SecurityContextHolder.getContext().setAuthentication(
 					new UsernamePasswordAuthenticationToken(
