@@ -67,5 +67,8 @@ jobs:
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
             export DOZZLE_USERNAME="${{ secrets.DOZZLE_USERNAME }}"
             export DOZZLE_PASSWORD="${{ secrets.DOZZLE_PASSWORD }}"
+            export S3_REGION="${{ secrets.S3_REGION }}"
+            export S3_BUCKET="${{ secrets.S3_BUCKET }}"
+            export S3_ENDPOINT="${{ secrets.S3_ENDPOINT }}"
 
             cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ github.sha }}
