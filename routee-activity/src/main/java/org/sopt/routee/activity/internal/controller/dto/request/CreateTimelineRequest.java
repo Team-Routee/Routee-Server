@@ -7,6 +7,7 @@ import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineCommand;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,6 +23,7 @@ public record CreateTimelineRequest(
 	LocalDateTime createdAt,
 
 	@NotNull(message = "trackPointIndex는 필수입니다.")
+	@Min(1)
 	Integer trackPointIndex,
 
 	@Valid
