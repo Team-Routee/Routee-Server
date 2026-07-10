@@ -4,6 +4,7 @@ public record TimelineMarkerResult(
 	Long timelineId,
 	String thumbnailUrl,
 	double latitude,
-	double longitude
+	double longitude,
+	int pointIndex
 ) {
 }

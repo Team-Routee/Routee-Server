@@ -13,7 +13,7 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 
 	List<Timeline> findByActivityIdOrderByCreatedAtAsc(Long activityId);
 
-	List<Timeline> findByActivityIdAndTimelineStatus(Long activityId, TimelineStatus timelineStatus);
+	List<Timeline> findByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(Long activityId, TimelineStatus timelineStatus);
 
 	@Modifying
 	@Query("DELETE FROM Timeline t WHERE t.activity.memberId = :memberId")

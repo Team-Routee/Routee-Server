@@ -6,9 +6,12 @@ public record TimelineMarkerResponse(
 	Long timelineId,
 	String thumbnailUrl,
 	double latitude,
-	double longitude
+	double longitude,
+	int pointIndex
 ) {
 	public static TimelineMarkerResponse from(TimelineMarkerResult result) {
-		return new TimelineMarkerResponse(result.timelineId(), result.thumbnailUrl(), result.latitude(), result.longitude());
+		return new TimelineMarkerResponse(
+			result.timelineId(), result.thumbnailUrl(), result.latitude(), result.longitude(), result.pointIndex()
+		);
 	}
 }

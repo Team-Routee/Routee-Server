@@ -196,7 +196,7 @@ public class ActivityService {
 			.map(ActivityTrackMapper::toTrackPointResult)
 			.toList();
 
-		List<Timeline> timelines = timelineRepository.findByActivityIdAndTimelineStatus(
+		List<Timeline> timelines = timelineRepository.findByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(
 			activityId, TimelineStatus.SUCCESSFUL_CREATED
 		);
 		List<TimelineMarkerResult> timelineMarkers = timelines.stream()
