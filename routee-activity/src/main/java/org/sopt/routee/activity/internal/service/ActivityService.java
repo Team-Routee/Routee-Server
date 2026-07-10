@@ -220,6 +220,11 @@ public class ActivityService {
 		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
+	@Transactional
+	public void deleteActivitiesByMemberId(long memberId) {
+		activityRepository.deleteByMemberId(memberId);
+	}
+
 	private String generateTimelineThumbnailUrl(Long activityId, Timeline timeline) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,

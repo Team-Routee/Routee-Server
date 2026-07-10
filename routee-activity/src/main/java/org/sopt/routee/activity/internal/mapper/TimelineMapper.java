@@ -16,11 +16,11 @@ public class TimelineMapper {
 	private static final int SRID = 4326;
 	private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory(new PrecisionModel(), SRID);
 
-	public static Timeline toEntity(CreateTimelineCommand command, Activity activity, Instant recordedAt) {
+	public static Timeline toEntity(CreateTimelineCommand command, Activity activity, Instant createdAt) {
 		return Timeline.builder()
 			.title(command.title())
-			.timelineImageObjectKey(command.objectKey())
-			.createdAt(recordedAt)
+			.timelineImageObjectKey(command.timelineImageObjectKey())
+			.createdAt(createdAt)
 			.trackPointIndex(command.trackPointIndex())
 			.location(toPoint(command))
 			.timelineStatus(command.status())
@@ -41,8 +41,8 @@ public class TimelineMapper {
 		Point point = GEOMETRY_FACTORY.createPoint(new CoordinateXYZM(
 			command.longitude(),
 			command.latitude(),
-			command.altitude(),
-			command.measure()
+			command.elevation(),
+			command.pointIndex()
 		));
 		point.setSRID(SRID);
 		return point;
