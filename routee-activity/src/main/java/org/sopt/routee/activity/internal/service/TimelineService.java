@@ -34,9 +34,9 @@ public class TimelineService {
 		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
 
-		Instant recordedAt = TimeZoneUtils.toUtcInstantTime(command.recordedAt(), command.timeZone());
+		Instant createdAt = TimeZoneUtils.toUtcInstantTime(command.createdAt(), command.timeZone());
 
-		timelineRepository.save(TimelineMapper.toEntity(command, activity, recordedAt));
+		timelineRepository.save(TimelineMapper.toEntity(command, activity, createdAt));
 	}
 
 	@Transactional(readOnly = true)

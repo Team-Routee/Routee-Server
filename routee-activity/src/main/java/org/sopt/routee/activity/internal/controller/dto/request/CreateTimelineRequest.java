@@ -15,11 +15,11 @@ public record CreateTimelineRequest(
 	@Size(max = 16, message = "title은 16자 이하여야 합니다.")
 	String title,
 
-	@NotBlank(message = "objectKey는 필수입니다.")
-	String objectKey,
+	@NotBlank(message = "timelineImageObjectKey는 필수입니다.")
+	String timelineImageObjectKey,
 
-	@NotNull(message = "recordedAt은 필수입니다.")
-	LocalDateTime recordedAt,
+	@NotNull(message = "createdAt은 필수입니다.")
+	LocalDateTime createdAt,
 
 	@NotNull(message = "trackPointIndex는 필수입니다.")
 	Integer trackPointIndex,
@@ -36,13 +36,13 @@ public record CreateTimelineRequest(
 			memberId,
 			activityId,
 			title,
-			objectKey,
-			recordedAt,
+			timelineImageObjectKey,
+			createdAt,
 			trackPointIndex,
 			location.longitude(),
 			location.latitude(),
-			location.altitude(),
-			location.measure(),
+			location.elevation(),
+			location.pointIndex(),
 			status,
 			timeZone
 		);

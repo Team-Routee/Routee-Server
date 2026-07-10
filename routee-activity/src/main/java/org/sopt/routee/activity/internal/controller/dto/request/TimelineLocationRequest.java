@@ -15,12 +15,12 @@ public record TimelineLocationRequest(
 	@DecimalMax(value = "90.0", message = "latitude는 90.0 이하여야 합니다.")
 	Double latitude,
 
-	@NotNull(message = "altitude는 필수입니다.")
-	@DecimalMin(value = "-500.0", message = "altitude는 -500.0 이상이어야 합니다.")
-	@DecimalMax(value = "9000.0", message = "altitude는 9000.0 이하여야 합니다.")
-	Double altitude,
+	@NotNull(message = "elevation은 필수입니다.")
+	@DecimalMin(value = "-500.0", message = "elevation은 -500.0 이상이어야 합니다.")
+	@DecimalMax(value = "9000.0", message = "elevation은 9000.0 이하여야 합니다.")
+	Double elevation,
 
-	@NotNull(message = "measure는 필수입니다.")
-	Integer measure
+	@NotNull(message = "pointIndex는 필수입니다.")
+	Integer pointIndex
 ) {
 }
