@@ -43,3 +43,13 @@ s3:
   region: ${S3_REGION}
   endpoint: ${S3_ENDPOINT}
   presigned-url-expiry-minutes: ${S3_PRESIGNED_URL_EXPIRY_MINUTES:10}
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://tempo:4318/v1/traces
