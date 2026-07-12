@@ -32,5 +32,11 @@ dependencies {
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation "org.springframework.modulith:spring-modulith-events-jackson"
     implementation 'org.springframework.modulith:spring-modulith-events-jpa'
+    implementation 'org.springframework.modulith:spring-modulith-observability'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+
+    // tracing
+    implementation 'org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
 }

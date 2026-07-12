@@ -30,6 +30,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      tempo:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
@@ -58,6 +60,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      tempo:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
@@ -96,8 +100,37 @@ services:
     networks:
       - routee-network
 
+  tempo:
+    image: grafana/tempo:latest
+    container_name: routee-tempo
+    restart: unless-stopped
+    user: "0"
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo-data:/tmp/tempo
+    networks:
+      - routee-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: routee-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    depends_on:
+      - tempo
+    networks:
+      - routee-network
+
 volumes:
   redis-data:
+  tempo-data:
 
 networks:
   routee-network:
