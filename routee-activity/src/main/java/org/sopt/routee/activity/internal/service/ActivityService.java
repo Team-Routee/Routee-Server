@@ -8,6 +8,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import org.sopt.routee.activity.api.event.ActivityCompletedEvent;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
@@ -48,6 +49,7 @@ import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,6 +71,7 @@ public class ActivityService {
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
 	private final RouteRepository routeRepository;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
@@ -148,6 +151,8 @@ public class ActivityService {
 			ActivityMapper.toLineString(command.track()),
 			endedAt
 		);
+
+		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));
 	}
 
 	@Transactional(readOnly = true)
