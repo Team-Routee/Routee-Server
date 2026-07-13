@@ -17,7 +17,7 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 
 	boolean existsByMemberIdAndActivityDate(Long memberId, LocalDate activityDate);
 
-	@Modifying
+	@Modifying(flushAutomatically = true)
 	@Query("""
 		UPDATE ActivityDailySummary ads
 		SET ads.totalDurationSec = ads.totalDurationSec + :durationSec,
