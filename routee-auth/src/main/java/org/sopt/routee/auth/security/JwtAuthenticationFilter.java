@@ -9,9 +9,11 @@ import org.sopt.routee.auth.internal.jwt.JwtValidator;
 import org.sopt.routee.auth.internal.repository.TokenBlacklistRepository;
 import org.sopt.routee.auth.security.util.AuthWhiteList;
 import org.sopt.routee.exception.BaseException;
+import org.sopt.routee.logging.MdcKeys;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.api.usecase.MemberUseCase;
 import org.sopt.routee.util.TokenExtractor;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -79,6 +81,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				if (!memberUseCase.existsById(memberId)) {
 					throw new InvalidTokenException();
 				}
+
+				MDC.put(MdcKeys.MEMBER_ID, String.valueOf(memberId));
 
 				SecurityContextHolder.getContext().setAuthentication(
 					new UsernamePasswordAuthenticationToken(

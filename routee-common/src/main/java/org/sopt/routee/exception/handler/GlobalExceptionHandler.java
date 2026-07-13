@@ -21,11 +21,15 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends BaseExceptionHandler {
 
 	@ExceptionHandler(BaseException.class)
 	protected ResponseEntity<ApiResponse> handleBaseException(BaseException e) {
+		log.warn("Business exception: code={}, message={}", e.getCode(), e.getMessage());
 		return buildErrorResponse(e.getCode());
 	}
 
@@ -99,6 +103,7 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	protected ResponseEntity<ApiResponse> handleException(Exception e) {
+		log.error("Unexpected server exception", e);
 		return buildErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
 	}
 }
