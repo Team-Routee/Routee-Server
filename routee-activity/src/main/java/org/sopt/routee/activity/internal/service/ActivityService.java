@@ -153,7 +153,7 @@ public class ActivityService {
 			endedAt
 		);
 
-		LocalDate activityDate = TimeZoneUtils.toLocalDate(endedAt, command.timeZone());
+		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
 		activityDailySummaryService.recordActivity(command.memberId(), activityDate, command.durationSec());
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));
