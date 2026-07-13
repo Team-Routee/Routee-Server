@@ -82,7 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					throw new InvalidTokenException();
 				}
 
-				MDC.put(MdcKeys.MEMBER_ID, String.valueOf(memberId));
+				MDC.put(MdcKeys.MEMBER_ID.getKey(), String.valueOf(memberId));
 
 				SecurityContextHolder.getContext().setAuthentication(
 					new UsernamePasswordAuthenticationToken(

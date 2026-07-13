@@ -1,15 +1,19 @@
 package org.sopt.routee.logging;
 
-public final class MdcKeys {
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-	public static final String TRACE_ID = "traceId";
-	public static final String MEMBER_ID = "memberId";
-	public static final String METHOD = "method";
-	public static final String URI = "uri";
-	public static final String REQUEST_MODULE = "requestModule";
-	public static final String STATUS = "status";
-	public static final String DURATION_MS = "durationMs";
+@Getter
+@RequiredArgsConstructor
+public enum MdcKeys {
 
-	private MdcKeys() {
-	}
+	TRACE_ID("traceId"),
+	MEMBER_ID("memberId"),
+	METHOD("method"),
+	URI("uri"),
+	REQUEST_MODULE("requestModule"),
+	STATUS("status"),
+	DURATION_MS("durationMs");
+
+	private final String key;
 }

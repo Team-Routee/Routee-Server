@@ -38,15 +38,15 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 		Map<String, String> previousContext = MDC.getCopyOfContextMap();
 
-		String traceId = MDC.get(MdcKeys.TRACE_ID);
+		String traceId = MDC.get(MdcKeys.TRACE_ID.getKey());
 		if (!StringUtils.hasText(traceId)) {
 			traceId = UUID.randomUUID().toString();
 		}
 
-		MDC.put(MdcKeys.TRACE_ID, traceId);
-		MDC.put(MdcKeys.METHOD, request.getMethod());
-		MDC.put(MdcKeys.URI, request.getRequestURI());
-		MDC.put(MdcKeys.REQUEST_MODULE, requestModuleResolver.resolve(request.getRequestURI()));
+		MDC.put(MdcKeys.TRACE_ID.getKey(), traceId);
+		MDC.put(MdcKeys.METHOD.getKey(), request.getMethod());
+		MDC.put(MdcKeys.URI.getKey(), request.getRequestURI());
+		MDC.put(MdcKeys.REQUEST_MODULE.getKey(), requestModuleResolver.resolve(request.getRequestURI()));
 
 		response.setHeader(TRACE_ID_HEADER, traceId);
 
@@ -55,8 +55,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 			filterChain.doFilter(request, response);
 		} finally {
 			long durationMs = System.currentTimeMillis() - startTime;
-			MDC.put(MdcKeys.STATUS, String.valueOf(response.getStatus()));
-			MDC.put(MdcKeys.DURATION_MS, String.valueOf(durationMs));
+			MDC.put(MdcKeys.STATUS.getKey(), String.valueOf(response.getStatus()));
+			MDC.put(MdcKeys.DURATION_MS.getKey(), String.valueOf(durationMs));
 
 			log.info("{} {} - {} ({}ms)", request.getMethod(), request.getRequestURI(), response.getStatus(), durationMs);
 
