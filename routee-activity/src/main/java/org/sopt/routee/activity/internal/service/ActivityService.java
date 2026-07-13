@@ -50,6 +50,8 @@ import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +91,12 @@ public class ActivityService {
 		Activity activity = ActivityMapper.toEntity(command, title, startedAt);
 		Activity savedActivity = activityRepository.save(activity);
 
-		log.info("Activity created. activityId={}, memberId={}", savedActivity.getId(), command.memberId());
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				log.info("Activity created. activityId={}, memberId={}", savedActivity.getId(), command.memberId());
+			}
+		});
 
 		return new CreateActivityResult(savedActivity.getId(), title);
 	}
@@ -154,7 +161,12 @@ public class ActivityService {
 			endedAt
 		);
 
-		log.info("Activity completed. activityId={}, memberId={}", command.activityId(), command.memberId());
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				log.info("Activity completed. activityId={}, memberId={}", command.activityId(), command.memberId());
+			}
+		});
 	}
 
 	@Transactional(readOnly = true)
