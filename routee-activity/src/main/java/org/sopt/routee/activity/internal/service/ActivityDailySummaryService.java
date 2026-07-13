@@ -1,5 +1,6 @@
 package org.sopt.routee.activity.internal.service;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import org.sopt.routee.activity.internal.repository.ActivityDailySummaryReposito
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.hypersistence.tsid.TSID;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -25,6 +27,13 @@ public class ActivityDailySummaryService {
 			.stream()
 			.map(ActivityDailySummaryMapper::toResult)
 			.toList();
+	}
+
+	@Transactional
+	public void recordActivity(Long memberId, LocalDate activityDate, Integer durationSec) {
+		activityDailySummaryRepository.upsertDailySummary(
+			TSID.Factory.getTsid().toLong(), memberId, activityDate, durationSec
+		);
 	}
 
 	@Transactional
