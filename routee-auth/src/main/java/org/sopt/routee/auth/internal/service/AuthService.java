@@ -71,7 +71,8 @@ public class AuthService {
 			throw new InvalidTokenException();
 		}
 
-		if (!jwtParser.extractMemberId(accessClaims).equals(jwtParser.extractMemberId(refreshClaims))) {
+		Long memberId = jwtParser.extractMemberId(accessClaims);
+		if (!memberId.equals(jwtParser.extractMemberId(refreshClaims))) {
 			throw new InvalidTokenException();
 		}
 
@@ -80,7 +81,7 @@ public class AuthService {
 		tokenBlacklistRepository.blacklist(accessToken, ttl);
 		refreshTokenRepository.deleteByToken(refreshToken);
 
-		log.info("Logout succeeded. memberId={}", jwtParser.extractMemberId(accessClaims));
+		log.info("Logout succeeded. memberId={}", memberId);
 	}
 
 	public void revokeTokens(String accessTokenHash, String refreshTokenHash) {
