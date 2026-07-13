@@ -1,4 +1,4 @@
-package org.sopt.routee.logging;
+package org.sopt.routee.logging.internal;
 
 import static org.assertj.core.api.Assertions.*;
 

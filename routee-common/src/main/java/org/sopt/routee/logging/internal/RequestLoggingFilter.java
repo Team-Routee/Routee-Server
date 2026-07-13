@@ -1,8 +1,9 @@
-package org.sopt.routee.logging;
+package org.sopt.routee.logging.internal;
 
 import java.io.IOException;
 import java.util.UUID;
 
+import org.sopt.routee.logging.MdcKeys;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
