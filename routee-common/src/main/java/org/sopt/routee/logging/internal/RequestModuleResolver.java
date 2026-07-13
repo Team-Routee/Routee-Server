@@ -5,19 +5,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class RequestModuleResolver {
 
-	private static final String API_V1_PREFIX = "/api/v1";
+	private static final String API_PREFIX = "/api/v1";
 
 	public String resolve(String uri) {
-		if (uri.startsWith(API_V1_PREFIX + "/auth")) {
+		if (uri.startsWith(API_PREFIX + "/auth")) {
 			return "auth";
 		}
 
-		if (uri.startsWith(API_V1_PREFIX + "/member")) {
+		if (uri.startsWith(API_PREFIX + "/member")) {
 			return "member";
 		}
 
-		if (uri.startsWith(API_V1_PREFIX + "/activity")
-			|| uri.startsWith(API_V1_PREFIX + "/archive")) {
+		if (uri.startsWith(API_PREFIX + "/activity")
+			|| uri.startsWith(API_PREFIX + "/archive")) {
 			return "activity";
 		}
 
