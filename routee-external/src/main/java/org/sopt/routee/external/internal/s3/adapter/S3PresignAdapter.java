@@ -8,6 +8,7 @@ import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.internal.s3.config.S3Properties;
+import org.sopt.routee.external.internal.s3.exception.FileUploadPresignException;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -67,7 +68,7 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 				.toString();
 		} catch (RuntimeException e) {
 			log.error("Failed to generate S3 presigned URL. bucket={}, objectKey={}", properties.bucket(), objectKey, e);
-			throw e;
+			throw new FileUploadPresignException(e);
 		}
 	}
 }
