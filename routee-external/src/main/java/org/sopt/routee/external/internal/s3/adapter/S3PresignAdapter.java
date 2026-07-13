@@ -12,12 +12,10 @@ import org.sopt.routee.external.internal.s3.exception.FileUploadPresignException
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class S3PresignAdapter implements FileUploadPresignPort {
@@ -67,7 +65,6 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 				.url()
 				.toString();
 		} catch (RuntimeException e) {
-			log.error("Failed to generate S3 presigned URL. bucket={}, objectKey={}", properties.bucket(), objectKey, e);
 			throw new FileUploadPresignException(e);
 		}
 	}
