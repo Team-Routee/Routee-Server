@@ -52,9 +52,13 @@ import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ActivityService {
@@ -90,6 +94,14 @@ public class ActivityService {
 		String title = activityDate.format(TITLE_DATE_FORMATTER) + " 기록";
 		Activity activity = ActivityMapper.toEntity(command, title, startedAt);
 		Activity savedActivity = activityRepository.save(activity);
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				log.info("Activity created. activityId={}, memberId={}", savedActivity.getId(), command.memberId());
+			}
+		});
+
 		return new CreateActivityResult(savedActivity.getId(), title);
 	}
 
@@ -157,6 +169,13 @@ public class ActivityService {
 		activityDailySummaryService.recordActivity(command.memberId(), activityDate, command.durationSec());
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				log.info("Activity completed. activityId={}, memberId={}", command.activityId(), command.memberId());
+			}
+		});
 	}
 
 	@Transactional(readOnly = true)

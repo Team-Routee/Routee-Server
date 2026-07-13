@@ -8,6 +8,7 @@ import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.internal.s3.config.S3Properties;
+import org.sopt.routee.external.internal.s3.exception.FileUploadPresignException;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -59,8 +60,12 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 			.putObjectRequest(putObjectRequest)
 			.build();
 
-		return s3Presigner.presignPutObject(presignRequest)
-			.url()
-			.toString();
+		try {
+			return s3Presigner.presignPutObject(presignRequest)
+				.url()
+				.toString();
+		} catch (RuntimeException e) {
+			throw new FileUploadPresignException(e);
+		}
 	}
 }

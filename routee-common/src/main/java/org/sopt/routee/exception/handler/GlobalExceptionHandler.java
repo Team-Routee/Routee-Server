@@ -21,36 +21,49 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends BaseExceptionHandler {
 
 	@ExceptionHandler(BaseException.class)
 	protected ResponseEntity<ApiResponse> handleBaseException(BaseException e) {
+		if (e.getCause() != null) {
+			log.warn("Business exception: code={}, message={}", e.getCode(), e.getMessage(), e.getCause());
+		} else {
+			log.warn("Business exception: code={}, message={}", e.getCode(), e.getMessage());
+		}
 		return buildErrorResponse(e.getCode());
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
 	protected ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+		log.warn("Invalid header: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.INVALID_HEADER);
 	}
 
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	protected ResponseEntity<ApiResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
+		log.warn("Missing request parameter: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.MISSING_REQUEST_PARAMETER);
 	}
 
 	@ExceptionHandler(MissingRequestHeaderException.class)
 	protected ResponseEntity<ApiResponse> handleMissingRequestHeader(MissingRequestHeaderException e) {
+		log.warn("Missing request header: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.MISSING_REQUEST_HEADER);
 	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	protected ResponseEntity<ApiResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+		log.warn("Invalid request body: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.INVALID_REQUEST_BODY);
 	}
 
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	protected ResponseEntity<ApiResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
+		log.warn("Invalid parameter type: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.INVALID_PARAMETER_TYPE);
 	}
 
@@ -60,6 +73,7 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
 			.findFirst()
 			.map(DefaultMessageSourceResolvable::getDefaultMessage)
 			.orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+		log.warn("Invalid input value: message={}", message);
 		return buildErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message);
 	}
 
@@ -70,6 +84,7 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
 			.findFirst()
 			.map(MessageSourceResolvable::getDefaultMessage)
 			.orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+		log.warn("Invalid input value: message={}", message);
 		return buildErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message);
 	}
 
@@ -79,26 +94,31 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
 			.findFirst()
 			.map(ConstraintViolation::getMessage)
 			.orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+		log.warn("Constraint violation: message={}", message);
 		return buildErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message);
 	}
 
 	@ExceptionHandler(NoResourceFoundException.class)
 	protected ResponseEntity<ApiResponse> handleNoResourceFound(NoResourceFoundException e) {
+		log.warn("No resource found: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.NOT_FOUND);
 	}
 
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
 	protected ResponseEntity<ApiResponse> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+		log.warn("Method not supported: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.METHOD_NOT_ALLOWED);
 	}
 
 	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
 	protected ResponseEntity<ApiResponse> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+		log.warn("Media type not supported: message={}", e.getMessage());
 		return buildErrorResponse(ErrorCode.UNSUPPORTED_MEDIA_TYPE);
 	}
 
 	@ExceptionHandler(Exception.class)
 	protected ResponseEntity<ApiResponse> handleException(Exception e) {
+		log.error("Unexpected server exception", e);
 		return buildErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
 	}
 }
