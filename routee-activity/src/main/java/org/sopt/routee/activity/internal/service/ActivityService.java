@@ -67,6 +67,7 @@ public class ActivityService {
 
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
+	private final ActivityDailySummaryService activityDailySummaryService;
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
@@ -151,6 +152,9 @@ public class ActivityService {
 			ActivityMapper.toLineString(command.track()),
 			endedAt
 		);
+
+		LocalDate activityDate = TimeZoneUtils.toLocalDate(endedAt, command.timeZone());
+		activityDailySummaryService.recordActivity(command.memberId(), activityDate, command.durationSec());
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));
 	}

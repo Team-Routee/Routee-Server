@@ -15,6 +15,21 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 		Long memberId, LocalDate startDate, LocalDate endDate
 	);
 
+	boolean existsByMemberIdAndActivityDate(Long memberId, LocalDate activityDate);
+
+	@Modifying
+	@Query("""
+		UPDATE ActivityDailySummary ads
+		SET ads.totalDurationSec = ads.totalDurationSec + :durationSec,
+			ads.activityCount = ads.activityCount + 1
+		WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate
+		""")
+	void incrementDailySummary(
+		@Param("memberId") Long memberId,
+		@Param("activityDate") LocalDate activityDate,
+		@Param("durationSec") Integer durationSec
+	);
+
 	@Modifying
 	@Query("DELETE FROM ActivityDailySummary ads WHERE ads.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
