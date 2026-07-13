@@ -2984,7 +2984,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "irate(http_server_requests_seconds_sum{instance=~\"$instance\", application=\"$application\", exception=\"None\", uri!~\".*actuator.*\"}[5m]) / irate(http_server_requests_seconds_count{instance=~\"$instance\", application=\"$application\", exception=\"None\", uri!~\".*actuator.*\"}[5m])",
+          "expr": "sum by (method, status, uri) (\n    rate(http_server_requests_seconds_count{instance=~\"$instance\", application=\"$application\", uri!~\".*actuator.*\"}[5m])\n  )",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{method}} [{{status}}] - {{uri}}",
@@ -3407,7 +3407,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "tomcat_threads_config_max{instance=~\"$instance\", application=\"$application\"}",
+          "expr": "tomcat_threads_config_max_threads{instance=~\"$instance\", application=\"$application\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -3476,7 +3476,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "tomcat_threads_current{instance=~\"$instance\", application=\"$application\"}",
+          "expr": "tomcat_threads_current_threads{instance=~\"$instance\", application=\"$application\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -3484,7 +3484,7 @@
           "refId": "A"
         },
         {
-          "expr": "tomcat_threads_busy{instance=~\"$instance\", application=\"$application\"}",
+          "expr": "tomcat_threads_busy_threads{instance=~\"$instance\", application=\"$application\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Current thread busy",
