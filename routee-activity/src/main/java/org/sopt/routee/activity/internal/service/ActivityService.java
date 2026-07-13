@@ -52,7 +52,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ActivityService {
@@ -86,6 +88,9 @@ public class ActivityService {
 		String title = activityDate.format(TITLE_DATE_FORMATTER) + " 기록";
 		Activity activity = ActivityMapper.toEntity(command, title, startedAt);
 		Activity savedActivity = activityRepository.save(activity);
+
+		log.info("Activity created. activityId={}, memberId={}", savedActivity.getId(), command.memberId());
+
 		return new CreateActivityResult(savedActivity.getId(), title);
 	}
 
@@ -148,6 +153,8 @@ public class ActivityService {
 			ActivityMapper.toLineString(command.track()),
 			endedAt
 		);
+
+		log.info("Activity completed. activityId={}, memberId={}", command.activityId(), command.memberId());
 	}
 
 	@Transactional(readOnly = true)

@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -41,7 +43,10 @@ public class AuthService {
 
 		TokenClaimsResult tokenClaims = memberUseCase.getTokenResult(oauthId, command.provider());
 
-		return issueTokenPair(tokenClaims.memberId(), tokenClaims.memberRole());
+		TokenResult tokenResult = issueTokenPair(tokenClaims.memberId(), tokenClaims.memberRole());
+		log.info("Login succeeded. memberId={}, provider={}", tokenClaims.memberId(), command.provider());
+
+		return tokenResult;
 	}
 
 	public TokenResult reissue(String refreshToken) {
@@ -74,6 +79,8 @@ public class AuthService {
 
 		tokenBlacklistRepository.blacklist(accessToken, ttl);
 		refreshTokenRepository.deleteByToken(refreshToken);
+
+		log.info("Logout succeeded. memberId={}", jwtParser.extractMemberId(accessClaims));
 	}
 
 	public void revokeTokens(String accessTokenHash, String refreshTokenHash) {
