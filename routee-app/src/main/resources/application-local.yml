@@ -2,3 +2,24 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: routee   # 모든 메트릭에 application=routee 라벨 부여
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true   # tomcat.threads.* (스레드풀) / tomcat.global.sent|received (네트워크 트래픽) 노출에 필수
