@@ -16,6 +16,22 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 	);
 
 	@Modifying
+	@Query(value = """
+		INSERT INTO activity_daily_summary (id, member_id, activity_date, total_duration_sec, activity_count)
+		VALUES (:id, :memberId, :activityDate, :durationSec, 1)
+		ON CONFLICT (member_id, activity_date)
+		DO UPDATE SET
+			total_duration_sec = activity_daily_summary.total_duration_sec + EXCLUDED.total_duration_sec,
+			activity_count = activity_daily_summary.activity_count + 1
+		""", nativeQuery = true)
+	void upsertDailySummary(
+		@Param("id") Long id,
+		@Param("memberId") Long memberId,
+		@Param("activityDate") LocalDate activityDate,
+		@Param("durationSec") Integer durationSec
+	);
+
+	@Modifying
 	@Query("DELETE FROM ActivityDailySummary ads WHERE ads.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
 }
