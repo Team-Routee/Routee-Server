@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockFilterChain;
@@ -13,6 +14,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 class RequestLoggingFilterTest {
 
 	private final RequestLoggingFilter filter = new RequestLoggingFilter(new RequestModuleResolver());
+
+	@AfterEach
+	void tearDown() {
+		MDC.clear();
+	}
 
 	@Test
 	void 요청_처리_중에는_MDC에_traceId_method_uri가_채워진다() throws Exception {

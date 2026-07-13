@@ -1,10 +1,10 @@
 package org.sopt.routee.logging.internal;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import org.sopt.routee.logging.MdcKeys;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -18,11 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
-/**
- * Must run inside Boot's tracing observation filter (registered near {@link Ordered#HIGHEST_PRECEDENCE})
- * so that MDC already contains the real OTel traceId when this filter reads it, but outside Spring
- * Security's filter chain (registered around order -100) so auth failures are logged too.
- */
 @Slf4j
 @Component
 @Order(RequestLoggingFilter.ORDER)
@@ -41,6 +36,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 		HttpServletResponse response,
 		FilterChain filterChain
 	) throws ServletException, IOException {
+		Map<String, String> previousContext = MDC.getCopyOfContextMap();
+
 		String traceId = MDC.get(MdcKeys.TRACE_ID);
 		if (!StringUtils.hasText(traceId)) {
 			traceId = UUID.randomUUID().toString();
@@ -63,7 +60,11 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
 			log.info("{} {} - {} ({}ms)", request.getMethod(), request.getRequestURI(), response.getStatus(), durationMs);
 
-			MDC.clear();
+			if (previousContext != null) {
+				MDC.setContextMap(previousContext);
+			} else {
+				MDC.clear();
+			}
 		}
 	}
 }
