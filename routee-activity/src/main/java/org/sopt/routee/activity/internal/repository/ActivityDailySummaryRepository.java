@@ -15,16 +15,17 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 		Long memberId, LocalDate startDate, LocalDate endDate
 	);
 
-	boolean existsByMemberIdAndActivityDate(Long memberId, LocalDate activityDate);
-
-	@Modifying(flushAutomatically = true)
-	@Query("""
-		UPDATE ActivityDailySummary ads
-		SET ads.totalDurationSec = ads.totalDurationSec + :durationSec,
-			ads.activityCount = ads.activityCount + 1
-		WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate
-		""")
-	void incrementDailySummary(
+	@Modifying
+	@Query(value = """
+		INSERT INTO activity_daily_summary (id, member_id, activity_date, total_duration_sec, activity_count)
+		VALUES (:id, :memberId, :activityDate, :durationSec, 1)
+		ON CONFLICT (member_id, activity_date)
+		DO UPDATE SET
+			total_duration_sec = activity_daily_summary.total_duration_sec + EXCLUDED.total_duration_sec,
+			activity_count = activity_daily_summary.activity_count + 1
+		""", nativeQuery = true)
+	void upsertDailySummary(
+		@Param("id") Long id,
 		@Param("memberId") Long memberId,
 		@Param("activityDate") LocalDate activityDate,
 		@Param("durationSec") Integer durationSec
