@@ -45,6 +45,10 @@ s3:
   presigned-url-expiry-minutes: ${S3_PRESIGNED_URL_EXPIRY_MINUTES:10}
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
   tracing:
     sampling:
       probability: 0.1
