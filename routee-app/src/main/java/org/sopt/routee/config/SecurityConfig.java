@@ -4,6 +4,7 @@ import org.sopt.routee.auth.security.handler.JwtAccessDeniedHandler;
 import org.sopt.routee.auth.security.handler.JwtAuthenticationEntryPoint;
 import org.sopt.routee.auth.security.util.AuthWhiteList;
 import org.sopt.routee.auth.security.JwtAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +24,14 @@ class SecurityConfig {
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+	@Bean
+	FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration() {
+		FilterRegistrationBean<JwtAuthenticationFilter> registration =
+			new FilterRegistrationBean<>(jwtAuthenticationFilter);
+		registration.setEnabled(false);
+		return registration;
+	}
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
