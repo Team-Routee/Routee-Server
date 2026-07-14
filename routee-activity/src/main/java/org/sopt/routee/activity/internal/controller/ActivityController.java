@@ -160,7 +160,7 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_RECAP_GET_SUCCESS, ActivityRecapResponse.from(result)));
 	}
 
-	@GetMapping("/activity")
+	@GetMapping("/activity/recap")
 	public ResponseEntity<SuccessResponse<ActivityEditListResponse>> getActivityEditList(
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader("Time-Zone") String timeZone,
