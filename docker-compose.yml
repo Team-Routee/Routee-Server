@@ -121,9 +121,6 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      # prometheus.yml 변경을 재기동 없이 반영하기 위한 /-/reload 엔드포인트.
-      # 9090은 127.0.0.1에만 바인딩되므로 외부에서 호출할 수 없다.
-      - "--web.enable-lifecycle"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
