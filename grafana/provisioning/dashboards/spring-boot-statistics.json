@@ -2984,7 +2984,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (method, status, uri) (\\n    rate(http_server_requests_seconds_sum{instance=~\\\"$instance\\\", application=\\\"$application\\\", uri!~\\\".*actuator.*\\\"}[5m])\\n  )\\n  /\\n  sum by (method, status, uri) (\\n    rate(http_server_requests_seconds_count{instance=~\\\"$instance\\\", application=\\\"$application\\\", uri!~\\\".*actuator.*\\\"}[5m])\\n  )",
+          "expr": "sum by (method, status, uri) (rate(http_server_requests_seconds_sum{instance=~\"app-green:8080\", application=\"routee\", uri!~\".*actuator.*\"}[5m])) / sum by (method, status, uri) (rate(http_server_requests_seconds_count{instance=~\"app-green:8080\", application=\"routee\", uri!~\".*actuator.*\"}[5m]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{method}} [{{status}}] - {{uri}}",
