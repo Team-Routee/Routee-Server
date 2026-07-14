@@ -112,12 +112,30 @@ services:
     networks:
       - routee-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: routee-prometheus
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      # prometheus.yml 변경을 재기동 없이 반영하기 위한 /-/reload 엔드포인트.
+      # 9090은 127.0.0.1에만 바인딩되므로 외부에서 호출할 수 없다.
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - routee-network
+
   grafana:
     image: grafana/grafana:latest
     container_name: routee-grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
@@ -125,12 +143,14 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     depends_on:
       - tempo
+      - prometheus
     networks:
       - routee-network
 
 volumes:
   redis-data:
   tempo-data:
+  prometheus-data:
 
 networks:
   routee-network:

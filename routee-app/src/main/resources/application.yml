@@ -49,6 +49,13 @@ management:
     web:
       exposure:
         include: health,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: routee
   tracing:
     sampling:
       probability: 0.1
@@ -57,3 +64,8 @@ management:
       export:
         otlp:
           endpoint: http://tempo:4318/v1/traces
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true

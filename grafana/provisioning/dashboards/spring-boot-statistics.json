@@ -362,7 +362,7 @@
           "refId": "A"
         },
         {
-          "expr": "process_files_max{application=\"$application\", instance=~\"$instance\"}",
+          "expr": "process_files_max_files{application=\"$application\", instance=~\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Max Files",
@@ -1862,14 +1862,14 @@
           "refId": "A"
         },
         {
-          "expr": "jvm_threads_live{instance=~\"$instance\", application=\"$application\"}",
+          "expr": "jvm_threads_live_threads{instance=~\"$instance\", application=\"$application\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Live",
           "refId": "B"
         },
         {
-          "expr": "jvm_threads_peak{instance=~\"$instance\", application=\"$application\"}",
+          "expr": "jvm_threads_peak_threads{instance=~\"$instance\", application=\"$application\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Peak",

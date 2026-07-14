@@ -3,7 +3,10 @@ global:
   evaluation_interval: 5s
 
 scrape_configs:
+  # 운영과 동일하게 blue/green 두 타깃을 등록한다. 꺼져 있는 색은 up=0으로만 기록된다.
   - job_name: 'routee-app'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['app:8080']   # dev compose 네트워크상 app 서비스명
+      - targets:
+          - 'app-blue:8080'
+          - 'app-green:8080'

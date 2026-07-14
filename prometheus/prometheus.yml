@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # blue/green 두 타깃을 항상 등록한다. 꺼져 있는 색은 up=0으로 기록될 뿐이며,
+  # 대시보드에서 instance 라벨(app-blue:8080 / app-green:8080)로 색을 선택해서 본다.
+  # 알림을 만들 때는 up == 0 대신 sum(up{job="routee-app"}) < 1 형태로 작성할 것.
+  - job_name: 'routee-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'app-blue:8080'
+          - 'app-green:8080'
