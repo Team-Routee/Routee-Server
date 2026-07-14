@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'routee-dashboards'
+    orgId: 1
+    folder: 'Routee'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

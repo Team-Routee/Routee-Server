@@ -25,6 +25,9 @@ dependencies {
     // Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Metrics — Prometheus registry (exposes /actuator/prometheus)
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 

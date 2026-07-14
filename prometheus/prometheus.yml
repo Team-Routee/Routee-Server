@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  scrape_timeout: 4s
+
+scrape_configs:
+  - job_name: 'routee-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'app-blue:8080'
+          - 'app-green:8080'
