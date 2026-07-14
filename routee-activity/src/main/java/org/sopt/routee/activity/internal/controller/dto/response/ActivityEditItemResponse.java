@@ -9,14 +9,14 @@ public record ActivityEditItemResponse(
 	Long activityId,
 	String title,
 	LocalDate activityDate,
-	List<String> timelinePhotoUrls
+	List<String> timelineImageUrls
 ) {
 	public static ActivityEditItemResponse from(ActivityEditItemResult result) {
 		return new ActivityEditItemResponse(
 			result.activityId(),
 			result.title(),
 			result.activityDate(),
-			result.timelinePhotoUrls()
+			result.timelineImageUrls()
 		);
 	}
 }

@@ -73,7 +73,7 @@ public class ActivityService {
 		ActivityStatus.ACTIVITY_IN_PROGRESS,
 		ActivityStatus.ACTIVITY_PAUSED
 	);
-	private static final int MAX_EDIT_LIST_TIMELINE_PHOTO_COUNT = 4;
+	private static final int MAX_EDIT_LIST_TIMELINE_IMAGE_COUNT = 4;
 
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
@@ -242,14 +242,14 @@ public class ActivityService {
 
 		List<ActivityEditItemResult> items = activities.stream()
 			.map(activity -> {
-				List<String> timelinePhotoUrls = timelinesByActivityId
+				List<String> timelineImageUrls = timelinesByActivityId
 					.getOrDefault(activity.getId(), List.of())
 					.stream()
-					.limit(MAX_EDIT_LIST_TIMELINE_PHOTO_COUNT)
+					.limit(MAX_EDIT_LIST_TIMELINE_IMAGE_COUNT)
 					.map(timeline -> generateTimelineImageUrl(activity.getId(), timeline, FileUploadImageSize.MEDIUM))
 					.toList();
 				LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
-				return ActivityMapper.toActivityEditItemResult(activity, activityDate, timelinePhotoUrls);
+				return ActivityMapper.toActivityEditItemResult(activity, activityDate, timelineImageUrls);
 			})
 			.toList();
 

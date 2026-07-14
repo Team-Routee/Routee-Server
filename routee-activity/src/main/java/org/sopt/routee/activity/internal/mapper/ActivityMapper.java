@@ -61,9 +61,9 @@ public class ActivityMapper {
 	}
 
 	public static ActivityEditItemResult toActivityEditItemResult(
-		Activity activity, LocalDate activityDate, List<String> timelinePhotoUrls
+		Activity activity, LocalDate activityDate, List<String> timelineImageUrls
 	) {
-		return new ActivityEditItemResult(activity.getId(), activity.getTitle(), activityDate, timelinePhotoUrls);
+		return new ActivityEditItemResult(activity.getId(), activity.getTitle(), activityDate, timelineImageUrls);
 	}
 
 	public static ActivityRecapResult toRecapResult(Activity activity, List<Route> routes) {

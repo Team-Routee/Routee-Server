@@ -7,6 +7,6 @@ public record ActivityEditItemResult(
 	Long activityId,
 	String title,
 	LocalDate activityDate,
-	List<String> timelinePhotoUrls
+	List<String> timelineImageUrls
 ) {
 }
