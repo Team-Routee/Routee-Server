@@ -11,28 +11,28 @@ fi
 
 export APP_IMAGE=$APP_IMAGE
 
-if ! docker ps --format '{{.Names}}' | grep -q "^routee-nginx$"; then
-  echo "Initial setup: starting nginx, redis, dozzle, tempo, grafana, prometheus..."
-  mkdir -p nginx
-  if [ ! -f nginx/service-url.inc ]; then
-    echo "set \$service_url app-blue:8080;" > nginx/service-url.inc
-  fi
-  docker compose -f docker-compose.yml up -d nginx redis dozzle tempo grafana prometheus
+mkdir -p nginx
 
-  echo "Waiting for Redis to be ready..."
-  for i in {1..30}; do
-    if docker exec routee-redis redis-cli ping 2>/dev/null | grep -q PONG; then
-      echo "Redis is ready"
-      break
-    fi
-    if [ "$i" -eq 30 ]; then
-      echo "Redis healthcheck failed"
-      docker logs routee-redis --tail 50
-      exit 1
-    fi
-    sleep 1
-  done
+if [ ! -f nginx/service-url.inc ]; then
+  echo "set \$service_url app-blue:8080;" > nginx/service-url.inc
 fi
+
+echo "Ensuring shared infrastructure is running..."
+docker compose -f docker-compose.yml up -d nginx redis dozzle tempo grafana prometheus
+
+echo "Waiting for Redis to be ready..."
+for i in {1..30}; do
+  if docker exec routee-redis redis-cli ping 2>/dev/null | grep -q PONG; then
+    echo "Redis is ready"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "Redis healthcheck failed"
+    docker logs routee-redis --tail 50
+    exit 1
+  fi
+  sleep 1
+done
 
 if docker ps --format '{{.Names}}' | grep -q "^routee-app-blue$"; then
   CURRENT="app-blue"
