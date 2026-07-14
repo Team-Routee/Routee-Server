@@ -31,18 +31,12 @@ read_nginx_target() {
 
 write_nginx_target() {
   local service=$1
-  local temp_file
 
-  temp_file=$(mktemp nginx/service-url.inc.tmp.XXXXXX) || return 1
-  if ! printf 'set $service_url %s:8080;\n' "$service" > "$temp_file"; then
-    rm -f "$temp_file"
+  if ! printf 'set $service_url %s:8080;\n' "$service" > nginx/service-url.inc; then
     return 1
   fi
 
-  # mktemp은 0600으로 파일을 만들고 mv는 그 권한을 유지한다.
-  chmod 0644 "$temp_file" || { rm -f "$temp_file"; return 1; }
-
-  mv "$temp_file" nginx/service-url.inc
+  chmod 0644 nginx/service-url.inc
 }
 
 reload_prometheus() {
