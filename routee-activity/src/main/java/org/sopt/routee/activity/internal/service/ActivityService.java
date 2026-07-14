@@ -232,7 +232,7 @@ public class ActivityService {
 
 		List<Long> activityIds = activities.stream().map(Activity::getId).toList();
 		Map<Long, List<Timeline>> timelinesByActivityId = timelineRepository
-			.findByActivityIdInAndTimelineStatusOrderByCreatedAtAsc(activityIds, TimelineStatus.SUCCESSFUL_CREATED)
+			.findByActivityIdInAndTimelineStatusOrderByCreatedAtDesc(activityIds, TimelineStatus.SUCCESSFUL_CREATED)
 			.stream()
 			.collect(Collectors.groupingBy(timeline -> timeline.getActivity().getId()));
 
