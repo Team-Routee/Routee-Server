@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 public enum SuccessCode implements SuccessResultCode {
 
 	ACTIVITY_COMPLETED(HttpStatus.OK, "활동 기록 저장에 성공했습니다."),
+	ACTIVITY_EDIT_LIST_GET_SUCCESS(HttpStatus.OK, "활동 수정 목록 조회에 성공했습니다."),
 	ACTIVITY_RECAP_GET_SUCCESS(HttpStatus.OK, "활동 리캡 조회에 성공했습니다."),
 	ACTIVITY_STATISTICS_GET_SUCCESS(HttpStatus.OK, "활동 통계 기록 조회에 성공했습니다."),
 	ACTIVITY_STATUS_UPDATED(HttpStatus.OK, "활동 상태 변경에 성공했습니다."),

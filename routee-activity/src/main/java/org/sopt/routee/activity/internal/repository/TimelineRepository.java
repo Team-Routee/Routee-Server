@@ -16,6 +16,8 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 
 	List<Timeline> findByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(Long activityId, TimelineStatus timelineStatus);
 
+	List<Timeline> findByActivityIdInAndTimelineStatusOrderByCreatedAtAsc(List<Long> activityIds, TimelineStatus timelineStatus);
+
 	@Modifying
 	@Query("DELETE FROM Timeline t WHERE t.activity.memberId = :memberId")
 	void deleteTimelinesByMemberId(@Param("memberId") Long memberId);

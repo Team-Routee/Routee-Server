@@ -2,11 +2,14 @@ package org.sopt.routee.activity.internal.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.sopt.routee.activity.api.event.ActivityCompletedEvent;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
@@ -30,6 +33,8 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateActivityComma
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityEditItemResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityEditListResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
@@ -68,6 +73,7 @@ public class ActivityService {
 		ActivityStatus.ACTIVITY_IN_PROGRESS,
 		ActivityStatus.ACTIVITY_PAUSED
 	);
+	private static final int MAX_EDIT_LIST_TIMELINE_PHOTO_COUNT = 4;
 
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
@@ -215,6 +221,38 @@ public class ActivityService {
 	}
 
 	@Transactional(readOnly = true)
+	public ActivityEditListResult getActivityEditList(Long memberId, YearMonth yearMonth, ZoneId timeZone) {
+		Instant startedAtFrom = TimeZoneUtils.toUtcInstant(yearMonth.atDay(1), timeZone);
+		Instant startedAtTo = TimeZoneUtils.toUtcInstant(yearMonth.plusMonths(1).atDay(1), timeZone).minusNanos(1);
+
+		List<Activity> activities = activityRepository
+			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtAsc(
+				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
+			);
+
+		List<Long> activityIds = activities.stream().map(Activity::getId).toList();
+		Map<Long, List<Timeline>> timelinesByActivityId = timelineRepository
+			.findByActivityIdInAndTimelineStatusOrderByCreatedAtAsc(activityIds, TimelineStatus.SUCCESSFUL_CREATED)
+			.stream()
+			.collect(Collectors.groupingBy(timeline -> timeline.getActivity().getId()));
+
+		List<ActivityEditItemResult> items = activities.stream()
+			.map(activity -> {
+				List<String> timelinePhotoUrls = timelinesByActivityId
+					.getOrDefault(activity.getId(), List.of())
+					.stream()
+					.limit(MAX_EDIT_LIST_TIMELINE_PHOTO_COUNT)
+					.map(timeline -> generateTimelineImageUrl(activity.getId(), timeline, FileUploadImageSize.MEDIUM))
+					.toList();
+				LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
+				return ActivityMapper.toActivityEditItemResult(activity, activityDate, timelinePhotoUrls);
+			})
+			.toList();
+
+		return new ActivityEditListResult(yearMonth.getYear(), yearMonth.getMonthValue(), items);
+	}
+
+	@Transactional(readOnly = true)
 	public ActivityTrackResult getTrack(Long activityId, Long memberId) {
 		Activity activity = activityRepository.findByIdAndMemberId(activityId, memberId)
 			.orElseThrow(ActivityNotFoundException::new);
@@ -228,7 +266,9 @@ public class ActivityService {
 			activityId, TimelineStatus.SUCCESSFUL_CREATED
 		);
 		List<TimelineMarkerResult> timelineMarkers = timelines.stream()
-			.map(timeline -> ActivityTrackMapper.toTimelineMarker(timeline, generateTimelineThumbnailUrl(activityId, timeline)))
+			.map(timeline -> ActivityTrackMapper.toTimelineMarker(
+				timeline, generateTimelineImageUrl(activityId, timeline, FileUploadImageSize.SMALL)
+			))
 			.toList();
 
 		return new ActivityTrackResult(activityId, trackPointResults, timelineMarkers);
@@ -253,10 +293,10 @@ public class ActivityService {
 		activityRepository.deleteByMemberId(memberId);
 	}
 
-	private String generateTimelineThumbnailUrl(Long activityId, Timeline timeline) {
+	private String generateTimelineImageUrl(Long activityId, Timeline timeline, FileUploadImageSize imageSize) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
-			FileUploadImageSize.SMALL,
+			imageSize,
 			activityId.toString(),
 			timeline.getTimelineImageObjectKey()
 		);
