@@ -230,6 +230,10 @@ public class ActivityService {
 				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
 			);
 
+		if (activities.isEmpty()) {
+			return new ActivityEditListResult(yearMonth.getYear(), yearMonth.getMonthValue(), List.of());
+		}
+
 		List<Long> activityIds = activities.stream().map(Activity::getId).toList();
 		Map<Long, List<Timeline>> timelinesByActivityId = timelineRepository
 			.findByActivityIdInAndTimelineStatusOrderByCreatedAtDesc(activityIds, TimelineStatus.SUCCESSFUL_CREATED)
@@ -280,10 +284,10 @@ public class ActivityService {
 		}
 
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
-				FileUploadDirectory.TIMELINE,
-				FileUploadImageSize.SMALL,
-				activity.getId().toString(),
-				activity.getCoverImageObjectKey()
+			FileUploadDirectory.TIMELINE,
+			FileUploadImageSize.SMALL,
+			activity.getId().toString(),
+			activity.getCoverImageObjectKey()
 		);
 		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
