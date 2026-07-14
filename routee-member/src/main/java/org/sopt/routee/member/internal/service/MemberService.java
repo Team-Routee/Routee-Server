@@ -76,6 +76,11 @@ public class MemberService {
 		return MemberMapper.toMemberInfoResult(member, zoneId);
 	}
 
+	@Transactional
+	public void incrementTotalActivityCount(long memberId) {
+		memberRepository.incrementTotalActivityCount(memberId);
+	}
+
 	@Transactional(readOnly = true)
 	public ActivitySummaryResult getActivitySummary(long memberId, int year, int month) {
 		if (!memberRepository.existsById(memberId)) {

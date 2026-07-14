@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -41,7 +43,10 @@ public class AuthService {
 
 		TokenClaimsResult tokenClaims = memberUseCase.getTokenResult(oauthId, command.provider());
 
-		return issueTokenPair(tokenClaims.memberId(), tokenClaims.memberRole());
+		TokenResult tokenResult = issueTokenPair(tokenClaims.memberId(), tokenClaims.memberRole());
+		log.info("Login succeeded. memberId={}, provider={}", tokenClaims.memberId(), command.provider());
+
+		return tokenResult;
 	}
 
 	public TokenResult reissue(String refreshToken) {
@@ -66,7 +71,8 @@ public class AuthService {
 			throw new InvalidTokenException();
 		}
 
-		if (!jwtParser.extractMemberId(accessClaims).equals(jwtParser.extractMemberId(refreshClaims))) {
+		Long memberId = jwtParser.extractMemberId(accessClaims);
+		if (!memberId.equals(jwtParser.extractMemberId(refreshClaims))) {
 			throw new InvalidTokenException();
 		}
 
@@ -74,6 +80,8 @@ public class AuthService {
 
 		tokenBlacklistRepository.blacklist(accessToken, ttl);
 		refreshTokenRepository.deleteByToken(refreshToken);
+
+		log.info("Logout succeeded. memberId={}", memberId);
 	}
 
 	public void revokeTokens(String accessTokenHash, String refreshTokenHash) {

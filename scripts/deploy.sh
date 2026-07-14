@@ -12,12 +12,12 @@ fi
 export APP_IMAGE=$APP_IMAGE
 
 if ! docker ps --format '{{.Names}}' | grep -q "^routee-nginx$"; then
-  echo "Initial setup: starting nginx, redis, dozzle..."
+  echo "Initial setup: starting nginx, redis, dozzle, tempo, grafana, prometheus..."
   mkdir -p nginx
   if [ ! -f nginx/service-url.inc ]; then
     echo "set \$service_url app-blue:8080;" > nginx/service-url.inc
   fi
-  docker compose -f docker-compose.yml up -d nginx redis dozzle
+  docker compose -f docker-compose.yml up -d nginx redis dozzle tempo grafana prometheus
 
   echo "Waiting for Redis to be ready..."
   for i in {1..30}; do

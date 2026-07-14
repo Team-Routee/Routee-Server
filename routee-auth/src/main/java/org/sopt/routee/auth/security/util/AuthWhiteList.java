@@ -18,6 +18,8 @@ public enum AuthWhiteList {
 	TOKEN_REISSUE(HttpMethod.POST, "/api/v1/auth/reissue"),
 
 	ACTUATOR_HEALTH_CHECK(HttpMethod.GET, "/actuator/health"),
+	ACTUATOR_CONDITION(HttpMethod.GET, "/actuator/conditions"),
+	ACTUATOR_PROMETHEUS(HttpMethod.GET, "/actuator/prometheus"),
 
 	SWAGGER_UI(HttpMethod.GET, "/swagger-ui/**"),
 	SWAGGER_API_DOCS(HttpMethod.GET, "/v3/api-docs/**");

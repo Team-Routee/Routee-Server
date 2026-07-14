@@ -25,6 +25,9 @@ dependencies {
     // Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Metrics — Prometheus registry (exposes /actuator/prometheus)
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
@@ -32,5 +35,14 @@ dependencies {
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation "org.springframework.modulith:spring-modulith-events-jackson"
     implementation 'org.springframework.modulith:spring-modulith-events-jpa'
+    implementation 'org.springframework.modulith:spring-modulith-observability'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+
+    // tracing
+    implementation 'org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+
+    // logging
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 }
