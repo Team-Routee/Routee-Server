@@ -2,6 +2,7 @@ package org.sopt.routee.activity.internal.controller;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
@@ -11,6 +12,7 @@ import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRe
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditListResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
@@ -20,6 +22,7 @@ import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlRespons
 import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityEditListResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
@@ -35,6 +38,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -49,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
@@ -153,6 +158,21 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_RECAP_GET_SUCCESS, ActivityRecapResponse.from(result)));
+	}
+
+	@GetMapping("/activity/recap")
+	public ResponseEntity<SuccessResponse<ActivityEditListResponse>> getActivityEditList(
+		@AuthenticationPrincipal Long memberId,
+		@RequestHeader("Time-Zone") String timeZone,
+		@RequestParam(name = "year", required = true) Integer year,
+		@RequestParam(name = "month", required = true) Integer month
+	) {
+		ActivityEditListResult result = activityService.getActivityEditList(
+			memberId, YearMonth.of(year, month), parseTimeZone(timeZone)
+		);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_EDIT_LIST_GET_SUCCESS, ActivityEditListResponse.from(result)));
 	}
 
 	@GetMapping("/archive/activity")

@@ -8,6 +8,7 @@ import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUp
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditListResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
@@ -32,6 +33,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Tag(name = "Activity", description = "활동 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -253,6 +256,33 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<ActivityRecapResponse>> getRecap(
 		Long memberId,
 		@PathVariable(name = "activityId") Long activityId
+	);
+
+	@Operation(summary = "월별 활동 수정 목록 조회", description = "인증된 사용자의 특정 연/월에 완료된 활동 수정 목록을 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "월별 활동 수정 목록 조회 성공",
+			content = @Content(schema = @Schema(implementation = ActivityEditListResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_PARAMETER_TYPE",
+						value = "{\"status\":400,\"code\":\"INVALID_PARAMETER_TYPE\",\"message\":\"요청 파라미터 타입이 올바르지 않습니다.\"}"),
+					@ExampleObject(name = "MISSING_REQUEST_PARAMETER",
+						value = "{\"status\":400,\"code\":\"MISSING_REQUEST_PARAMETER\",\"message\":\"필수 요청 파라미터가 누락되었습니다.\"}"),
+					@ExampleObject(name = "INVALID_TIME_ZONE",
+						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class)))
+	})
+	ResponseEntity<SuccessResponse<ActivityEditListResponse>> getActivityEditList(
+		Long memberId,
+		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
+		@RequestHeader("Time-Zone") String timeZone,
+		@Parameter(description = "조회할 연도", example = "2026", required = true)
+		@RequestParam(name = "year", required = true) Integer year,
+		@Parameter(description = "조회할 월", example = "7", required = true)
+		@Min(1) @Max(12) @RequestParam(name = "month", required = true) Integer month
 	);
 
 	@Operation(summary = "특정 날짜의 활동 목록 조회", description = "인증된 사용자의 특정 날짜에 완료된 활동 목록을 조회합니다.")
