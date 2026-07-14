@@ -14,6 +14,7 @@ import org.sopt.routee.activity.internal.entity.route.Route;
 import org.sopt.routee.activity.internal.exception.InvalidTrackException;
 import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityEditItemResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapRouteResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
@@ -57,6 +58,12 @@ public class ActivityMapper {
 
 	public static ActivityPreviewResult toActivityPreviewResult(Activity activity, String thumbnailUrl) {
 		return new ActivityPreviewResult(activity.getId(), activity.getTitle(), thumbnailUrl);
+	}
+
+	public static ActivityEditItemResult toActivityEditItemResult(
+		Activity activity, LocalDate activityDate, List<String> timelineImageUrls
+	) {
+		return new ActivityEditItemResult(activity.getId(), activity.getTitle(), activityDate, timelineImageUrls);
 	}
 
 	public static ActivityRecapResult toRecapResult(Activity activity, List<Route> routes) {
