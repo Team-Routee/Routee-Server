@@ -226,7 +226,7 @@ public class ActivityService {
 		Instant startedAtTo = TimeZoneUtils.toUtcInstant(yearMonth.plusMonths(1).atDay(1), timeZone).minusNanos(1);
 
 		List<Activity> activities = activityRepository
-			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtAsc(
+			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtDesc(
 				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
 			);
 
@@ -236,7 +236,7 @@ public class ActivityService {
 
 		List<Long> activityIds = activities.stream().map(Activity::getId).toList();
 		Map<Long, List<Timeline>> timelinesByActivityId = timelineRepository
-			.findByActivityIdInAndTimelineStatusOrderByCreatedAtDesc(activityIds, TimelineStatus.SUCCESSFUL_CREATED)
+			.findByActivityIdInAndTimelineStatusOrderByCreatedAtAsc(activityIds, TimelineStatus.SUCCESSFUL_CREATED)
 			.stream()
 			.collect(Collectors.groupingBy(timeline -> timeline.getActivity().getId()));
 

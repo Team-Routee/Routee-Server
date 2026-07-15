@@ -26,6 +26,13 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 		Instant startedAtTo
 	);
 
+	List<Activity> findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtDesc(
+		Long memberId,
+		ActivityStatus activityStatus,
+		Instant startedAtFrom,
+		Instant startedAtTo
+	);
+
 	@Modifying
 	@Query("DELETE FROM Activity a WHERE a.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
