@@ -33,6 +33,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Tag(name = "Activity", description = "활동 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -280,7 +282,7 @@ public interface ActivityControllerDocs {
 		@Parameter(description = "조회할 연도", example = "2026", required = true)
 		@RequestParam(name = "year", required = true) Integer year,
 		@Parameter(description = "조회할 월", example = "7", required = true)
-		@RequestParam(name = "month", required = true) Integer month
+		@Min(1) @Max(12) @RequestParam(name = "month", required = true) Integer month
 	);
 
 	@Operation(summary = "특정 날짜의 활동 목록 조회", description = "인증된 사용자의 특정 날짜에 완료된 활동 목록을 조회합니다.")

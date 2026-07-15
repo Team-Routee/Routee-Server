@@ -51,6 +51,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @Validated
@@ -165,7 +167,7 @@ public class ActivityController implements ActivityControllerDocs {
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader("Time-Zone") String timeZone,
 		@RequestParam(name = "year", required = true) Integer year,
-		@RequestParam(name = "month", required = true) Integer month
+		@Min(1) @Max(12) @RequestParam(name = "month", required = true) Integer month
 	) {
 		ActivityEditListResult result = activityService.getActivityEditList(
 			memberId, YearMonth.of(year, month), parseTimeZone(timeZone)
