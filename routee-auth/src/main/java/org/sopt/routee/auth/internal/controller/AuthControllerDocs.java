@@ -31,8 +31,8 @@ public interface AuthControllerDocs {
 				examples = {
 					@ExampleObject(name = "INVALID_INPUT_VALUE",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"provider는 필수입니다.\"}"),
-					@ExampleObject(name = "UNSUPPORTED_PROVIDER",
-						value = "{\"status\":400,\"code\":\"UNSUPPORTED_PROVIDER\",\"message\":\"지원하지 않는 소셜 로그인 제공자입니다.\"}")
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),
 		@ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 id_token",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),

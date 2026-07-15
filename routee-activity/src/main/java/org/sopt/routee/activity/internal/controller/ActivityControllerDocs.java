@@ -33,8 +33,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 
 @Tag(name = "Activity", description = "활동 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -94,7 +92,7 @@ public interface ActivityControllerDocs {
 		@ApiResponse(responseCode = "404", description = "활동 기록 없음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
-					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록을 찾을 수 없습니다.\"}")))
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<ImageUrlResponse>> generateImageUploadUrl(
 		Long memberId,
@@ -125,7 +123,7 @@ public interface ActivityControllerDocs {
 		@ApiResponse(responseCode = "404", description = "활동 기록 없음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
-					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록을 찾을 수 없습니다.\"}")))
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<ImageUrlResponse>> generateMapImageUploadUrl(
 		Long memberId,
@@ -194,8 +192,8 @@ public interface ActivityControllerDocs {
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"durationSec은 1 이상이어야 합니다.\"}"),
 					@ExampleObject(name = "INVALID_MAX_ELEVATION",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"maxElevation은 9000 이하여야 합니다.\"}"),
-					@ExampleObject(name = "INVALID_ACTIVITY_TIME_RANGE",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"endedAt은 startedAt에 durationSec을 더한 시간 이후여야 합니다.\"}"),
+					@ExampleObject(name = "INVALID_MIN_ELEVATION",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"maxElevation은 -500 이상이어야 합니다.\"}"),
 					@ExampleObject(name = "INVALID_TIME_ZONE",
 						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}"),
 					@ExampleObject(name = "INVALID_TRACK",
@@ -216,7 +214,7 @@ public interface ActivityControllerDocs {
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = ActivityCompleteRequest.class),
 				examples = @ExampleObject(value = """
-					{"title":"북한산 기록","activityType":"HIKING","status":"ACTIVITY_COMPLETED","distance":5400,"durationSec":3600,"maxElevation":836,"mapImageUrl":"https://example.com/map.png","coverImageObjectKey":"activity/1/cover.png","track":"LINESTRING ZM (126.978 37.566 20 0, 126.979 37.567 25 10)","startedAt":"2026-07-07T15:30:00","endedAt":"2026-07-07T16:30:00"}""")))
+					{"title":"북한산 기록","distance":5400,"durationSec":3600,"maxElevation":836,"mapImageUrl":"https://example.com/map.png","coverImageObjectKey":"activity/1/cover.png","track":[{"latitude":37.566,"longitude":126.978,"elevation":20,"pointIndex":0},{"latitude":37.567,"longitude":126.979,"elevation":25,"pointIndex":10}],"endedAt":"2026-07-07T16:30:00"}""")))
 		@Valid @RequestBody ActivityCompleteRequest request
 	);
 
@@ -282,7 +280,7 @@ public interface ActivityControllerDocs {
 		@Parameter(description = "조회할 연도", example = "2026", required = true)
 		@RequestParam(name = "year", required = true) Integer year,
 		@Parameter(description = "조회할 월", example = "7", required = true)
-		@Min(1) @Max(12) @RequestParam(name = "month", required = true) Integer month
+		@RequestParam(name = "month", required = true) Integer month
 	);
 
 	@Operation(summary = "특정 날짜의 활동 목록 조회", description = "인증된 사용자의 특정 날짜에 완료된 활동 목록을 조회합니다.")
