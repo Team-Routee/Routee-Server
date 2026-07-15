@@ -32,8 +32,8 @@ public interface TimelineControllerDocs {
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
-					@ExampleObject(name = "INVALID_INPUT_VALUE",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 필수입니다.\"}"),
+					@ExampleObject(name = "TITLE_TOO_LONG",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 16자 이하여야 합니다.\"}"),
 					@ExampleObject(name = "INVALID_TIME_ZONE",
 						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}")
 				})),
@@ -42,11 +42,7 @@ public interface TimelineControllerDocs {
 		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
-					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}"))),
-		@ApiResponse(responseCode = "409", description = "해당 좌표 번호의 타임라인이 이미 존재함",
-			content = @Content(schema = @Schema(implementation = FailureResponse.class),
-				examples = @ExampleObject(name = "TIMELINE_ALREADY_EXISTS",
-					value = "{\"status\":409,\"code\":\"TIMELINE_ALREADY_EXISTS\",\"message\":\"해당 경로 좌표에는 이미 타임라인이 존재합니다.\"}")))
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<Void>> create(
 		@Parameter(hidden = true)

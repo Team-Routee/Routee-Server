@@ -38,10 +38,10 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
-					@ExampleObject(name = "INVALID_INPUT_VALUE",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"nickname은 필수입니다.\"}"),
-					@ExampleObject(name = "UNSUPPORTED_PROVIDER",
-						value = "{\"status\":400,\"code\":\"UNSUPPORTED_PROVIDER\",\"message\":\"지원하지 않는 소셜 로그인 제공자입니다.\"}")
+					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),
 		@ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 id_token",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
@@ -100,7 +100,7 @@ public interface MemberControllerDocs {
 				examples = {
 					@ExampleObject(name = "MISSING_REQUEST_HEADER",
 						value = "{\"status\":400,\"code\":\"MISSING_REQUEST_HEADER\",\"message\":\"필수 요청 헤더가 누락되었습니다.\"}"),
-					@ExampleObject(name = "INVALID_TIME_ZONE",
+					@ExampleObject(name = "INVALID_HEADER",
 						value = "{\"status\":400,\"code\":\"INVALID_HEADER\",\"message\":\"헤더값이 올바르지 않습니다.\"}")
 				})),
 		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
@@ -132,8 +132,8 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = ActivitySummaryResponse.class))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
-				examples = @ExampleObject(name = "INVALID_INPUT_VALUE",
-					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"year는 필수입니다.\"}"))),
+				examples = @ExampleObject(name = "MISSING_REQUEST_PARAMETER",
+					value = "{\"status\":400,\"code\":\"MISSING_REQUEST_PARAMETER\",\"message\":\"필수 요청 파라미터가 누락되었습니다.\"}"))),
 		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
