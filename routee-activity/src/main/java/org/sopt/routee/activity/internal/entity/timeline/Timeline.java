@@ -13,10 +13,10 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,10 +27,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 @Table(name = "timeline",
-	uniqueConstraints = {
-		@UniqueConstraint(
-			name = "uk_timeline_activity_point_index",
-			columnNames = {"activity_id", "track_point_index"}
+	indexes = {
+		@Index(
+			name = "idx_timeline_activity_id_created_at",
+			columnList = "activity_id, created_at"
 		)
 	})
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
