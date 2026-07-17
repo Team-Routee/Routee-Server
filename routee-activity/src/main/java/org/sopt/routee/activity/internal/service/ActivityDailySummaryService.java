@@ -4,9 +4,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
-import org.sopt.routee.activity.internal.service.dto.result.ActivityDailySummaryResult;
 import org.sopt.routee.activity.internal.mapper.ActivityDailySummaryMapper;
 import org.sopt.routee.activity.internal.repository.ActivityDailySummaryRepository;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityDailySummaryResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +30,9 @@ public class ActivityDailySummaryService {
 	}
 
 	@Transactional
-	public void recordActivity(Long memberId, LocalDate activityDate, Integer durationSec) {
+	public void recordActivity(Long memberId, LocalDate activityDate, Integer durationSec, String coverImageUrl) {
 		activityDailySummaryRepository.upsertDailySummary(
-			TSID.Factory.getTsid().toLong(), memberId, activityDate, durationSec
+			TSID.Factory.getTsid().toLong(), memberId, activityDate, durationSec, coverImageUrl
 		);
 	}
 
