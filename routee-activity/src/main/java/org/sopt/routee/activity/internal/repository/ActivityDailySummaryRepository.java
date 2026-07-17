@@ -17,18 +17,22 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 
 	@Modifying
 	@Query(value = """
-		INSERT INTO activity_daily_summary (id, member_id, activity_date, total_duration_sec, activity_count)
-		VALUES (:id, :memberId, :activityDate, :durationSec, 1)
+		INSERT INTO activity_daily_summary (
+			id, member_id, activity_date, total_duration_sec, cover_image_url, activity_count
+		)
+		VALUES (:id, :memberId, :activityDate, :durationSec, :coverImageUrl, 1)
 		ON CONFLICT (member_id, activity_date)
 		DO UPDATE SET
 			total_duration_sec = activity_daily_summary.total_duration_sec + EXCLUDED.total_duration_sec,
+			cover_image_url = COALESCE(activity_daily_summary.cover_image_url, EXCLUDED.cover_image_url),
 			activity_count = activity_daily_summary.activity_count + 1
 		""", nativeQuery = true)
 	void upsertDailySummary(
 		@Param("id") Long id,
 		@Param("memberId") Long memberId,
 		@Param("activityDate") LocalDate activityDate,
-		@Param("durationSec") Integer durationSec
+		@Param("durationSec") Integer durationSec,
+		@Param("coverImageUrl") String coverImageUrl
 	);
 
 	@Modifying

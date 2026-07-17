@@ -172,7 +172,10 @@ public class ActivityService {
 		);
 
 		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
-		activityDailySummaryService.recordActivity(command.memberId(), activityDate, command.durationSec());
+		String coverImageUrl = generateThumbnailUrl(activity);
+		activityDailySummaryService.recordActivity(
+			command.memberId(), activityDate, command.durationSec(), coverImageUrl
+		);
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));
 
