@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.controller;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
@@ -64,7 +65,7 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = ActivityCreateRequest.class),
 				examples = @ExampleObject(value = "{\"activityType\":\"HIKING\",\"startedAt\":\"2026-07-07T15:30:00\"}")))
@@ -211,7 +212,7 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<Void>> complete(
 		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@PathVariable(name = "activityId") Long activityId,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = ActivityCompleteRequest.class),
@@ -239,7 +240,7 @@ public interface ActivityControllerDocs {
 		Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone
+		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
 
 	@Operation(summary = "활동 리캡 조회", description = "인증된 사용자의 활동 리캡 정보를 조회합니다.")
@@ -278,7 +279,7 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<ActivityEditListResponse>> getActivityEditList(
 		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@Parameter(description = "조회할 연도", example = "2026", required = true)
 		@RequestParam(name = "year", required = true) Integer year,
 		@Parameter(description = "조회할 월", example = "7", required = true)
@@ -305,7 +306,7 @@ public interface ActivityControllerDocs {
 		@Parameter(description = "조회할 날짜", example = "2026-07-02", required = true)
 		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone
+		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
 
 	@Operation(summary = "활동 경로 데이터 조회", description = "활동 기록에 속하는 경로 좌표와 타임라인 좌표 목록을 조회합니다.")

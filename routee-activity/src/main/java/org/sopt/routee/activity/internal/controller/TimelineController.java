@@ -1,14 +1,11 @@
 package org.sopt.routee.activity.internal.controller;
 
-import java.time.DateTimeException;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
-import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.TimelineService;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
 import org.sopt.routee.response.ApiResponse;
@@ -38,10 +35,10 @@ public class TimelineController implements TimelineControllerDocs {
 	public ResponseEntity<SuccessResponse<Void>> create(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@Valid @RequestBody CreateTimelineRequest request
 	) {
-		timelineService.create(request.toCommand(memberId, activityId, parseTimeZone(timeZone)));
+		timelineService.create(request.toCommand(memberId, activityId, timeZone));
 
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.body(ApiResponse.success(SuccessCode.TIMELINE_CREATED));
@@ -56,17 +53,5 @@ public class TimelineController implements TimelineControllerDocs {
 
 		return ResponseEntity.ok(
 			ApiResponse.success(SuccessCode.TIMELINE_LIST_GET_SUCCESS, TimelineListResponse.of(activityId, results)));
-	}
-
-	private ZoneId parseTimeZone(String timeZone) {
-		try {
-			ZoneId zoneId = ZoneId.of(timeZone);
-			if (zoneId instanceof ZoneOffset) {
-				throw new InvalidTimeZoneException();
-			}
-			return zoneId;
-		} catch (DateTimeException e) {
-			throw new InvalidTimeZoneException();
-		}
 	}
 }
