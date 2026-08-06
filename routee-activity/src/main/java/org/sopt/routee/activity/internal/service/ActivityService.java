@@ -33,6 +33,7 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateActivityComma
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
+import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityTitleCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityEditItemResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityEditListResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
@@ -45,6 +46,7 @@ import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineMarkerResult;
 import org.sopt.routee.activity.internal.service.dto.result.TrackPointResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
@@ -151,6 +153,15 @@ public class ActivityService {
 
 		activity.updateStatus(command.status());
 		return ActivityMapper.toStatusUpdateResult(activity);
+	}
+
+	@Transactional
+	public UpdateActivityTitleResult updateTitle(UpdateActivityTitleCommand command) {
+		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
+			.orElseThrow(ActivityNotFoundException::new);
+
+		activity.updateTitle(command.title());
+		return ActivityMapper.toTitleUpdateResult(activity);
 	}
 
 	@Transactional

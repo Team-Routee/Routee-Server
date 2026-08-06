@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
@@ -13,6 +14,7 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditLis
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityTitleResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
@@ -177,6 +179,43 @@ public interface ActivityControllerDocs {
 			content = @Content(schema = @Schema(implementation = ActivityStatusUpdateRequest.class),
 				examples = @ExampleObject(value = "{\"status\":\"ACTIVITY_PAUSED\"}")))
 		@Valid @RequestBody ActivityStatusUpdateRequest request
+	);
+
+	@Operation(summary = "활동 제목 수정", description = "인증된 사용자의 활동 기록 제목을 수정합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "활동 제목 수정 성공",
+			content = @Content(schema = @Schema(implementation = ActivityTitleResponse.class),
+				examples = @ExampleObject(value = "{\"activityId\":1,\"title\":\"북한산 기록\"}"))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 필수입니다.\"}"),
+					@ExampleObject(name = "TITLE_TOO_LONG",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 16자 이하여야 합니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "UNAUTHORIZED",
+						value = "{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증되지 않은 사용자입니다.\"}"),
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "활동 기록 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ActivityTitleResponse>> updateTitle(
+		Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ActivityTitleUpdateRequest.class),
+				examples = @ExampleObject(value = "{\"title\":\"북한산 기록\"}")))
+		@Valid @RequestBody ActivityTitleUpdateRequest request
 	);
 
 	@Operation(summary = "활동 종료 데이터 저장", description = "인증된 사용자의 활동 종료 데이터를 기존 활동 기록에 저장합니다.")
