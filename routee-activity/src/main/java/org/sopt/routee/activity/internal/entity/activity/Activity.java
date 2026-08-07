@@ -83,6 +83,10 @@ public class Activity {
 		this.activityStatus = status;
 	}
 
+	public void updateTitle(String title) {
+		this.title = title;
+	}
+
 	public void updateCompletedData(
 		String title,
 		Integer distance,

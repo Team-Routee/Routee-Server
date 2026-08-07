@@ -8,6 +8,7 @@ import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditListResponse;
@@ -15,6 +16,7 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapRe
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityTitleResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.service.ActivityService;
@@ -27,6 +29,7 @@ import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.response.ApiResponse;
@@ -110,6 +113,18 @@ public class ActivityController implements ActivityControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATUS_UPDATED, ActivityStatusResponse.from(result)));
+	}
+
+	@PatchMapping("/activity/{activityId}/title")
+	public ResponseEntity<SuccessResponse<ActivityTitleResponse>> updateTitle(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@Valid @RequestBody ActivityTitleUpdateRequest request
+	) {
+		UpdateActivityTitleResult result = activityService.updateTitle(request.toCommand(activityId, memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_TITLE_UPDATED, ActivityTitleResponse.from(result)));
 	}
 
 	@PutMapping("/activity/{activityId}")
