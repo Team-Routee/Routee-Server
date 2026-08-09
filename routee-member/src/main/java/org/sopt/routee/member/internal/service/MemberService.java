@@ -12,6 +12,7 @@ import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
+import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
@@ -74,6 +75,14 @@ public class MemberService {
 			.orElseThrow(MemberNotFoundException::new);
 
 		return MemberMapper.toMemberInfoResult(member, zoneId);
+	}
+
+	@Transactional(readOnly = true)
+	public MemberProfileResult getMemberProfile(long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
+
+		return MemberMapper.toMemberProfileResult(member);
 	}
 
 	@Transactional

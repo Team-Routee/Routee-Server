@@ -5,11 +5,13 @@ import java.time.ZoneId;
 import org.sopt.routee.member.internal.code.SuccessCode;
 import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
+import org.sopt.routee.member.internal.controller.dto.response.MemberProfileResponse;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
+import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.sopt.routee.util.TokenExtractor;
@@ -73,6 +75,16 @@ public class MemberController implements MemberControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberInfoResponse.from(result)));
+	}
+
+	@GetMapping(path = "/member/settings/profile")
+	public ResponseEntity<SuccessResponse<MemberProfileResponse>> getMemberProfile(
+		@AuthenticationPrincipal Long memberId
+	) {
+		MemberProfileResult result = memberService.getMemberProfile(memberId);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberProfileResponse.from(result)));
 	}
 
 	@GetMapping(path = "/archive/activity-summary")

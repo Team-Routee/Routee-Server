@@ -4,6 +4,7 @@ import java.time.ZoneId;
 
 import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
+import org.sopt.routee.member.internal.controller.dto.response.MemberProfileResponse;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.response.FailureResponse;
@@ -121,6 +122,29 @@ public interface MemberControllerDocs {
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
+
+	@Operation(
+		summary = "설정 페이지 회원 정보 조회",
+		description = "인증된 회원의 닉네임과 프로필 이미지 URL을 조회합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "조회 성공",
+			content = @Content(schema = @Schema(implementation = MemberProfileResponse.class))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<MemberProfileResponse>> getMemberProfile(Long memberId);
 
 	@Operation(
 		summary = "월별 활동 요약 조회",

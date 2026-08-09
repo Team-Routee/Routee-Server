@@ -10,6 +10,7 @@ import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.DailySummary;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
+import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.internal.entity.Member;
@@ -46,6 +47,10 @@ public class MemberMapper {
 			daysSinceJoining + 1,
 			member.getTotalActivityCount()
 		);
+	}
+
+	public static MemberProfileResult toMemberProfileResult(Member member) {
+		return new MemberProfileResult(member.getNickname(), member.getProfileImageUrl());
 	}
 
 	public static ActivitySummaryResult toActivitySummaryResult(
