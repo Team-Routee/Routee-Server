@@ -10,9 +10,11 @@ import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
+import org.sopt.routee.member.internal.service.dto.command.UpdateNicknameCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
@@ -83,6 +85,15 @@ public class MemberService {
 			.orElseThrow(MemberNotFoundException::new);
 
 		return MemberMapper.toMemberProfileResult(member);
+	}
+
+	@Transactional
+	public UpdateNicknameResult updateNickname(UpdateNicknameCommand command) {
+		Member member = memberRepository.findById(command.memberId())
+			.orElseThrow(MemberNotFoundException::new);
+
+		member.updateNickname(command.nickname());
+		return MemberMapper.toUpdateNicknameResult(member);
 	}
 
 	@Transactional

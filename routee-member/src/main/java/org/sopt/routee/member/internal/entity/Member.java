@@ -58,4 +58,8 @@ public class Member extends BaseEntity {
 	@Builder.Default
 	@ColumnDefault("0")
 	private Integer totalActivityCount = 0;
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
+	}
 }

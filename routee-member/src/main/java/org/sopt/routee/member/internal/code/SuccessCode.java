@@ -12,6 +12,7 @@ public enum SuccessCode implements SuccessResultCode {
 	MEMBER_FOUND(HttpStatus.OK, "사용자 정보 조회에 성공하였습니다."),
 	MEMBER_REGISTER(HttpStatus.CREATED, "회원가입이 완료되었습니다."),
 	MEMBER_WITHDRAW(HttpStatus.OK, "회원 탈퇴가 완료되었습니다."),
+	MEMBER_NICKNAME_UPDATED(HttpStatus.OK, "닉네임 변경이 완료되었습니다."),
 	ACTIVITY_SUMMARY_FOUND(HttpStatus.OK, "월간 활동 요약 조회에 성공하였습니다.");
 
 	private final HttpStatus status;

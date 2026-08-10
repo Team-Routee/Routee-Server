@@ -6,12 +6,15 @@ import org.sopt.routee.member.internal.code.SuccessCode;
 import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberProfileResponse;
+import org.sopt.routee.member.internal.controller.dto.response.NicknameResponse;
+import org.sopt.routee.member.internal.controller.dto.request.NicknameUpdateRequest;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.sopt.routee.util.TokenExtractor;
@@ -22,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -85,6 +89,17 @@ public class MemberController implements MemberControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberProfileResponse.from(result)));
+	}
+
+	@PatchMapping(path = "/member/nickname")
+	public ResponseEntity<SuccessResponse<NicknameResponse>> updateNickname(
+		@AuthenticationPrincipal Long memberId,
+		@Valid @RequestBody NicknameUpdateRequest request
+	) {
+		UpdateNicknameResult result = memberService.updateNickname(request.toCommand(memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.MEMBER_NICKNAME_UPDATED, NicknameResponse.from(result)));
 	}
 
 	@GetMapping(path = "/archive/activity-summary")
