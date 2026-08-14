@@ -2,7 +2,8 @@ package org.sopt.routee.external.api.type;
 
 public enum FileUploadDirectory {
 	TIMELINE("timeline"),
-	RECAP("recap");
+	RECAP("recap"),
+	PROFILE("profile");
 
 	private final String path;
 

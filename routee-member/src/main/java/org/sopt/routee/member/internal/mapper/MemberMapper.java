@@ -12,6 +12,7 @@ import org.sopt.routee.member.internal.service.dto.result.DailySummary;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
 import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.internal.entity.Member;
@@ -56,6 +57,10 @@ public class MemberMapper {
 
 	public static UpdateNicknameResult toUpdateNicknameResult(Member member) {
 		return new UpdateNicknameResult(member.getNickname());
+	}
+
+	public static UpdateProfileImageResult toUpdateProfileImageResult(Member member) {
+		return new UpdateProfileImageResult(member.getProfileImageUrl());
 	}
 
 	public static ActivitySummaryResult toActivitySummaryResult(

@@ -6,7 +6,11 @@ import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryRe
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberProfileResponse;
 import org.sopt.routee.member.internal.controller.dto.response.NicknameResponse;
+import org.sopt.routee.member.internal.controller.dto.response.ProfileImageResponse;
+import org.sopt.routee.member.internal.controller.dto.response.ProfileImageUploadUrlResponse;
 import org.sopt.routee.member.internal.controller.dto.request.NicknameUpdateRequest;
+import org.sopt.routee.member.internal.controller.dto.request.ProfileImageUpdateRequest;
+import org.sopt.routee.member.internal.controller.dto.request.ProfileImageUploadUrlRequest;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.response.FailureResponse;
@@ -183,6 +187,79 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = NicknameUpdateRequest.class),
 				examples = @ExampleObject(value = "{\"nickname\":\"루티\"}")))
 		@Valid @RequestBody NicknameUpdateRequest request
+	);
+
+	@Operation(
+		summary = "프로필 이미지 업로드 URL 발급",
+		description = "S3에 프로필 이미지를 직접 업로드할 수 있는 presigned URL과 objectKey를 발급합니다. " +
+			"발급받은 URL로 이미지를 업로드한 뒤 objectKey를 PATCH /member/profile-image로 전달해 반영해야 합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "발급 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageUploadUrlResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"fileName은 필수입니다.\"}"),
+					@ExampleObject(name = "UNSUPPORTED_IMAGE_FILE_EXTENSION",
+						value = "{\"status\":400,\"code\":\"UNSUPPORTED_IMAGE_FILE_EXTENSION\",\"message\":\"지원하지 않는 이미지 파일 확장자입니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				}))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageUploadUrlResponse>> generateProfileImageUploadUrl(
+		Long memberId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ProfileImageUploadUrlRequest.class),
+				examples = @ExampleObject(value = "{\"fileName\":\"profile.jpg\"}")))
+		@Valid @RequestBody ProfileImageUploadUrlRequest request
+	);
+
+	@Operation(
+		summary = "프로필 이미지 변경",
+		description = "presigned URL로 업로드한 이미지의 objectKey를 받아 회원의 프로필 이미지를 갱신합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "변경 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"objectKey는 필수입니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageResponse>> updateProfileImage(
+		Long memberId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ProfileImageUpdateRequest.class),
+				examples = @ExampleObject(value = "{\"objectKey\":\"a1b2c3d4e5f6.jpg\"}")))
+		@Valid @RequestBody ProfileImageUpdateRequest request
 	);
 
 	@Operation(

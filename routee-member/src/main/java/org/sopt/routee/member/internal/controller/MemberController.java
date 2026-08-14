@@ -7,14 +7,20 @@ import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryRe
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberProfileResponse;
 import org.sopt.routee.member.internal.controller.dto.response.NicknameResponse;
+import org.sopt.routee.member.internal.controller.dto.response.ProfileImageResponse;
+import org.sopt.routee.member.internal.controller.dto.response.ProfileImageUploadUrlResponse;
 import org.sopt.routee.member.internal.controller.dto.request.NicknameUpdateRequest;
+import org.sopt.routee.member.internal.controller.dto.request.ProfileImageUpdateRequest;
+import org.sopt.routee.member.internal.controller.dto.request.ProfileImageUploadUrlRequest;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.member.internal.service.MemberService;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
+import org.sopt.routee.member.internal.service.dto.result.ProfileImageUploadUrlResult;
 import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.sopt.routee.util.TokenExtractor;
@@ -100,6 +106,28 @@ public class MemberController implements MemberControllerDocs {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_NICKNAME_UPDATED, NicknameResponse.from(result)));
+	}
+
+	@PostMapping(path = "/member/profile-image/upload-url")
+	public ResponseEntity<SuccessResponse<ProfileImageUploadUrlResponse>> generateProfileImageUploadUrl(
+		@AuthenticationPrincipal Long memberId,
+		@Valid @RequestBody ProfileImageUploadUrlRequest request
+	) {
+		ProfileImageUploadUrlResult result = memberService.generateProfileImageUploadUrl(request.toCommand(memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.PROFILE_IMAGE_UPLOAD_URL_ISSUED, ProfileImageUploadUrlResponse.from(result)));
+	}
+
+	@PatchMapping(path = "/member/profile-image")
+	public ResponseEntity<SuccessResponse<ProfileImageResponse>> updateProfileImage(
+		@AuthenticationPrincipal Long memberId,
+		@Valid @RequestBody ProfileImageUpdateRequest request
+	) {
+		UpdateProfileImageResult result = memberService.updateProfileImage(request.toCommand(memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.PROFILE_IMAGE_UPDATED, ProfileImageResponse.from(result)));
 	}
 
 	@GetMapping(path = "/archive/activity-summary")
