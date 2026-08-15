@@ -1,7 +1,6 @@
 package org.sopt.routee.external.internal.s3.adapter;
 
 import java.time.Duration;
-import java.util.Locale;
 import java.util.UUID;
 
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
@@ -9,6 +8,7 @@ import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.internal.s3.config.S3Properties;
 import org.sopt.routee.external.internal.s3.exception.FileUploadPresignException;
+import org.sopt.routee.util.FileExtensionExtractor;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -45,8 +45,8 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 	}
 
 	private String parseExtension(String fileName) {
-		return fileName.substring(fileName.lastIndexOf('.') + 1)
-			.toLowerCase(Locale.ROOT);
+		return FileExtensionExtractor.extract(fileName)
+			.orElseThrow();
 	}
 
 	private String generatePutPresignedUrl(String objectKey) {
