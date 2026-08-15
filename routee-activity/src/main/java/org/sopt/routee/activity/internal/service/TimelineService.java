@@ -6,6 +6,7 @@ import java.util.List;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
+import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.mapper.TimelineMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
@@ -48,6 +49,18 @@ public class TimelineService {
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
 			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(activityId, timeline)))
 			.toList();
+	}
+
+	@Transactional
+	public void delete(Long activityId, Long timelineId, Long memberId) {
+		if (!activityRepository.existsByIdAndMemberId(activityId, memberId)) {
+			throw new ActivityNotFoundException();
+		}
+
+		Timeline timeline = timelineRepository.findByIdAndActivityId(timelineId, activityId)
+			.orElseThrow(TimelineNotFoundException::new);
+
+		timelineRepository.delete(timeline);
 	}
 
 	@Transactional

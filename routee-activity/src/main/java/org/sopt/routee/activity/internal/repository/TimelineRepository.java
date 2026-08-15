@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
@@ -11,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 	boolean existsByActivityIdAndTrackPointIndex(Long activityId, Integer trackPointIndex);
+
+	Optional<Timeline> findByIdAndActivityId(Long id, Long activityId);
 
 	List<Timeline> findByActivityIdOrderByCreatedAtAsc(Long activityId);
 

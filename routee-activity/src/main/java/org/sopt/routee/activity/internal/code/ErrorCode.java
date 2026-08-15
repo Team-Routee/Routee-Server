@@ -15,6 +15,7 @@ public enum ErrorCode implements ErrorResultCode {
 	UNSUPPORTED_IMAGE_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 파일 확장자입니다."),
 
 	ACTIVITY_NOT_FOUND(HttpStatus.NOT_FOUND, "활동 기록이 존재하지 않습니다."),
+	TIMELINE_NOT_FOUND(HttpStatus.NOT_FOUND, "타임라인이 존재하지 않습니다."),
 
 	ACTIVITY_ALREADY_COMPLETED(HttpStatus.CONFLICT, "이미 완료된 활동입니다."),
 	ACTIVITY_STATUS_ALREADY_SAME(HttpStatus.CONFLICT, "이미 동일한 활동 상태입니다."),

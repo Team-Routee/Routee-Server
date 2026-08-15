@@ -13,6 +13,7 @@ import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,5 +54,16 @@ public class TimelineController implements TimelineControllerDocs {
 
 		return ResponseEntity.ok(
 			ApiResponse.success(SuccessCode.TIMELINE_LIST_GET_SUCCESS, TimelineListResponse.of(activityId, results)));
+	}
+
+	@DeleteMapping("/{activityId}/timeline/{timelineId}")
+	public ResponseEntity<SuccessResponse<Void>> delete(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@PathVariable(name = "timelineId") Long timelineId
+	) {
+		timelineService.delete(activityId, timelineId, memberId);
+
+		return ResponseEntity.ok(ApiResponse.success(SuccessCode.TIMELINE_DELETED));
 	}
 }
