@@ -76,7 +76,7 @@ public class MemberController implements MemberControllerDocs {
 			.body(ApiResponse.success(SuccessCode.MEMBER_WITHDRAW));
 	}
 
-	@GetMapping(path = "/member/profile")
+	@GetMapping(path = "/member/summary")
 	public ResponseEntity<SuccessResponse<MemberInfoResponse>> getMemberInfo(
 		@AuthenticationPrincipal Long memberId,
 		@RequestHeader(name = "Time-Zone") ZoneId timeZone
@@ -87,7 +87,7 @@ public class MemberController implements MemberControllerDocs {
 			.body(ApiResponse.success(SuccessCode.MEMBER_FOUND, MemberInfoResponse.from(result)));
 	}
 
-	@GetMapping(path = "/member/settings/profile")
+	@GetMapping(path = "/member/profile")
 	public ResponseEntity<SuccessResponse<MemberProfileResponse>> getMemberProfile(
 		@AuthenticationPrincipal Long memberId
 	) {
