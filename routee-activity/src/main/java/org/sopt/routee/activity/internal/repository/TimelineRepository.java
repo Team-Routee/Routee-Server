@@ -13,13 +13,15 @@ import org.springframework.data.repository.query.Param;
 public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 	boolean existsByActivityIdAndTrackPointIndex(Long activityId, Integer trackPointIndex);
 
-	Optional<Timeline> findByIdAndActivityId(Long id, Long activityId);
+	Optional<Timeline> findByIdAndActivity_IdAndActivity_MemberId(Long id, Long activityId, Long memberId);
 
 	List<Timeline> findByActivityIdOrderByCreatedAtAsc(Long activityId);
 
-	List<Timeline> findByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(Long activityId, TimelineStatus timelineStatus);
+	List<Timeline> findByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(Long activityId,
+		TimelineStatus timelineStatus);
 
-	List<Timeline> findByActivityIdInAndTimelineStatusOrderByCreatedAtAsc(List<Long> activityIds, TimelineStatus timelineStatus);
+	List<Timeline> findByActivityIdInAndTimelineStatusOrderByCreatedAtAsc(List<Long> activityIds,
+		TimelineStatus timelineStatus);
 
 	@Modifying
 	@Query("DELETE FROM Timeline t WHERE t.activity.memberId = :memberId")

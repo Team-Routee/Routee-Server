@@ -57,12 +57,7 @@ public class TimelineService {
 
 	@Transactional
 	public void delete(Long activityId, Long timelineId, Long memberId) {
-		if (!activityRepository.existsByIdAndMemberId(activityId, memberId)) {
-			throw new ActivityNotFoundException();
-		}
-
-		Timeline timeline = timelineRepository.findByIdAndActivityId(timelineId, activityId)
-			.orElseThrow(TimelineNotFoundException::new);
+		Timeline timeline = findOwnedTimeline(activityId, timelineId, memberId);
 
 		timelineRepository.delete(timeline);
 
@@ -73,12 +68,7 @@ public class TimelineService {
 
 	@Transactional
 	public void updateTitle(UpdateTimelineTitleCommand command) {
-		if (!activityRepository.existsByIdAndMemberId(command.activityId(), command.memberId())) {
-			throw new ActivityNotFoundException();
-		}
-
-		Timeline timeline = timelineRepository.findByIdAndActivityId(command.timelineId(), command.activityId())
-			.orElseThrow(TimelineNotFoundException::new);
+		Timeline timeline = findOwnedTimeline(command.activityId(), command.timelineId(), command.memberId());
 
 		timeline.updateTitle(command.title());
 	}
@@ -97,5 +87,12 @@ public class TimelineService {
 		);
 
 		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
+	}
+
+	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {
+		return timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId)
+			.orElseThrow(() -> activityRepository.existsByIdAndMemberId(activityId, memberId)
+				? new TimelineNotFoundException()
+				: new ActivityNotFoundException());
 	}
 }

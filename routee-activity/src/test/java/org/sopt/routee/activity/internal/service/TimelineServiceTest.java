@@ -52,8 +52,8 @@ class TimelineServiceTest {
 			.timelineImageObjectKey(objectKey)
 			.build();
 
-		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(true);
-		when(timelineRepository.findByIdAndActivityId(timelineId, activityId)).thenReturn(Optional.of(timeline));
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.of(timeline));
 
 		timelineService.delete(activityId, timelineId, memberId);
 
@@ -73,6 +73,8 @@ class TimelineServiceTest {
 		Long timelineId = 10L;
 		Long memberId = 100L;
 
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.empty());
 		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(false);
 
 		assertThatThrownBy(() -> timelineService.delete(activityId, timelineId, memberId))
@@ -88,8 +90,9 @@ class TimelineServiceTest {
 		Long timelineId = 10L;
 		Long memberId = 100L;
 
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.empty());
 		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(true);
-		when(timelineRepository.findByIdAndActivityId(timelineId, activityId)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> timelineService.delete(activityId, timelineId, memberId))
 			.isInstanceOf(TimelineNotFoundException.class);
@@ -110,8 +113,8 @@ class TimelineServiceTest {
 			.title("이전 제목")
 			.build();
 
-		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(true);
-		when(timelineRepository.findByIdAndActivityId(timelineId, activityId)).thenReturn(Optional.of(timeline));
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.of(timeline));
 
 		timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, newTitle));
 
@@ -124,13 +127,13 @@ class TimelineServiceTest {
 		Long timelineId = 10L;
 		Long memberId = 100L;
 
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.empty());
 		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(false);
 
 		assertThatThrownBy(() ->
 			timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, "제목"))
 		).isInstanceOf(ActivityNotFoundException.class);
-
-		verify(timelineRepository, never()).findByIdAndActivityId(any(), any());
 	}
 
 	@Test
@@ -139,8 +142,9 @@ class TimelineServiceTest {
 		Long timelineId = 10L;
 		Long memberId = 100L;
 
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.empty());
 		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(true);
-		when(timelineRepository.findByIdAndActivityId(timelineId, activityId)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() ->
 			timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, "제목"))
