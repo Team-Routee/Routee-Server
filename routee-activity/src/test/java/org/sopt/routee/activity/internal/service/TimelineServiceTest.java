@@ -18,6 +18,7 @@ import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
+import org.sopt.routee.activity.internal.service.dto.command.UpdateTimelineTitleCommand;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -95,5 +96,54 @@ class TimelineServiceTest {
 
 		verify(timelineRepository, never()).delete(any());
 		verify(applicationEventPublisher, never()).publishEvent(any());
+	}
+
+	@Test
+	void updateTitle_소유한_타임라인이면_제목을_수정한다() {
+		Long activityId = 1L;
+		Long timelineId = 10L;
+		Long memberId = 100L;
+		String newTitle = "백운대 정상 도착";
+
+		Timeline timeline = Timeline.builder()
+			.id(timelineId)
+			.title("이전 제목")
+			.build();
+
+		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(true);
+		when(timelineRepository.findByIdAndActivityId(timelineId, activityId)).thenReturn(Optional.of(timeline));
+
+		timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, newTitle));
+
+		assertThat(timeline.getTitle()).isEqualTo(newTitle);
+	}
+
+	@Test
+	void updateTitle_활동이_없으면_예외를_던진다() {
+		Long activityId = 1L;
+		Long timelineId = 10L;
+		Long memberId = 100L;
+
+		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(false);
+
+		assertThatThrownBy(() ->
+			timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, "제목"))
+		).isInstanceOf(ActivityNotFoundException.class);
+
+		verify(timelineRepository, never()).findByIdAndActivityId(any(), any());
+	}
+
+	@Test
+	void updateTitle_타임라인이_없으면_예외를_던진다() {
+		Long activityId = 1L;
+		Long timelineId = 10L;
+		Long memberId = 100L;
+
+		when(activityRepository.existsByIdAndMemberId(activityId, memberId)).thenReturn(true);
+		when(timelineRepository.findByIdAndActivityId(timelineId, activityId)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() ->
+			timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, "제목"))
+		).isInstanceOf(TimelineNotFoundException.class);
 	}
 }

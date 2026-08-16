@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.TimelineTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
 import org.sopt.routee.activity.internal.service.TimelineService;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,6 +56,18 @@ public class TimelineController implements TimelineControllerDocs {
 
 		return ResponseEntity.ok(
 			ApiResponse.success(SuccessCode.TIMELINE_LIST_GET_SUCCESS, TimelineListResponse.of(activityId, results)));
+	}
+
+	@PatchMapping("/{activityId}/timeline/{timelineId}")
+	public ResponseEntity<SuccessResponse<Void>> updateTitle(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@PathVariable(name = "timelineId") Long timelineId,
+		@Valid @RequestBody TimelineTitleUpdateRequest request
+	) {
+		timelineService.updateTitle(request.toCommand(activityId, timelineId, memberId));
+
+		return ResponseEntity.ok(ApiResponse.success(SuccessCode.TIMELINE_TITLE_UPDATED));
 	}
 
 	@DeleteMapping("/{activityId}/timeline/{timelineId}")

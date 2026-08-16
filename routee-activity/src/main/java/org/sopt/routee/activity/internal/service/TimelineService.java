@@ -12,6 +12,7 @@ import org.sopt.routee.activity.internal.mapper.TimelineMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineCommand;
+import org.sopt.routee.activity.internal.service.dto.command.UpdateTimelineTitleCommand;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
@@ -68,6 +69,18 @@ public class TimelineService {
 		applicationEventPublisher.publishEvent(
 			new TimelineDeletedEvent(activityId, timeline.getTimelineImageObjectKey())
 		);
+	}
+
+	@Transactional
+	public void updateTitle(UpdateTimelineTitleCommand command) {
+		if (!activityRepository.existsByIdAndMemberId(command.activityId(), command.memberId())) {
+			throw new ActivityNotFoundException();
+		}
+
+		Timeline timeline = timelineRepository.findByIdAndActivityId(command.timelineId(), command.activityId())
+			.orElseThrow(TimelineNotFoundException::new);
+
+		timeline.updateTitle(command.title());
 	}
 
 	@Transactional
