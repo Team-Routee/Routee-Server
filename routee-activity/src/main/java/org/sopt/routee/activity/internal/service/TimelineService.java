@@ -15,6 +15,7 @@ import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineComma
 import org.sopt.routee.activity.internal.service.dto.command.UpdateTimelineTitleCommand;
 import org.sopt.routee.activity.internal.service.dto.result.CreateTimelineResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateTimelineTitleResult;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
@@ -70,10 +71,12 @@ public class TimelineService {
 	}
 
 	@Transactional
-	public void updateTitle(UpdateTimelineTitleCommand command) {
+	public UpdateTimelineTitleResult updateTitle(UpdateTimelineTitleCommand command) {
 		Timeline timeline = findOwnedTimeline(command.activityId(), command.timelineId(), command.memberId());
 
 		timeline.updateTitle(command.title());
+
+		return TimelineMapper.toTitleUpdateResult(timeline);
 	}
 
 	@Transactional

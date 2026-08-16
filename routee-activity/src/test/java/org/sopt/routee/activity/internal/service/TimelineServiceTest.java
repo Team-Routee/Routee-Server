@@ -19,6 +19,7 @@ import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateTimelineTitleCommand;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateTimelineTitleResult;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -116,9 +117,12 @@ class TimelineServiceTest {
 		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
 			.thenReturn(Optional.of(timeline));
 
-		timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, newTitle));
+		UpdateTimelineTitleResult result =
+			timelineService.updateTitle(new UpdateTimelineTitleCommand(activityId, timelineId, memberId, newTitle));
 
 		assertThat(timeline.getTitle()).isEqualTo(newTitle);
+		assertThat(result.timelineId()).isEqualTo(timelineId);
+		assertThat(result.title()).isEqualTo(newTitle);
 	}
 
 	@Test

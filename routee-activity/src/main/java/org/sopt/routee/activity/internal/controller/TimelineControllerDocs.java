@@ -6,6 +6,7 @@ import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRe
 import org.sopt.routee.activity.internal.controller.dto.request.TimelineTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineTitleResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -82,8 +83,8 @@ public interface TimelineControllerDocs {
 	@Operation(summary = "타임라인 제목 수정", description = "인증된 사용자의 활동 기록에 속한 타임라인 제목을 수정합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "타임라인 제목 수정 성공",
-			content = @Content(
-				examples = @ExampleObject(value = "{\"status\":200,\"code\":\"TIMELINE_TITLE_UPDATED\",\"message\":\"타임라인 제목 수정에 성공했습니다.\",\"data\":null}"))),
+			content = @Content(schema = @Schema(implementation = TimelineTitleResponse.class),
+				examples = @ExampleObject(value = "{\"status\":200,\"code\":\"TIMELINE_TITLE_UPDATED\",\"message\":\"타임라인 제목 수정에 성공했습니다.\",\"data\":{\"timelineId\":3,\"title\":\"백운대 정상 도착\"}}"))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
@@ -103,7 +104,7 @@ public interface TimelineControllerDocs {
 						value = "{\"status\":404,\"code\":\"TIMELINE_NOT_FOUND\",\"message\":\"타임라인이 존재하지 않습니다.\"}")
 				}))
 	})
-	ResponseEntity<SuccessResponse<Void>> updateTitle(
+	ResponseEntity<SuccessResponse<TimelineTitleResponse>> updateTitle(
 		@Parameter(hidden = true)
 		Long memberId,
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)

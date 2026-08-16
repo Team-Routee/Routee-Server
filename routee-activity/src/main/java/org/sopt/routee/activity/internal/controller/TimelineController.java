@@ -8,9 +8,11 @@ import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRe
 import org.sopt.routee.activity.internal.controller.dto.request.TimelineTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineTitleResponse;
 import org.sopt.routee.activity.internal.service.TimelineService;
 import org.sopt.routee.activity.internal.service.dto.result.CreateTimelineResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateTimelineTitleResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.HttpStatus;
@@ -61,15 +63,15 @@ public class TimelineController implements TimelineControllerDocs {
 	}
 
 	@PatchMapping("/{activityId}/timeline/{timelineId}")
-	public ResponseEntity<SuccessResponse<Void>> updateTitle(
+	public ResponseEntity<SuccessResponse<TimelineTitleResponse>> updateTitle(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
 		@PathVariable(name = "timelineId") Long timelineId,
 		@Valid @RequestBody TimelineTitleUpdateRequest request
 	) {
-		timelineService.updateTitle(request.toCommand(activityId, timelineId, memberId));
+		UpdateTimelineTitleResult result = timelineService.updateTitle(request.toCommand(activityId, timelineId, memberId));
 
-		return ResponseEntity.ok(ApiResponse.success(SuccessCode.TIMELINE_TITLE_UPDATED));
+		return ResponseEntity.ok(ApiResponse.success(SuccessCode.TIMELINE_TITLE_UPDATED, TimelineTitleResponse.from(result)));
 	}
 
 	@DeleteMapping("/{activityId}/timeline/{timelineId}")
