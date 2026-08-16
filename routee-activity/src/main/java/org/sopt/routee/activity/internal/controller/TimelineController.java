@@ -6,8 +6,10 @@ import java.util.List;
 import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.TimelineTitleUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
 import org.sopt.routee.activity.internal.service.TimelineService;
+import org.sopt.routee.activity.internal.service.dto.result.CreateTimelineResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
 import org.sopt.routee.response.ApiResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -35,16 +37,16 @@ public class TimelineController implements TimelineControllerDocs {
 	private final TimelineService timelineService;
 
 	@PostMapping("/{activityId}/timeline")
-	public ResponseEntity<SuccessResponse<Void>> create(
+	public ResponseEntity<SuccessResponse<TimelineCreateResponse>> create(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
 		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@Valid @RequestBody CreateTimelineRequest request
 	) {
-		timelineService.create(request.toCommand(memberId, activityId, timeZone));
+		CreateTimelineResult result = timelineService.create(request.toCommand(memberId, activityId, timeZone));
 
 		return ResponseEntity.status(HttpStatus.CREATED)
-			.body(ApiResponse.success(SuccessCode.TIMELINE_CREATED));
+			.body(ApiResponse.success(SuccessCode.TIMELINE_CREATED, TimelineCreateResponse.from(result)));
 	}
 
 	@GetMapping("/{activityId}/timeline")

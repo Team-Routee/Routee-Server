@@ -4,6 +4,7 @@ import java.time.ZoneId;
 
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.TimelineTitleUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -30,8 +31,8 @@ public interface TimelineControllerDocs {
 	@Operation(summary = "타임라인 생성", description = "인증된 사용자의 활동 기록에 타임라인을 생성합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "타임라인 생성 성공",
-			content = @Content(
-				examples = @ExampleObject(value = "{\"status\":201,\"code\":\"TIMELINE_CREATED\",\"message\":\"타임라인 생성에 성공했습니다.\",\"data\":null}"))),
+			content = @Content(schema = @Schema(implementation = TimelineCreateResponse.class),
+				examples = @ExampleObject(value = "{\"status\":201,\"code\":\"TIMELINE_CREATED\",\"message\":\"타임라인 생성에 성공했습니다.\",\"data\":{\"timelineId\":3}}"))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
@@ -47,7 +48,7 @@ public interface TimelineControllerDocs {
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
 					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<Void>> create(
+	ResponseEntity<SuccessResponse<TimelineCreateResponse>> create(
 		@Parameter(hidden = true)
 		Long memberId,
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)

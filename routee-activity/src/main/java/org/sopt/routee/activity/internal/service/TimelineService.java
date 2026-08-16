@@ -13,6 +13,7 @@ import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateTimelineTitleCommand;
+import org.sopt.routee.activity.internal.service.dto.result.CreateTimelineResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
@@ -35,13 +36,15 @@ public class TimelineService {
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
-	public void create(CreateTimelineCommand command) {
+	public CreateTimelineResult create(CreateTimelineCommand command) {
 		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
 
 		Instant createdAt = TimeZoneUtils.toUtcInstantTime(command.createdAt(), command.timeZone());
 
-		timelineRepository.save(TimelineMapper.toEntity(command, activity, createdAt));
+		Timeline timeline = timelineRepository.save(TimelineMapper.toEntity(command, activity, createdAt));
+
+		return new CreateTimelineResult(timeline.getId());
 	}
 
 	@Transactional(readOnly = true)
