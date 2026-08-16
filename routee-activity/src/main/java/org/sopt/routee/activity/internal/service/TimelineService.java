@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
+import org.sopt.routee.activity.internal.event.TimelineDeletedEvent;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.mapper.TimelineMapper;
@@ -17,6 +18,7 @@ import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class TimelineService {
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public void create(CreateTimelineCommand command) {
@@ -61,6 +64,10 @@ public class TimelineService {
 			.orElseThrow(TimelineNotFoundException::new);
 
 		timelineRepository.delete(timeline);
+
+		applicationEventPublisher.publishEvent(
+			new TimelineDeletedEvent(activityId, timeline.getTimelineImageObjectKey())
+		);
 	}
 
 	@Transactional
