@@ -19,7 +19,9 @@ import org.sopt.routee.external.internal.s3.exception.FileDeleteException;
 
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import software.amazon.awssdk.services.s3.model.S3Error;
 
 @ExtendWith(MockitoExtension.class)
 class S3FileDeleteAdapterTest {
@@ -38,6 +40,8 @@ class S3FileDeleteAdapterTest {
 	@Test
 	void deleteImage_타임라인_이미지를_삭제하면_원본과_람다가_생성한_리사이징_사이즈_전부를_삭제_요청한다() {
 		FileDeleteCommand command = new FileDeleteCommand(FileUploadDirectory.TIMELINE, "1", "timeline-image.jpg");
+		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+			.thenReturn(DeleteObjectsResponse.builder().build());
 
 		s3FileDeleteAdapter.deleteImage(command);
 
@@ -62,6 +66,8 @@ class S3FileDeleteAdapterTest {
 	@Test
 	void deleteImage_RECAP_이미지를_삭제하면_사이즈_구분_없이_단일_키만_삭제_요청한다() {
 		FileDeleteCommand command = new FileDeleteCommand(FileUploadDirectory.RECAP, "1", "recap-image.jpg");
+		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+			.thenReturn(DeleteObjectsResponse.builder().build());
 
 		s3FileDeleteAdapter.deleteImage(command);
 
@@ -79,6 +85,21 @@ class S3FileDeleteAdapterTest {
 	void deleteImage_S3_삭제_요청이_실패하면_FileDeleteException으로_변환한다() {
 		FileDeleteCommand command = new FileDeleteCommand(FileUploadDirectory.RECAP, "1", "recap-image.jpg");
 		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class))).thenThrow(new RuntimeException("boom"));
+
+		assertThatThrownBy(() -> s3FileDeleteAdapter.deleteImage(command))
+			.isInstanceOf(FileDeleteException.class);
+	}
+
+	@Test
+	void deleteImage_일부_객체_삭제가_실패하면_FileDeleteException을_던진다() {
+		FileDeleteCommand command = new FileDeleteCommand(FileUploadDirectory.RECAP, "1", "recap-image.jpg");
+		S3Error error = S3Error.builder()
+			.key("activity/1/recap/recap-image.jpg")
+			.code("AccessDenied")
+			.message("Access Denied")
+			.build();
+		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+			.thenReturn(DeleteObjectsResponse.builder().errors(error).build());
 
 		assertThatThrownBy(() -> s3FileDeleteAdapter.deleteImage(command))
 			.isInstanceOf(FileDeleteException.class);

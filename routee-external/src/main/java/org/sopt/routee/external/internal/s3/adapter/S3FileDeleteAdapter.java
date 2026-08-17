@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 
 @Component
@@ -35,10 +36,15 @@ public class S3FileDeleteAdapter implements FileDeletePort {
 			.delete(Delete.builder().objects(objectIdentifiers).build())
 			.build();
 
+		DeleteObjectsResponse response;
 		try {
-			s3Client.deleteObjects(request);
+			response = s3Client.deleteObjects(request);
 		} catch (RuntimeException e) {
 			throw new FileDeleteException(e);
+		}
+
+		if (response.hasErrors()) {
+			throw new FileDeleteException();
 		}
 	}
 
