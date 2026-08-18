@@ -11,6 +11,7 @@ import org.sopt.routee.external.api.type.FileUploadImageSize;
 final class S3ObjectKeyAssembler {
 
 	private static final String ACTIVITY_ROOT_PATH = "activity";
+	private static final String MEMBER_ROOT_PATH = "member";
 
 	static String assemble(
 		FileUploadDirectory directory,
@@ -32,9 +33,10 @@ final class S3ObjectKeyAssembler {
 				directory.path(),
 				objectKey
 			);
-			case PROFILE -> "%s/%s/%s".formatted(
-				directory.path(),
+			case PROFILE -> "%s/%s/%s/%s".formatted(
+				MEMBER_ROOT_PATH,
 				ownerId,
+				directory.path(),
 				objectKey
 			);
 		};
