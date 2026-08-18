@@ -1,15 +1,14 @@
 package org.sopt.routee.activity.internal.controller;
 
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditListResponse;
@@ -17,9 +16,9 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapRe
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityTitleResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
-import org.sopt.routee.activity.internal.exception.InvalidTimeZoneException;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityEditListResult;
@@ -30,6 +29,7 @@ import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.response.ApiResponse;
@@ -66,10 +66,10 @@ public class ActivityController implements ActivityControllerDocs {
 	@PostMapping("/activity")
 	public ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		@AuthenticationPrincipal Long memberId,
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@Valid @RequestBody ActivityCreateRequest request
 	) {
-		CreateActivityResult result = activityService.create(request.toCommand(memberId, parseTimeZone(timeZone)));
+		CreateActivityResult result = activityService.create(request.toCommand(memberId, timeZone));
 
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_CREATED, ActivityCreateResponse.from(result)));
@@ -115,14 +115,26 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATUS_UPDATED, ActivityStatusResponse.from(result)));
 	}
 
+	@PatchMapping("/activity/{activityId}/title")
+	public ResponseEntity<SuccessResponse<ActivityTitleResponse>> updateTitle(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@Valid @RequestBody ActivityTitleUpdateRequest request
+	) {
+		UpdateActivityTitleResult result = activityService.updateTitle(request.toCommand(activityId, memberId));
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_TITLE_UPDATED, ActivityTitleResponse.from(result)));
+	}
+
 	@PutMapping("/activity/{activityId}")
 	public ResponseEntity<SuccessResponse<Void>> complete(
 		@AuthenticationPrincipal Long memberId,
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@PathVariable(name = "activityId") Long activityId,
 		@Valid @RequestBody ActivityCompleteRequest request
 	) {
-		activityService.complete(request.toCommand(activityId, memberId, parseTimeZone(timeZone)));
+		activityService.complete(request.toCommand(activityId, memberId, timeZone));
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_COMPLETED));
@@ -132,9 +144,9 @@ public class ActivityController implements ActivityControllerDocs {
 	public ResponseEntity<SuccessResponse<ActivityStatisticsResponse>> getStatistics(
 		@AuthenticationPrincipal Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
-		@RequestHeader("Time-Zone") String timeZone
+		@RequestHeader("Time-Zone") ZoneId timeZone
 	) {
-		ActivityStatisticsResult result = activityService.getStatistics(activityId, memberId, parseTimeZone(timeZone));
+		ActivityStatisticsResult result = activityService.getStatistics(activityId, memberId, timeZone);
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS, ActivityStatisticsResponse.from(result)));
@@ -165,12 +177,12 @@ public class ActivityController implements ActivityControllerDocs {
 	@GetMapping("/activity/recap")
 	public ResponseEntity<SuccessResponse<ActivityEditListResponse>> getActivityEditList(
 		@AuthenticationPrincipal Long memberId,
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@RequestParam(name = "year", required = true) Integer year,
 		@Min(1) @Max(12) @RequestParam(name = "month", required = true) Integer month
 	) {
 		ActivityEditListResult result = activityService.getActivityEditList(
-			memberId, YearMonth.of(year, month), parseTimeZone(timeZone)
+			memberId, YearMonth.of(year, month), timeZone
 		);
 
 		return ResponseEntity.status(HttpStatus.OK)
@@ -181,23 +193,11 @@ public class ActivityController implements ActivityControllerDocs {
 	public ResponseEntity<SuccessResponse<ActivitiesByDateResponse>> getActivitiesByDate(
 		@AuthenticationPrincipal Long memberId,
 		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-		@RequestHeader("Time-Zone") String timeZone
+		@RequestHeader("Time-Zone") ZoneId timeZone
 	) {
-		ActivitiesByDateResult result = activityService.getActivitiesByDate(memberId, date, parseTimeZone(timeZone));
+		ActivitiesByDateResult result = activityService.getActivitiesByDate(memberId, date, timeZone);
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.ARCHIVE_ACTIVITY_LIST_GET_SUCCESS, ActivitiesByDateResponse.from(result)));
-	}
-
-	private ZoneId parseTimeZone(String timeZone) {
-		try {
-			ZoneId zoneId = ZoneId.of(timeZone);
-			if (zoneId instanceof ZoneOffset) {
-				throw new InvalidTimeZoneException();
-			}
-			return zoneId;
-		} catch (DateTimeException e) {
-			throw new InvalidTimeZoneException();
-		}
 	}
 }

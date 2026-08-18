@@ -20,6 +20,7 @@ import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapRouteRe
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleResult;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,10 @@ public class ActivityMapper {
 
 	public static UpdateActivityStatusResult toStatusUpdateResult(Activity activity) {
 		return new UpdateActivityStatusResult(activity.getId(), activity.getActivityStatus());
+	}
+
+	public static UpdateActivityTitleResult toTitleUpdateResult(Activity activity) {
+		return new UpdateActivityTitleResult(activity.getId(), activity.getTitle());
 	}
 
 	public static ActivityStatisticsResult toStatisticsResult(Activity activity, LocalDate activityDate) {

@@ -1,10 +1,12 @@
 package org.sopt.routee.activity.internal.controller;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCompleteRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.ActivityTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
@@ -12,6 +14,7 @@ import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditLis
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityTitleResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.response.FailureResponse;
@@ -64,7 +67,7 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = ActivityCreateRequest.class),
 				examples = @ExampleObject(value = "{\"activityType\":\"HIKING\",\"startedAt\":\"2026-07-07T15:30:00\"}")))
@@ -178,6 +181,43 @@ public interface ActivityControllerDocs {
 		@Valid @RequestBody ActivityStatusUpdateRequest request
 	);
 
+	@Operation(summary = "활동 제목 수정", description = "인증된 사용자의 활동 기록 제목을 수정합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "활동 제목 수정 성공",
+			content = @Content(schema = @Schema(implementation = ActivityTitleResponse.class),
+				examples = @ExampleObject(value = "{\"activityId\":1,\"title\":\"북한산 기록\"}"))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 필수입니다.\"}"),
+					@ExampleObject(name = "TITLE_TOO_LONG",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 16자 이하여야 합니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "UNAUTHORIZED",
+						value = "{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"인증되지 않은 사용자입니다.\"}"),
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "활동 기록 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ActivityTitleResponse>> updateTitle(
+		Long memberId,
+		@PathVariable(name = "activityId") Long activityId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ActivityTitleUpdateRequest.class),
+				examples = @ExampleObject(value = "{\"title\":\"북한산 기록\"}")))
+		@Valid @RequestBody ActivityTitleUpdateRequest request
+	);
+
 	@Operation(summary = "활동 종료 데이터 저장", description = "인증된 사용자의 활동 종료 데이터를 기존 활동 기록에 저장합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "활동 기록 저장 성공"),
@@ -211,7 +251,7 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<Void>> complete(
 		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@PathVariable(name = "activityId") Long activityId,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = ActivityCompleteRequest.class),
@@ -239,7 +279,7 @@ public interface ActivityControllerDocs {
 		Long memberId,
 		@PathVariable(name = "activityId") Long activityId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone
+		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
 
 	@Operation(summary = "활동 리캡 조회", description = "인증된 사용자의 활동 리캡 정보를 조회합니다.")
@@ -278,7 +318,7 @@ public interface ActivityControllerDocs {
 	ResponseEntity<SuccessResponse<ActivityEditListResponse>> getActivityEditList(
 		Long memberId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@Parameter(description = "조회할 연도", example = "2026", required = true)
 		@RequestParam(name = "year", required = true) Integer year,
 		@Parameter(description = "조회할 월", example = "7", required = true)
@@ -305,7 +345,7 @@ public interface ActivityControllerDocs {
 		@Parameter(description = "조회할 날짜", example = "2026-07-02", required = true)
 		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone
+		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
 
 	@Operation(summary = "활동 경로 데이터 조회", description = "활동 기록에 속하는 경로 좌표와 타임라인 좌표 목록을 조회합니다.")

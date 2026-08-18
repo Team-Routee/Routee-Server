@@ -1,5 +1,7 @@
 package org.sopt.routee.activity.internal.controller;
 
+import java.time.ZoneId;
+
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
 import org.sopt.routee.response.FailureResponse;
@@ -50,7 +52,7 @@ public interface TimelineControllerDocs {
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
 		@PathVariable(name = "activityId") Long activityId,
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
-		@RequestHeader("Time-Zone") String timeZone,
+		@RequestHeader("Time-Zone") ZoneId timeZone,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = CreateTimelineRequest.class),
 				examples = @ExampleObject(value = "{\"title\":\"정상 도착\",\"timelineImageObjectKey\":\"550e8400-summit.jpg\",\"createdAt\":\"2026-07-02T10:45:00\",\"trackPointIndex\":35,\"location\":{\"longitude\":127.123456,\"latitude\":37.123456,\"elevation\":542,\"pointIndex\":35},\"status\":\"SUCCESSFUL_CREATED\"}")))
