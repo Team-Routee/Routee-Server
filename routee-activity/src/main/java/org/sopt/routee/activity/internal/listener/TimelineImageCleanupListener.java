@@ -20,6 +20,10 @@ class TimelineImageCleanupListener {
 
 	@ApplicationModuleListener
 	void handleTimelineDeleted(TimelineDeletedEvent event) {
+		Thread.startVirtualThread(() -> deleteImage(event));
+	}
+
+	private void deleteImage(TimelineDeletedEvent event) {
 		try {
 			fileDeletePort.deleteImage(new FileDeleteCommand(
 				FileUploadDirectory.TIMELINE,
@@ -29,7 +33,6 @@ class TimelineImageCleanupListener {
 		} catch (BaseException e) {
 			log.warn("Timeline image delete failed. activityId={}, objectKey={}",
 				event.activityId(), event.timelineImageObjectKey(), e);
-			throw e;
 		}
 	}
 }
