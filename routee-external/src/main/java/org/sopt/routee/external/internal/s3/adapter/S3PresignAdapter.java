@@ -46,7 +46,7 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 
 	private String parseExtension(String fileName) {
 		return FileExtensionExtractor.extract(fileName)
-			.orElseThrow();
+			.orElseThrow(FileUploadPresignException::new);
 	}
 
 	private String generatePutPresignedUrl(String objectKey) {
