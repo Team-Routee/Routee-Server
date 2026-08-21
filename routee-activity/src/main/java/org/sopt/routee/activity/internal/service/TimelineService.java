@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
-import org.sopt.routee.activity.internal.event.TimelineDeletedEvent;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.mapper.TimelineMapper;
@@ -16,17 +15,22 @@ import org.sopt.routee.activity.internal.service.dto.command.UpdateTimelineTitle
 import org.sopt.routee.activity.internal.service.dto.result.CreateTimelineResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateTimelineTitleResult;
+import org.sopt.routee.exception.BaseException;
+import org.sopt.routee.external.api.command.FileDeleteCommand;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
+import org.sopt.routee.external.api.port.FileDeletePort;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
 import org.sopt.routee.util.TimeZoneUtils;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TimelineService {
@@ -34,7 +38,8 @@ public class TimelineService {
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
-	private final ApplicationEventPublisher applicationEventPublisher;
+	private final FileDeletePort fileDeletePort;
+	private final TransactionTemplate transactionTemplate;
 
 	@Transactional
 	public CreateTimelineResult create(CreateTimelineCommand command) {
@@ -59,15 +64,18 @@ public class TimelineService {
 			.toList();
 	}
 
-	@Transactional
 	public void delete(Long activityId, Long timelineId, Long memberId) {
-		Timeline timeline = findOwnedTimeline(activityId, timelineId, memberId);
+		Timeline timeline = transactionTemplate.execute(status -> {
+			Timeline ownedTimeline = findOwnedTimeline(activityId, timelineId, memberId);
 
-		timelineRepository.delete(timeline);
+			timelineRepository.delete(ownedTimeline);
 
-		applicationEventPublisher.publishEvent(
-			new TimelineDeletedEvent(activityId, timeline.getTimelineImageObjectKey())
-		);
+			return ownedTimeline;
+		});
+
+		String objectKey = timeline.getTimelineImageObjectKey();
+
+		Thread.startVirtualThread(() -> deleteTimelineImage(activityId, objectKey));
 	}
 
 	@Transactional
@@ -100,5 +108,14 @@ public class TimelineService {
 			.orElseThrow(() -> activityRepository.existsByIdAndMemberId(activityId, memberId)
 				? new TimelineNotFoundException()
 				: new ActivityNotFoundException());
+	}
+
+	private void deleteTimelineImage(Long activityId, String objectKey) {
+		try {
+			fileDeletePort.deleteImage(
+				new FileDeleteCommand(FileUploadDirectory.TIMELINE, activityId.toString(), objectKey));
+		} catch (BaseException e) {
+			log.warn("Timeline image delete failed. activityId={}, objectKey={}", activityId, objectKey, e);
+		}
 	}
 }
