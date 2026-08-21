@@ -6,7 +6,7 @@ import org.sopt.routee.external.api.type.FileUploadImageSize;
 public record FileImageAccessUrlCommand(
 	FileUploadDirectory directory,
 	FileUploadImageSize imageSize,
-	String activityId,
+	String ownerId,
 	String objectKey
 ) {
 }

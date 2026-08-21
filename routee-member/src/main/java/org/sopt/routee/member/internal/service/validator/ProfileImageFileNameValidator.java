@@ -1,4 +1,4 @@
-package org.sopt.routee.activity.internal.service.validator;
+package org.sopt.routee.member.internal.service.validator;
 
 import java.util.Set;
 
@@ -6,7 +6,7 @@ import org.sopt.routee.util.FileExtensionExtractor;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ActivityImageFileNameValidator {
+public class ProfileImageFileNameValidator {
 
 	private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "heic");
 
