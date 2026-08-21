@@ -6,18 +6,33 @@ import java.util.List;
 
 import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
 import org.sopt.routee.activity.api.usecase.ActivityUseCase;
+import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
+import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
+import org.sopt.routee.external.api.port.FileUploadPresignPort;
+import org.sopt.routee.external.api.result.FileUploadPresignResult;
+import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
+import org.sopt.routee.member.internal.service.dto.command.ProfileImageUploadUrlCommand;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
+import org.sopt.routee.member.internal.service.dto.command.UpdateNicknameCommand;
+import org.sopt.routee.member.internal.service.dto.command.UpdateProfileImageCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
+import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
+import org.sopt.routee.member.internal.service.dto.result.ProfileImageUploadUrlResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
+import org.sopt.routee.member.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.member.internal.mapper.MemberMapper;
 import org.sopt.routee.member.internal.repository.MemberRepository;
+import org.sopt.routee.member.internal.service.validator.ProfileImageFileNameValidator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +47,9 @@ public class MemberService {
 	private final ActivityUseCase activityUseCase;
 	private final MemberRepository memberRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
+	private final FileUploadPresignPort fileUploadPresignPort;
+	private final FileImageAccessUrlPort fileImageAccessUrlPort;
+	private final ProfileImageFileNameValidator profileImageFileNameValidator;
 
 	@Transactional(readOnly = true)
 	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider) {
@@ -74,6 +92,56 @@ public class MemberService {
 			.orElseThrow(MemberNotFoundException::new);
 
 		return MemberMapper.toMemberInfoResult(member, zoneId);
+	}
+
+	@Transactional(readOnly = true)
+	public MemberProfileResult getMemberProfile(long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
+
+		return MemberMapper.toMemberProfileResult(member);
+	}
+
+	@Transactional
+	public UpdateNicknameResult updateNickname(UpdateNicknameCommand command) {
+		Member member = memberRepository.findById(command.memberId())
+			.orElseThrow(MemberNotFoundException::new);
+
+		member.updateNickname(command.nickname());
+		return MemberMapper.toUpdateNicknameResult(member);
+	}
+
+	public ProfileImageUploadUrlResult generateProfileImageUploadUrl(ProfileImageUploadUrlCommand command) {
+		if (!profileImageFileNameValidator.validate(command.fileName())) {
+			throw new UnsupportedImageFileExtensionException();
+		}
+
+		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
+			FileUploadDirectory.PROFILE,
+			null,
+			command.memberId().toString(),
+			command.fileName()
+		);
+		FileUploadPresignResult result = fileUploadPresignPort.generatePutPresignedUrl(presignCommand);
+
+		return new ProfileImageUploadUrlResult(result.presignedUrl(), result.objectKey());
+	}
+
+	@Transactional
+	public UpdateProfileImageResult updateProfileImage(UpdateProfileImageCommand command) {
+		Member member = memberRepository.findById(command.memberId())
+			.orElseThrow(MemberNotFoundException::new);
+
+		FileImageAccessUrlCommand accessUrlCommand = new FileImageAccessUrlCommand(
+			FileUploadDirectory.PROFILE,
+			null,
+			command.memberId().toString(),
+			command.objectKey()
+		);
+		String profileImageUrl = fileImageAccessUrlPort.generateImageUrl(accessUrlCommand).imageUrl();
+
+		member.updateProfileImageUrl(profileImageUrl);
+		return MemberMapper.toUpdateProfileImageResult(member);
 	}
 
 	@Transactional
