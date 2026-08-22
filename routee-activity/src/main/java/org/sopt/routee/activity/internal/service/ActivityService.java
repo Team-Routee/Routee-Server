@@ -19,7 +19,6 @@ import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityAlreadyCompletedException;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.ActivityStatusAlreadySameException;
-import org.sopt.routee.activity.internal.exception.AlreadyInProgressActivityException;
 import org.sopt.routee.activity.internal.exception.InvalidActivityStatusTransitionException;
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
@@ -88,12 +87,7 @@ public class ActivityService {
 
 	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
-		if (activityRepository.existsByMemberIdAndActivityStatusIn(
-			command.memberId(),
-			ACTIVE_STATUSES
-		)) {
-			throw new AlreadyInProgressActivityException();
-		}
+		discardExistingActiveActivities(command.memberId());
 
 		Instant startedAt = command.startedAt()
 			.atZone(command.timeZone())
@@ -111,6 +105,20 @@ public class ActivityService {
 		});
 
 		return new CreateActivityResult(savedActivity.getId(), title);
+	}
+
+	private void discardExistingActiveActivities(Long memberId) {
+		List<Long> activeActivityIds = activityRepository.findIdsByMemberIdAndActivityStatusIn(
+			memberId,
+			ACTIVE_STATUSES
+		);
+
+		if (activeActivityIds.isEmpty()) {
+			return;
+		}
+
+		timelineRepository.deleteByActivityIdIn(activeActivityIds);
+		activityRepository.deleteByIdIn(activeActivityIds);
 	}
 
 	@Transactional(readOnly = true)

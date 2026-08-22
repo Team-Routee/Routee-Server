@@ -26,4 +26,8 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 	@Modifying
 	@Query("DELETE FROM Timeline t WHERE t.activity.memberId = :memberId")
 	void deleteTimelinesByMemberId(@Param("memberId") Long memberId);
+
+	@Modifying
+	@Query("DELETE FROM Timeline t WHERE t.activity.id IN :activityIds")
+	void deleteByActivityIdIn(@Param("activityIds") List<Long> activityIds);
 }

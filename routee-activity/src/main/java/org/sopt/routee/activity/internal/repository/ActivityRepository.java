@@ -15,6 +15,12 @@ import org.springframework.data.repository.query.Param;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	boolean existsByMemberIdAndActivityStatusIn(Long memberId, Collection<ActivityStatus> activityStatuses);
 
+	@Query("SELECT a.id FROM Activity a WHERE a.memberId = :memberId AND a.activityStatus IN :activityStatuses")
+	List<Long> findIdsByMemberIdAndActivityStatusIn(
+		@Param("memberId") Long memberId,
+		@Param("activityStatuses") Collection<ActivityStatus> activityStatuses
+	);
+
 	boolean existsByIdAndMemberId(Long id, Long memberId);
 
 	Optional<Activity> findByIdAndMemberId(Long id, Long memberId);
@@ -36,4 +42,8 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	@Modifying
 	@Query("DELETE FROM Activity a WHERE a.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
+
+	@Modifying
+	@Query("DELETE FROM Activity a WHERE a.id IN :activityIds")
+	void deleteByIdIn(@Param("activityIds") List<Long> activityIds);
 }
