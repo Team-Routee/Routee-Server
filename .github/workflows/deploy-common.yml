@@ -1,17 +1,23 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - main
-
-concurrency:
-  group: deploy
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      secret_prefix:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4
@@ -33,15 +39,15 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ github.sha }} \
-                       -t ${{ secrets.DOCKER_USERNAME }}/routee-api:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ github.sha }}
-          docker push ${{ secrets.DOCKER_USERNAME }}/routee-api:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ inputs.environment }}-${{ github.sha }} \
+                       -t ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ inputs.environment }}-latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ inputs.environment }}-${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ inputs.environment }}-latest
 
       - name: Copy config files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets[format('{0}EC2_HOST', inputs.secret_prefix)] }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.yml,nginx/default.conf,scripts/,tempo/,grafana/,prometheus/prometheus.yml"
@@ -51,7 +57,7 @@ jobs:
       - name: Blue-Green Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets[format('{0}EC2_HOST', inputs.secret_prefix)] }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
@@ -61,7 +67,7 @@ jobs:
 
             export DB_HOST="${{ secrets.DB_HOST }}"
             export DB_PORT="${{ secrets.DB_PORT }}"
-            export DB_NAME="${{ secrets.DB_NAME }}"
+            export DB_NAME="${{ secrets[format('{0}DB_NAME', inputs.secret_prefix)] }}"
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
@@ -70,7 +76,7 @@ jobs:
             export GRAFANA_ADMIN_USER="${{ secrets.GRAFANA_ADMIN_USER }}"
             export GRAFANA_ADMIN_PASSWORD="${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
             export S3_REGION="${{ secrets.S3_REGION }}"
-            export S3_BUCKET="${{ secrets.S3_BUCKET }}"
-            export S3_ENDPOINT="${{ secrets.S3_ENDPOINT }}"
+            export S3_BUCKET="${{ secrets[format('{0}S3_BUCKET', inputs.secret_prefix)] }}"
+            export S3_ENDPOINT="${{ secrets[format('{0}S3_ENDPOINT', inputs.secret_prefix)] }}"
 
-            cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ github.sha }}
+            cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ inputs.environment }}-${{ github.sha }}
