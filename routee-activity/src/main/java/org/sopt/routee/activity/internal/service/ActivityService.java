@@ -24,31 +24,36 @@ import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtension
 import org.sopt.routee.activity.internal.mapper.ActivityMapper;
 import org.sopt.routee.activity.internal.mapper.ActivityTrackMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
-import org.sopt.routee.activity.internal.repository.TimelineRepository;
-import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
+import org.sopt.routee.activity.internal.repository.TimelineRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityStatusCommand;
 import org.sopt.routee.activity.internal.service.dto.command.UpdateActivityTitleCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityCreationTransactionResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityEditItemResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityEditListResult;
+import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
-import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
-import org.sopt.routee.activity.internal.service.dto.result.ActivityPreviewResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineMarkerResult;
 import org.sopt.routee.activity.internal.service.dto.result.TrackPointResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleResult;
+import org.sopt.routee.activity.internal.service.dto.vo.TimelineImageDeleteTarget;
+import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
+import org.sopt.routee.exception.BaseException;
+import org.sopt.routee.external.api.command.FileDeleteCommand;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileDeletePort;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
@@ -60,6 +65,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,43 +88,63 @@ public class ActivityService {
 	private final ActivityImageFileNameValidator activityImageFileNameValidator;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
+	private final FileDeletePort fileDeletePort;
 	private final RouteRepository routeRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
+	private final TransactionTemplate transactionTemplate;
 
-	@Transactional
 	public CreateActivityResult create(CreateActivityCommand command) {
-		discardExistingActiveActivities(command.memberId());
+		ActivityCreationTransactionResult transactionResult = transactionTemplate.execute(
+			status -> createInTransaction(command));
 
-		Instant startedAt = command.startedAt()
-			.atZone(command.timeZone())
-			.toInstant();
-		LocalDate activityDate = TimeZoneUtils.toLocalDate(startedAt, command.timeZone());
-		String title = activityDate.format(TITLE_DATE_FORMATTER) + " 기록";
-		Activity activity = ActivityMapper.toEntity(command, title, startedAt);
-		Activity savedActivity = activityRepository.save(activity);
+		log.info("Activity created. activityId={}, memberId={}", transactionResult.result().activityId(),
+			command.memberId());
 
-		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-			@Override
-			public void afterCommit() {
-				log.info("Activity created. activityId={}, memberId={}", savedActivity.getId(), command.memberId());
-			}
-		});
+		if (!transactionResult.imageDeleteTargets().isEmpty()) {
+			Thread.startVirtualThread(() -> deleteTimelineImages(transactionResult.imageDeleteTargets()));
+		}
 
-		return new CreateActivityResult(savedActivity.getId(), title);
+		return transactionResult.result();
 	}
 
-	private void discardExistingActiveActivities(Long memberId) {
+	private ActivityCreationTransactionResult createInTransaction(CreateActivityCommand command) {
 		List<Long> activeActivityIds = activityRepository.findIdsByMemberIdAndActivityStatusIn(
-			memberId,
+			command.memberId(),
 			ACTIVE_STATUSES
 		);
 
-		if (activeActivityIds.isEmpty()) {
-			return;
+		List<TimelineImageDeleteTarget> imageDeleteTargets = List.of();
+		if (!activeActivityIds.isEmpty()) {
+			imageDeleteTargets = timelineRepository.findImageDeleteTargetsByActivityIdIn(activeActivityIds);
+
+			timelineRepository.deleteByActivityIdIn(activeActivityIds);
+			activityRepository.deleteByIdIn(activeActivityIds);
 		}
 
-		timelineRepository.deleteByActivityIdIn(activeActivityIds);
-		activityRepository.deleteByIdIn(activeActivityIds);
+		Instant startedAt = command.startedAt().atZone(command.timeZone()).toInstant();
+		LocalDate activityDate = TimeZoneUtils.toLocalDate(startedAt, command.timeZone());
+		String title = activityDate.format(TITLE_DATE_FORMATTER) + " 기록";
+		Activity savedActivity = activityRepository.save(ActivityMapper.toEntity(command, title, startedAt));
+
+		return new ActivityCreationTransactionResult(
+			new CreateActivityResult(savedActivity.getId(), title),
+			imageDeleteTargets
+		);
+	}
+
+	private void deleteTimelineImages(List<TimelineImageDeleteTarget> targets) {
+		for (TimelineImageDeleteTarget target : targets) {
+			try {
+				fileDeletePort.deleteImage(new FileDeleteCommand(
+					FileUploadDirectory.TIMELINE,
+					target.activityId().toString(),
+					target.objectKey()
+				));
+			} catch (BaseException e) {
+				log.warn("Timeline image delete failed. activityId={}, objectKey={}",
+					target.activityId(), target.objectKey(), e);
+			}
+		}
 	}
 
 	@Transactional(readOnly = true)
