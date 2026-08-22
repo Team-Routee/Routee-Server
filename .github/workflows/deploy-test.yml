@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - develop
-      - feat/96/deploy-workflow
 
 jobs:
   deploy:
