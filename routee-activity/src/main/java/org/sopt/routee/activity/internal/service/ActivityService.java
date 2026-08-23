@@ -26,6 +26,7 @@ import org.sopt.routee.activity.internal.mapper.ActivityTrackMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
+import org.sopt.routee.activity.internal.repository.projection.TimelineImageDeleteTargetProjection;
 import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
@@ -46,7 +47,6 @@ import org.sopt.routee.activity.internal.service.dto.result.TimelineMarkerResult
 import org.sopt.routee.activity.internal.service.dto.result.TrackPointResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityStatusResult;
 import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleResult;
-import org.sopt.routee.activity.internal.service.dto.vo.TimelineImageDeleteTarget;
 import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.exception.BaseException;
@@ -113,7 +113,7 @@ public class ActivityService {
 			ACTIVE_STATUSES
 		);
 
-		List<TimelineImageDeleteTarget> imageDeleteTargets = List.of();
+		List<TimelineImageDeleteTargetProjection> imageDeleteTargets = List.of();
 		if (!activeActivityIds.isEmpty()) {
 			imageDeleteTargets = timelineRepository.findImageDeleteTargetsByActivityIdIn(activeActivityIds);
 
@@ -132,17 +132,17 @@ public class ActivityService {
 		);
 	}
 
-	private void deleteTimelineImages(List<TimelineImageDeleteTarget> targets) {
-		for (TimelineImageDeleteTarget target : targets) {
+	private void deleteTimelineImages(List<TimelineImageDeleteTargetProjection> targets) {
+		for (TimelineImageDeleteTargetProjection target : targets) {
 			try {
 				fileDeletePort.deleteImage(new FileDeleteCommand(
 					FileUploadDirectory.TIMELINE,
-					target.activityId().toString(),
-					target.objectKey()
+					target.getActivityId().toString(),
+					target.getObjectKey()
 				));
 			} catch (BaseException e) {
 				log.warn("Timeline image delete failed. activityId={}, objectKey={}",
-					target.activityId(), target.objectKey(), e);
+					target.getActivityId(), target.getObjectKey(), e);
 			}
 		}
 	}

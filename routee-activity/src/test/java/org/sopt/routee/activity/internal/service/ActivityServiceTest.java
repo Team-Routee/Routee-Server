@@ -27,10 +27,10 @@ import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
+import org.sopt.routee.activity.internal.repository.projection.TimelineImageDeleteTargetProjection;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityCreationTransactionResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
-import org.sopt.routee.activity.internal.service.dto.vo.TimelineImageDeleteTarget;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileDeleteCommand;
 import org.sopt.routee.external.api.port.FileDeletePort;
@@ -125,6 +125,13 @@ class ActivityServiceTest {
 			.build();
 	}
 
+	private TimelineImageDeleteTargetProjection imageDeleteTarget(Long activityId, String objectKey) {
+		TimelineImageDeleteTargetProjection projection = mock(TimelineImageDeleteTargetProjection.class);
+		when(projection.getActivityId()).thenReturn(activityId);
+		when(projection.getObjectKey()).thenReturn(objectKey);
+		return projection;
+	}
+
 	@Test
 	void create_활성_활동이_없으면_기존_데이터를_삭제하지_않고_새_활동을_생성한다() {
 		Activity savedActivity = savedActivity(10L, ActivityType.RUNNING);
@@ -179,9 +186,9 @@ class ActivityServiceTest {
 	@Test
 	void create_타임라인_이미지가_있으면_DB_삭제_후_S3_삭제를_요청한다() throws InterruptedException {
 		List<Long> activeActivityIds = List.of(10L, 11L);
-		List<TimelineImageDeleteTarget> imageDeleteTargets = List.of(
-			new TimelineImageDeleteTarget(10L, "10/first.jpg"),
-			new TimelineImageDeleteTarget(11L, "11/second.jpg")
+		List<TimelineImageDeleteTargetProjection> imageDeleteTargets = List.of(
+			imageDeleteTarget(10L, "10/first.jpg"),
+			imageDeleteTarget(11L, "11/second.jpg")
 		);
 		when(activityRepository.findIdsByMemberIdAndActivityStatusIn(MEMBER_ID, ACTIVE_STATUSES))
 			.thenReturn(activeActivityIds);
@@ -216,9 +223,9 @@ class ActivityServiceTest {
 	@Test
 	void create_일부_S3_삭제가_실패해도_나머지_삭제를_계속하고_예외를_전파하지_않는다() throws InterruptedException {
 		List<Long> activeActivityIds = List.of(10L, 11L);
-		List<TimelineImageDeleteTarget> imageDeleteTargets = List.of(
-			new TimelineImageDeleteTarget(10L, "10/first.jpg"),
-			new TimelineImageDeleteTarget(11L, "11/second.jpg")
+		List<TimelineImageDeleteTargetProjection> imageDeleteTargets = List.of(
+			imageDeleteTarget(10L, "10/first.jpg"),
+			imageDeleteTarget(11L, "11/second.jpg")
 		);
 		when(activityRepository.findIdsByMemberIdAndActivityStatusIn(MEMBER_ID, ACTIVE_STATUSES))
 			.thenReturn(activeActivityIds);
@@ -246,10 +253,11 @@ class ActivityServiceTest {
 	@Test
 	void create_새_활동_저장에_실패하면_S3_삭제를_요청하지_않는다() {
 		List<Long> activeActivityIds = List.of(10L);
+		TimelineImageDeleteTargetProjection imageDeleteTarget = mock(TimelineImageDeleteTargetProjection.class);
 		when(activityRepository.findIdsByMemberIdAndActivityStatusIn(MEMBER_ID, ACTIVE_STATUSES))
 			.thenReturn(activeActivityIds);
 		when(timelineRepository.findImageDeleteTargetsByActivityIdIn(activeActivityIds))
-			.thenReturn(List.of(new TimelineImageDeleteTarget(10L, "10/first.jpg")));
+			.thenReturn(List.of(imageDeleteTarget));
 		when(activityRepository.save(any(Activity.class))).thenThrow(new ActivityNotFoundException());
 		stubTransactionTemplateToRunCallback();
 
