@@ -108,6 +108,8 @@ public class ActivityService {
 	}
 
 	private ActivityCreationTransactionResult createInTransaction(CreateActivityCommand command) {
+		activityRepository.acquireCreationLock(command.memberId());
+
 		List<Long> activeActivityIds = activityRepository.findIdsByMemberIdAndActivityStatusIn(
 			command.memberId(),
 			ACTIVE_STATUSES

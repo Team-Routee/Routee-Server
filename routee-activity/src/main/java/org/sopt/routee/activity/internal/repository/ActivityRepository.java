@@ -46,4 +46,7 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	@Modifying
 	@Query("DELETE FROM Activity a WHERE a.id IN :activityIds")
 	void deleteByIdIn(@Param("activityIds") List<Long> activityIds);
+
+	@Query(value = "SELECT pg_advisory_xact_lock(:memberId)", nativeQuery = true)
+	void acquireCreationLock(@Param("memberId") Long memberId);
 }
