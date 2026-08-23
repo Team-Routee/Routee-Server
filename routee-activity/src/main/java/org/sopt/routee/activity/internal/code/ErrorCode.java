@@ -19,7 +19,6 @@ public enum ErrorCode implements ErrorResultCode {
 
 	ACTIVITY_ALREADY_COMPLETED(HttpStatus.CONFLICT, "이미 완료된 활동입니다."),
 	ACTIVITY_STATUS_ALREADY_SAME(HttpStatus.CONFLICT, "이미 동일한 활동 상태입니다."),
-	ALREADY_IN_PROGRESS_ACTIVITY(HttpStatus.CONFLICT, "이미 진행 중이거나 일시정지된 활동이 있습니다."),
 	INVALID_ACTIVITY_STATUS_TRANSITION(HttpStatus.CONFLICT, "변경할 수 없는 활동 상태입니다."),
 	ROUTE_ALREADY_EXISTS(HttpStatus.CONFLICT, "루트 목록이 이미 존재합니다.");
 
