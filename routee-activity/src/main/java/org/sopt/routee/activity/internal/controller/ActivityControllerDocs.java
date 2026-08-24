@@ -58,11 +58,7 @@ public interface ActivityControllerDocs {
 						value = "{\"status\":400,\"code\":\"INVALID_TIME_ZONE\",\"message\":\"Time-Zone 헤더 값이 올바르지 않습니다.\"}")
 				})),
 		@ApiResponse(responseCode = "401", description = "인증 실패",
-			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
-		@ApiResponse(responseCode = "409", description = "이미 진행 중인 활동이 있음",
-			content = @Content(schema = @Schema(implementation = FailureResponse.class),
-				examples = @ExampleObject(name = "ALREADY_IN_PROGRESS_ACTIVITY",
-					value = "{\"status\":409,\"code\":\"ALREADY_IN_PROGRESS_ACTIVITY\",\"message\":\"이미 진행 중이거나 일시정지된 활동이 있습니다.\"}")))
+			content = @Content(schema = @Schema(implementation = FailureResponse.class)))
 	})
 	ResponseEntity<SuccessResponse<ActivityCreateResponse>> create(
 		Long memberId,

@@ -11,23 +11,37 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
+import org.sopt.routee.activity.internal.repository.RouteRepository;
+import org.sopt.routee.activity.internal.repository.TimelineRepository;
 import org.sopt.routee.activity.internal.service.dto.command.ImageUploadUrlCommand;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileDeletePort;
+import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.FileUploadImageSize;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class ActivityImageUrlServiceTest {
 
 	private static final Long ACTIVITY_ID = 100L;
 	private static final Long MEMBER_ID = 1L;
+	private static final FileUploadDirectory DIRECTORY = FileUploadDirectory.TIMELINE;
+	private static final FileUploadImageSize IMAGE_SIZE = FileUploadImageSize.ORIGINAL;
 
 	@Mock
 	private ActivityRepository activityRepository;
+
+	@Mock
+	private TimelineRepository timelineRepository;
+
+	@Mock
+	private ActivityDailySummaryService activityDailySummaryService;
 
 	@Mock
 	private ActivityImageFileNameValidator activityImageFileNameValidator;
@@ -35,14 +49,36 @@ class ActivityImageUrlServiceTest {
 	@Mock
 	private FileUploadPresignPort fileUploadPresignPort;
 
+	@Mock
+	private FileImageAccessUrlPort fileImageAccessUrlPort;
+
+	@Mock
+	private FileDeletePort fileDeletePort;
+
+	@Mock
+	private RouteRepository routeRepository;
+
+	@Mock
+	private ApplicationEventPublisher applicationEventPublisher;
+
+	@Mock
+	private TransactionTemplate transactionTemplate;
+
 	private ActivityService activityService;
 
 	@BeforeEach
 	void setUp() {
 		activityService = new ActivityService(
 			activityRepository,
+			timelineRepository,
+			activityDailySummaryService,
 			activityImageFileNameValidator,
-			fileUploadPresignPort
+			fileUploadPresignPort,
+			fileImageAccessUrlPort,
+			fileDeletePort,
+			routeRepository,
+			applicationEventPublisher,
+			transactionTemplate
 		);
 	}
 
@@ -54,8 +90,8 @@ class ActivityImageUrlServiceTest {
 		when(activityRepository.existsByIdAndMemberId(ACTIVITY_ID, MEMBER_ID)).thenReturn(true);
 		when(activityImageFileNameValidator.validate("hike.jpg")).thenReturn(true);
 		FileUploadPresignCommand command = new FileUploadPresignCommand(
-			FileUploadDirectory.ACTIVITY,
-			FileUploadImageSize.ORIGINAL,
+			DIRECTORY,
+			IMAGE_SIZE,
 			ACTIVITY_ID.toString(),
 			"hike.jpg"
 		);
@@ -63,7 +99,7 @@ class ActivityImageUrlServiceTest {
 			.thenReturn(presignResult);
 
 		ImageUrlResult result = activityService.generateImageUploadUrl(
-			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.jpg")
+			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.jpg", DIRECTORY, IMAGE_SIZE)
 		);
 
 		assertThat(result.presignedUrl()).isEqualTo("https://presigned-url");
@@ -77,7 +113,7 @@ class ActivityImageUrlServiceTest {
 		when(activityImageFileNameValidator.validate("hike.gif")).thenReturn(false);
 
 		assertThatThrownBy(() -> activityService.generateImageUploadUrl(
-			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.gif")
+			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.gif", DIRECTORY, IMAGE_SIZE)
 		))
 			.isInstanceOf(UnsupportedImageFileExtensionException.class);
 		verifyNoInteractions(fileUploadPresignPort);
@@ -88,7 +124,7 @@ class ActivityImageUrlServiceTest {
 		when(activityRepository.existsByIdAndMemberId(ACTIVITY_ID, MEMBER_ID)).thenReturn(false);
 
 		assertThatThrownBy(() -> activityService.generateImageUploadUrl(
-			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.jpg")
+			new ImageUploadUrlCommand(ACTIVITY_ID, MEMBER_ID, "hike.jpg", DIRECTORY, IMAGE_SIZE)
 		))
 			.isInstanceOf(ActivityNotFoundException.class);
 		verifyNoInteractions(activityImageFileNameValidator, fileUploadPresignPort);
