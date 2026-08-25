@@ -51,4 +51,11 @@ class S3ObjectKeyAssemblerTest {
 			S3ObjectKeyAssembler.assemble(FileUploadDirectory.RECAP, null, "1", null, "recap.jpg"))
 			.isInstanceOf(NullPointerException.class);
 	}
+
+	@Test
+	void assembleActivityDirectoryPrefix_member_루트_아래_activity_디렉터리_프리픽스를_조립한다() {
+		String prefix = S3ObjectKeyAssembler.assembleActivityDirectoryPrefix("1", "2");
+
+		assertThat(prefix).isEqualTo("member/1/activity/2/");
+	}
 }

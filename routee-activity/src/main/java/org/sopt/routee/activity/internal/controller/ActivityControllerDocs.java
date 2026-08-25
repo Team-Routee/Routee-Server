@@ -252,7 +252,7 @@ public interface ActivityControllerDocs {
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = ActivityCompleteRequest.class),
 				examples = @ExampleObject(value = """
-					{"title":"북한산 기록","distance":5400,"durationSec":3600,"maxElevation":836,"mapImageUrl":"https://example.com/map.png","coverImageObjectKey":"activity/1/cover.png","track":[{"latitude":37.566,"longitude":126.978,"elevation":20,"pointIndex":0},{"latitude":37.567,"longitude":126.979,"elevation":25,"pointIndex":10}],"endedAt":"2026-07-07T16:30:00"}""")))
+					{"title":"북한산 기록","distance":5400,"durationSec":3600,"maxElevation":836,"mapImageUrl":"https://example.com/map.png","track":[{"latitude":37.566,"longitude":126.978,"elevation":20,"pointIndex":0},{"latitude":37.567,"longitude":126.979,"elevation":25,"pointIndex":10}],"endedAt":"2026-07-07T16:30:00"}""")))
 		@Valid @RequestBody ActivityCompleteRequest request
 	);
 

@@ -26,7 +26,6 @@ import org.sopt.routee.activity.internal.mapper.ActivityTrackMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
-import org.sopt.routee.activity.internal.repository.projection.TimelineImageDeleteTargetProjection;
 import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
@@ -50,7 +49,7 @@ import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleR
 import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.exception.BaseException;
-import org.sopt.routee.external.api.command.FileDeleteCommand;
+import org.sopt.routee.external.api.command.FileDeleteDirectoryCommand;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileDeletePort;
@@ -100,9 +99,9 @@ public class ActivityService {
 		log.info("Activity created. activityId={}, memberId={}", transactionResult.result().activityId(),
 			command.memberId());
 
-		if (!transactionResult.imageDeleteTargets().isEmpty()) {
+		if (!transactionResult.deletedActivityIds().isEmpty()) {
 			Thread.startVirtualThread(
-				() -> deleteTimelineImages(command.memberId(), transactionResult.imageDeleteTargets()));
+				() -> deleteActivityImageDirectories(command.memberId(), transactionResult.deletedActivityIds()));
 		}
 
 		return transactionResult.result();
@@ -116,10 +115,7 @@ public class ActivityService {
 			ACTIVE_STATUSES
 		);
 
-		List<TimelineImageDeleteTargetProjection> imageDeleteTargets = List.of();
 		if (!activeActivityIds.isEmpty()) {
-			imageDeleteTargets = timelineRepository.findImageDeleteTargetsByActivityIdIn(activeActivityIds);
-
 			timelineRepository.deleteByActivityIdIn(activeActivityIds);
 			activityRepository.deleteByIdIn(activeActivityIds);
 		}
@@ -131,22 +127,17 @@ public class ActivityService {
 
 		return new ActivityCreationTransactionResult(
 			new CreateActivityResult(savedActivity.getId(), title),
-			imageDeleteTargets
+			activeActivityIds
 		);
 	}
 
-	private void deleteTimelineImages(Long memberId, List<TimelineImageDeleteTargetProjection> targets) {
-		for (TimelineImageDeleteTargetProjection target : targets) {
+	private void deleteActivityImageDirectories(Long memberId, List<Long> activityIds) {
+		for (Long activityId : activityIds) {
 			try {
-				fileDeletePort.deleteImage(new FileDeleteCommand(
-					FileUploadDirectory.TIMELINE,
-					memberId.toString(),
-					target.getActivityId().toString(),
-					target.getObjectKey()
-				));
+				fileDeletePort.deleteDirectory(
+					new FileDeleteDirectoryCommand(memberId.toString(), activityId.toString()));
 			} catch (BaseException e) {
-				log.warn("Timeline image delete failed. activityId={}, objectKey={}",
-					target.getActivityId(), target.getObjectKey(), e);
+				log.warn("Activity image directory delete failed. activityId={}", activityId, e);
 			}
 		}
 	}
@@ -209,6 +200,7 @@ public class ActivityService {
 			.orElseThrow(ActivityNotFoundException::new);
 
 		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
+		String coverImageObjectKey = resolveCoverImageObjectKey(command.activityId());
 
 		activity.updateCompletedData(
 			command.title(),
@@ -216,7 +208,7 @@ public class ActivityService {
 			command.durationSec(),
 			command.maxElevation(),
 			command.mapImageUrl(),
-			command.coverImageObjectKey(),
+			coverImageObjectKey,
 			ActivityMapper.toLineString(command.track()),
 			endedAt
 		);
@@ -330,6 +322,13 @@ public class ActivityService {
 			.toList();
 
 		return new ActivityTrackResult(activityId, trackPointResults, timelineMarkers);
+	}
+
+	private String resolveCoverImageObjectKey(Long activityId) {
+		return timelineRepository
+			.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(activityId, TimelineStatus.SUCCESSFUL_CREATED)
+			.map(Timeline::getTimelineImageObjectKey)
+			.orElse(null);
 	}
 
 	private String generateThumbnailUrl(Activity activity) {

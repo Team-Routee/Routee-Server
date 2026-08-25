@@ -87,6 +87,10 @@ public class Activity {
 		this.title = title;
 	}
 
+	public void updateCoverImageObjectKey(String coverImageObjectKey) {
+		this.coverImageObjectKey = coverImageObjectKey;
+	}
+
 	public void updateCompletedData(
 		String title,
 		Integer distance,

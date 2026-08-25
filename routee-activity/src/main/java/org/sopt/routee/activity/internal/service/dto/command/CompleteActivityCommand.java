@@ -15,7 +15,6 @@ public record CompleteActivityCommand(
 	Integer durationSec,
 	Integer maxElevation,
 	String mapImageUrl,
-	String coverImageObjectKey,
 	List<TrackPoint> track,
 	LocalDateTime endedAt
 ) {

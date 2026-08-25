@@ -14,7 +14,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
+import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
@@ -57,17 +59,23 @@ class TimelineServiceTest {
 		});
 	}
 
+	private Timeline timelineWithActivity(Long timelineId, String objectKey, Activity activity) {
+		return Timeline.builder()
+			.id(timelineId)
+			.timelineImageObjectKey(objectKey)
+			.activity(activity)
+			.build();
+	}
+
 	@Test
 	void delete_타임라인을_삭제하면_이미지_키로_S3_삭제를_요청한다() throws InterruptedException {
 		Long activityId = 1L;
 		Long timelineId = 10L;
 		Long memberId = 100L;
 		String objectKey = "timeline-image.jpg";
-
-		Timeline timeline = Timeline.builder()
-			.id(timelineId)
-			.timelineImageObjectKey(objectKey)
-			.build();
+		Activity activity = Activity.builder().id(activityId).memberId(memberId)
+			.coverImageObjectKey("other-cover.jpg").build();
+		Timeline timeline = timelineWithActivity(timelineId, objectKey, activity);
 
 		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
 			.thenReturn(Optional.of(timeline));
@@ -100,11 +108,9 @@ class TimelineServiceTest {
 		Long timelineId = 10L;
 		Long memberId = 100L;
 		String objectKey = "timeline-image.jpg";
-
-		Timeline timeline = Timeline.builder()
-			.id(timelineId)
-			.timelineImageObjectKey(objectKey)
-			.build();
+		Activity activity = Activity.builder().id(activityId).memberId(memberId)
+			.coverImageObjectKey("other-cover.jpg").build();
+		Timeline timeline = timelineWithActivity(timelineId, objectKey, activity);
 
 		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
 			.thenReturn(Optional.of(timeline));
@@ -159,6 +165,92 @@ class TimelineServiceTest {
 
 		verify(timelineRepository, never()).delete(any());
 		verify(fileDeletePort, never()).deleteImage(any());
+	}
+
+	@Test
+	void delete_삭제된_타임라인이_커버이미지가_아니면_커버이미지를_재계산하지_않는다() throws InterruptedException {
+		Long activityId = 1L;
+		Long timelineId = 10L;
+		Long memberId = 100L;
+		Activity activity = Activity.builder().id(activityId).memberId(memberId)
+			.coverImageObjectKey("cover.jpg").build();
+		Timeline timeline = timelineWithActivity(timelineId, "not-cover.jpg", activity);
+
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.of(timeline));
+		stubTransactionTemplateToRunCallback();
+
+		CountDownLatch latch = new CountDownLatch(1);
+		doAnswer(invocation -> {
+			latch.countDown();
+			return null;
+		}).when(fileDeletePort).deleteImage(any());
+
+		timelineService.delete(activityId, timelineId, memberId);
+
+		assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
+		verify(timelineRepository, never())
+			.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(any(), any());
+		assertThat(activity.getCoverImageObjectKey()).isEqualTo("cover.jpg");
+	}
+
+	@Test
+	void delete_삭제된_타임라인이_커버이미지면_남은_타임라인_중_트랙포인트가_가장_작은_것으로_갱신한다() throws InterruptedException {
+		Long activityId = 1L;
+		Long timelineId = 10L;
+		Long memberId = 100L;
+		String deletedObjectKey = "cover.jpg";
+		Activity activity = Activity.builder().id(activityId).memberId(memberId)
+			.coverImageObjectKey(deletedObjectKey).build();
+		Timeline timeline = timelineWithActivity(timelineId, deletedObjectKey, activity);
+		Timeline remainingTimeline = Timeline.builder().id(11L).timelineImageObjectKey("next-smallest.jpg").build();
+
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.of(timeline));
+		when(timelineRepository.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(
+			activityId, TimelineStatus.SUCCESSFUL_CREATED))
+			.thenReturn(Optional.of(remainingTimeline));
+		stubTransactionTemplateToRunCallback();
+
+		CountDownLatch latch = new CountDownLatch(1);
+		doAnswer(invocation -> {
+			latch.countDown();
+			return null;
+		}).when(fileDeletePort).deleteImage(any());
+
+		timelineService.delete(activityId, timelineId, memberId);
+
+		assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
+		assertThat(activity.getCoverImageObjectKey()).isEqualTo("next-smallest.jpg");
+	}
+
+	@Test
+	void delete_삭제된_타임라인이_커버이미지이고_남은_타임라인이_없으면_커버이미지를_비운다() throws InterruptedException {
+		Long activityId = 1L;
+		Long timelineId = 10L;
+		Long memberId = 100L;
+		String deletedObjectKey = "cover.jpg";
+		Activity activity = Activity.builder().id(activityId).memberId(memberId)
+			.coverImageObjectKey(deletedObjectKey).build();
+		Timeline timeline = timelineWithActivity(timelineId, deletedObjectKey, activity);
+
+		when(timelineRepository.findByIdAndActivity_IdAndActivity_MemberId(timelineId, activityId, memberId))
+			.thenReturn(Optional.of(timeline));
+		when(timelineRepository.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(
+			activityId, TimelineStatus.SUCCESSFUL_CREATED))
+			.thenReturn(Optional.empty());
+		stubTransactionTemplateToRunCallback();
+
+		CountDownLatch latch = new CountDownLatch(1);
+		doAnswer(invocation -> {
+			latch.countDown();
+			return null;
+		}).when(fileDeletePort).deleteImage(any());
+
+		timelineService.delete(activityId, timelineId, memberId);
+
+		assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
+		assertThat(activity.getCoverImageObjectKey()).isNull();
 	}
 
 	@Test

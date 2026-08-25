@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sopt.routee.external.api.command.FileDeleteCommand;
+import org.sopt.routee.external.api.command.FileDeleteDirectoryCommand;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.internal.s3.config.S3Properties;
 import org.sopt.routee.external.internal.s3.exception.FileDeleteException;
@@ -20,8 +21,11 @@ import org.sopt.routee.external.internal.s3.exception.FileDeleteException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Error;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 @ExtendWith(MockitoExtension.class)
 class S3FileDeleteAdapterTest {
@@ -102,6 +106,93 @@ class S3FileDeleteAdapterTest {
 			.thenReturn(DeleteObjectsResponse.builder().errors(error).build());
 
 		assertThatThrownBy(() -> s3FileDeleteAdapter.deleteImage(command))
+			.isInstanceOf(FileDeleteException.class);
+	}
+
+	@Test
+	void deleteDirectory_activity_디렉터리_아래_모든_객체를_삭제_요청한다() {
+		FileDeleteDirectoryCommand command = new FileDeleteDirectoryCommand("9", "1");
+		when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+			.thenReturn(ListObjectsV2Response.builder()
+				.contents(
+					S3Object.builder().key("member/9/activity/1/timeline/original/a.jpg").build(),
+					S3Object.builder().key("member/9/activity/1/timeline/large/a.jpg").build()
+				)
+				.isTruncated(false)
+				.build());
+		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+			.thenReturn(DeleteObjectsResponse.builder().build());
+
+		s3FileDeleteAdapter.deleteDirectory(command);
+
+		ArgumentCaptor<ListObjectsV2Request> listRequestCaptor = ArgumentCaptor.forClass(ListObjectsV2Request.class);
+		verify(s3Client).listObjectsV2(listRequestCaptor.capture());
+		assertThat(listRequestCaptor.getValue().prefix()).isEqualTo("member/9/activity/1/");
+
+		ArgumentCaptor<DeleteObjectsRequest> deleteRequestCaptor = ArgumentCaptor.forClass(DeleteObjectsRequest.class);
+		verify(s3Client).deleteObjects(deleteRequestCaptor.capture());
+		List<String> deletedKeys = deleteRequestCaptor.getValue().delete().objects().stream()
+			.map(ObjectIdentifier::key)
+			.toList();
+		assertThat(deletedKeys).containsExactlyInAnyOrder(
+			"member/9/activity/1/timeline/original/a.jpg",
+			"member/9/activity/1/timeline/large/a.jpg"
+		);
+	}
+
+	@Test
+	void deleteDirectory_대상_객체가_없으면_삭제_요청을_보내지_않는다() {
+		FileDeleteDirectoryCommand command = new FileDeleteDirectoryCommand("9", "1");
+		when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+			.thenReturn(ListObjectsV2Response.builder().isTruncated(false).build());
+
+		s3FileDeleteAdapter.deleteDirectory(command);
+
+		verify(s3Client, never()).deleteObjects(any(DeleteObjectsRequest.class));
+	}
+
+	@Test
+	void deleteDirectory_결과가_여러_페이지면_모두_순회하며_삭제한다() {
+		FileDeleteDirectoryCommand command = new FileDeleteDirectoryCommand("9", "1");
+		when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+			.thenReturn(ListObjectsV2Response.builder()
+				.contents(S3Object.builder().key("member/9/activity/1/timeline/original/a.jpg").build())
+				.isTruncated(true)
+				.nextContinuationToken("token-1")
+				.build())
+			.thenReturn(ListObjectsV2Response.builder()
+				.contents(S3Object.builder().key("member/9/activity/1/timeline/original/b.jpg").build())
+				.isTruncated(false)
+				.build());
+		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+			.thenReturn(DeleteObjectsResponse.builder().build());
+
+		s3FileDeleteAdapter.deleteDirectory(command);
+
+		verify(s3Client, times(2)).listObjectsV2(any(ListObjectsV2Request.class));
+		verify(s3Client, times(2)).deleteObjects(any(DeleteObjectsRequest.class));
+	}
+
+	@Test
+	void deleteDirectory_목록_조회가_실패하면_FileDeleteException으로_변환한다() {
+		FileDeleteDirectoryCommand command = new FileDeleteDirectoryCommand("9", "1");
+		when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenThrow(new RuntimeException("boom"));
+
+		assertThatThrownBy(() -> s3FileDeleteAdapter.deleteDirectory(command))
+			.isInstanceOf(FileDeleteException.class);
+	}
+
+	@Test
+	void deleteDirectory_삭제_요청이_실패하면_FileDeleteException으로_변환한다() {
+		FileDeleteDirectoryCommand command = new FileDeleteDirectoryCommand("9", "1");
+		when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+			.thenReturn(ListObjectsV2Response.builder()
+				.contents(S3Object.builder().key("member/9/activity/1/timeline/original/a.jpg").build())
+				.isTruncated(false)
+				.build());
+		when(s3Client.deleteObjects(any(DeleteObjectsRequest.class))).thenThrow(new RuntimeException("boom"));
+
+		assertThatThrownBy(() -> s3FileDeleteAdapter.deleteDirectory(command))
 			.isInstanceOf(FileDeleteException.class);
 	}
 }

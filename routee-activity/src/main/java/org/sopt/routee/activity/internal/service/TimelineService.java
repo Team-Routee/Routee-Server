@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
+import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.mapper.TimelineMapper;
@@ -69,6 +70,7 @@ public class TimelineService {
 			Timeline ownedTimeline = findOwnedTimeline(activityId, timelineId, memberId);
 
 			timelineRepository.delete(ownedTimeline);
+			refreshCoverImageIfDeleted(ownedTimeline);
 
 			return ownedTimeline;
 		});
@@ -102,6 +104,21 @@ public class TimelineService {
 		);
 
 		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
+	}
+
+	private void refreshCoverImageIfDeleted(Timeline deletedTimeline) {
+		Activity activity = deletedTimeline.getActivity();
+		if (!deletedTimeline.getTimelineImageObjectKey().equals(activity.getCoverImageObjectKey())) {
+			return;
+		}
+
+		String newCoverImageObjectKey = timelineRepository
+			.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(
+				activity.getId(), TimelineStatus.SUCCESSFUL_CREATED)
+			.map(Timeline::getTimelineImageObjectKey)
+			.orElse(null);
+
+		activity.updateCoverImageObjectKey(newCoverImageObjectKey);
 	}
 
 	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {

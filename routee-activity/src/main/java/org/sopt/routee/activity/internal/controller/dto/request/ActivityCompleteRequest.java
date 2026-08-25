@@ -37,8 +37,6 @@ public record ActivityCompleteRequest(
 	@NotBlank(message = "mapImageUrl은 필수입니다.")
 	String mapImageUrl,
 
-	String coverImageObjectKey,
-
 	@NotEmpty(message = "track은 필수입니다.")
 	@Valid
 	List<ActivityTrackPoint> track,
@@ -56,7 +54,6 @@ public record ActivityCompleteRequest(
 			durationSec,
 			maxElevation,
 			mapImageUrl,
-			coverImageObjectKey,
 			track.stream().map(ActivityTrackPoint::toTrackPoint).toList(),
 			endedAt
 		);
