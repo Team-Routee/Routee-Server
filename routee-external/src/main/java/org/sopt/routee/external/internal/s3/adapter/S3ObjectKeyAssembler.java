@@ -50,4 +50,8 @@ final class S3ObjectKeyAssembler {
 	static String assembleActivityDirectoryPrefix(String memberId, String activityId) {
 		return "%s/%s/%s/%s/".formatted(MEMBER_ROOT_PATH, memberId, ACTIVITY_SUB_PATH, activityId);
 	}
+
+	static String assembleMemberDirectoryPrefix(String memberId) {
+		return "%s/%s/".formatted(MEMBER_ROOT_PATH, memberId);
+	}
 }

@@ -4,4 +4,8 @@ public record FileDeleteDirectoryCommand(
 	String memberId,
 	String activityId
 ) {
+
+	public FileDeleteDirectoryCommand(String memberId) {
+		this(memberId, null);
+	}
 }

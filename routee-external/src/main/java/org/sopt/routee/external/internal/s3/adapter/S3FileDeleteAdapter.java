@@ -39,7 +39,9 @@ public class S3FileDeleteAdapter implements FileDeletePort {
 
 	@Override
 	public void deleteDirectory(FileDeleteDirectoryCommand command) {
-		String prefix = S3ObjectKeyAssembler.assembleActivityDirectoryPrefix(command.memberId(), command.activityId());
+		String prefix = command.activityId() == null
+			? S3ObjectKeyAssembler.assembleMemberDirectoryPrefix(command.memberId())
+			: S3ObjectKeyAssembler.assembleActivityDirectoryPrefix(command.memberId(), command.activityId());
 
 		String continuationToken = null;
 		do {

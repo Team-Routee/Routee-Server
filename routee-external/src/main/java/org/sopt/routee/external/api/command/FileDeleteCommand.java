@@ -8,4 +8,8 @@ public record FileDeleteCommand(
 	String activityId,
 	String objectKey
 ) {
+
+	public FileDeleteCommand(FileUploadDirectory directory, String memberId, String objectKey) {
+		this(directory, memberId, null, objectKey);
+	}
 }
