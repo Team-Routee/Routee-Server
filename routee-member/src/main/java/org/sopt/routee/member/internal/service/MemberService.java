@@ -91,7 +91,7 @@ public class MemberService {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(MemberNotFoundException::new);
 
-		return MemberMapper.toMemberInfoResult(member, zoneId);
+		return MemberMapper.toMemberInfoResult(member, generateProfileImageUrl(member), zoneId);
 	}
 
 	@Transactional(readOnly = true)
@@ -99,7 +99,7 @@ public class MemberService {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(MemberNotFoundException::new);
 
-		return MemberMapper.toMemberProfileResult(member);
+		return MemberMapper.toMemberProfileResult(member, generateProfileImageUrl(member));
 	}
 
 	@Transactional
@@ -132,16 +132,22 @@ public class MemberService {
 		Member member = memberRepository.findById(command.memberId())
 			.orElseThrow(MemberNotFoundException::new);
 
+		member.updateProfileImageObjectKey(command.objectKey());
+		return MemberMapper.toUpdateProfileImageResult(generateProfileImageUrl(member));
+	}
+
+	private String generateProfileImageUrl(Member member) {
+		if (member.getProfileImageObjectKey() == null) {
+			return null;
+		}
+
 		FileImageAccessUrlCommand accessUrlCommand = new FileImageAccessUrlCommand(
 			FileUploadDirectory.PROFILE,
 			null,
-			command.memberId().toString(),
-			command.objectKey()
+			member.getId().toString(),
+			member.getProfileImageObjectKey()
 		);
-		String profileImageUrl = fileImageAccessUrlPort.generateImageUrl(accessUrlCommand).imageUrl();
-
-		member.updateProfileImageUrl(profileImageUrl);
-		return MemberMapper.toUpdateProfileImageResult(member);
+		return fileImageAccessUrlPort.generateImageUrl(accessUrlCommand).imageUrl();
 	}
 
 	@Transactional

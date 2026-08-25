@@ -38,8 +38,8 @@ public class Member extends BaseEntity {
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
-	@Column(name = "profile_image_url")
-	private String profileImageUrl;
+	@Column(name = "profile_image_object_key")
+	private String profileImageObjectKey;
 
 	@Column(name = "oauth_id", nullable = false, updatable = false)
 	private String oauthId;
@@ -63,7 +63,7 @@ public class Member extends BaseEntity {
 		this.nickname = nickname;
 	}
 
-	public void updateProfileImageUrl(String profileImageUrl) {
-		this.profileImageUrl = profileImageUrl;
+	public void updateProfileImageObjectKey(String profileImageObjectKey) {
+		this.profileImageObjectKey = profileImageObjectKey;
 	}
 }
