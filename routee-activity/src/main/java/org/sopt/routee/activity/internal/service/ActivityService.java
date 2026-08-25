@@ -201,6 +201,7 @@ public class ActivityService {
 
 		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
 		String coverImageObjectKey = resolveCoverImageObjectKey(command.activityId());
+		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
 
 		activity.updateCompletedData(
 			command.title(),
@@ -210,13 +211,12 @@ public class ActivityService {
 			command.mapImageObjectKey(),
 			coverImageObjectKey,
 			ActivityMapper.toLineString(command.track()),
-			endedAt
+			endedAt,
+			activityDate
 		);
 
-		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
-		String coverImageUrl = generateThumbnailUrl(activity);
 		activityDailySummaryService.recordActivity(
-			command.memberId(), activityDate, command.durationSec(), coverImageUrl
+			command.memberId(), activityDate, command.durationSec(), activity.getId(), coverImageObjectKey
 		);
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));

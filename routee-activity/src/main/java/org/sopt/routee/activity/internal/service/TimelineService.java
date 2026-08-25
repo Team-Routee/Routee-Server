@@ -1,9 +1,11 @@
 package org.sopt.routee.activity.internal.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
+import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
@@ -38,6 +40,7 @@ public class TimelineService {
 
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
+	private final ActivityDailySummaryService activityDailySummaryService;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
 	private final FileDeletePort fileDeletePort;
 	private final TransactionTemplate transactionTemplate;
@@ -119,6 +122,24 @@ public class TimelineService {
 			.orElse(null);
 
 		activity.updateCoverImageObjectKey(newCoverImageObjectKey);
+		refreshDailySummaryCoverIfNeeded(activity);
+	}
+
+	private void refreshDailySummaryCoverIfNeeded(Activity activity) {
+		LocalDate activityDate = activity.getActivityDateWithTimezone();
+		if (activityDate == null) {
+			return;
+		}
+
+		Activity firstActivityOfDay = activityRepository
+			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusOrderByStartedAtAsc(
+				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED)
+			.orElse(null);
+
+		Long coverActivityId = firstActivityOfDay == null ? null : firstActivityOfDay.getId();
+		String coverImageObjectKey = firstActivityOfDay == null ? null : firstActivityOfDay.getCoverImageObjectKey();
+
+		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, coverActivityId, coverImageObjectKey);
 	}
 
 	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {

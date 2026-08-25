@@ -18,13 +18,14 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 	@Modifying
 	@Query(value = """
 		INSERT INTO activity_daily_summary (
-			id, member_id, activity_date, total_duration_sec, cover_image_url, activity_count
+			id, member_id, activity_date, total_duration_sec, cover_activity_id, cover_image_object_key, activity_count
 		)
-		VALUES (:id, :memberId, :activityDate, :durationSec, :coverImageUrl, 1)
+		VALUES (:id, :memberId, :activityDate, :durationSec, :coverActivityId, :coverImageObjectKey, 1)
 		ON CONFLICT (member_id, activity_date)
 		DO UPDATE SET
 			total_duration_sec = activity_daily_summary.total_duration_sec + EXCLUDED.total_duration_sec,
-			cover_image_url = COALESCE(activity_daily_summary.cover_image_url, EXCLUDED.cover_image_url),
+			cover_activity_id = COALESCE(activity_daily_summary.cover_activity_id, EXCLUDED.cover_activity_id),
+			cover_image_object_key = COALESCE(activity_daily_summary.cover_image_object_key, EXCLUDED.cover_image_object_key),
 			activity_count = activity_daily_summary.activity_count + 1
 		""", nativeQuery = true)
 	void upsertDailySummary(
@@ -32,10 +33,23 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 		@Param("memberId") Long memberId,
 		@Param("activityDate") LocalDate activityDate,
 		@Param("durationSec") Integer durationSec,
-		@Param("coverImageUrl") String coverImageUrl
+		@Param("coverActivityId") Long coverActivityId,
+		@Param("coverImageObjectKey") String coverImageObjectKey
 	);
 
 	@Modifying
 	@Query("DELETE FROM ActivityDailySummary ads WHERE ads.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
+
+	@Modifying
+	@Query("""
+		UPDATE ActivityDailySummary ads SET ads.coverActivityId = :coverActivityId, ads.coverImageObjectKey = :coverImageObjectKey
+		WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate
+		""")
+	void updateCoverImage(
+		@Param("memberId") Long memberId,
+		@Param("activityDate") LocalDate activityDate,
+		@Param("coverActivityId") Long coverActivityId,
+		@Param("coverImageObjectKey") String coverImageObjectKey
+	);
 }

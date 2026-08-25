@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.entity.activity;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.locationtech.jts.geom.LineString;
@@ -67,6 +68,9 @@ public class Activity {
 	@Column(name = "cover_image_object_key")
 	private String coverImageObjectKey;
 
+	@Column(name = "activity_date_with_timezone")
+	private LocalDate activityDateWithTimezone;
+
 	@Column(name = "track", columnDefinition = "geometry(LINESTRINGZM, 4326)")
 	private LineString track;
 
@@ -99,7 +103,8 @@ public class Activity {
 		String mapImageObjectKey,
 		String coverImageObjectKey,
 		LineString track,
-		Instant endedAt
+		Instant endedAt,
+		LocalDate activityDateWithTimezone
 	) {
 		this.title = title;
 		this.activityStatus = ActivityStatus.ACTIVITY_COMPLETED;
@@ -110,5 +115,6 @@ public class Activity {
 		this.coverImageObjectKey = coverImageObjectKey;
 		this.track = track;
 		this.endedAt = endedAt;
+		this.activityDateWithTimezone = activityDateWithTimezone;
 	}
 }

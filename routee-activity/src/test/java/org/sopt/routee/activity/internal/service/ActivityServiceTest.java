@@ -40,7 +40,6 @@ import org.sopt.routee.external.api.command.FileDeleteDirectoryCommand;
 import org.sopt.routee.external.api.port.FileDeletePort;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
-import org.sopt.routee.external.api.result.FileImageAccessUrlResult;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
@@ -258,12 +257,11 @@ class ActivityServiceTest {
 		when(timelineRepository.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(
 			activityId, TimelineStatus.SUCCESSFUL_CREATED))
 			.thenReturn(Optional.of(coverTimeline));
-		when(fileImageAccessUrlPort.generateImageUrl(any()))
-			.thenReturn(new FileImageAccessUrlResult("https://image-url"));
 
 		completeWithSynchronizationActive(completeCommand(activityId));
 
 		assertThat(activity.getCoverImageObjectKey()).isEqualTo("smallest.jpg");
+		verifyNoInteractions(fileImageAccessUrlPort);
 	}
 
 	@Test

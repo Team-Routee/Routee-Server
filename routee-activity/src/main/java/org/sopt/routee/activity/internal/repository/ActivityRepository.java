@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.repository;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,12 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 		ActivityStatus activityStatus,
 		Instant startedAtFrom,
 		Instant startedAtTo
+	);
+
+	Optional<Activity> findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusOrderByStartedAtAsc(
+		Long memberId,
+		LocalDate activityDateWithTimezone,
+		ActivityStatus activityStatus
 	);
 
 	@Modifying
