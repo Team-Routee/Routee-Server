@@ -51,13 +51,13 @@ public class S3FileDeleteAdapter implements FileDeletePort {
 	private List<String> resolveObjectKeys(FileDeleteCommand command) {
 		if (command.directory() != FileUploadDirectory.TIMELINE) {
 			return List.of(S3ObjectKeyAssembler.assemble(
-				command.directory(), null, command.activityId(), command.objectKey()
+				command.directory(), null, command.memberId(), command.activityId(), command.objectKey()
 			));
 		}
 
 		return Arrays.stream(FileUploadImageSize.values())
 			.map(imageSize -> S3ObjectKeyAssembler.assemble(
-				command.directory(), imageSize, command.activityId(), command.objectKey()
+				command.directory(), imageSize, command.memberId(), command.activityId(), command.objectKey()
 			))
 			.toList();
 	}

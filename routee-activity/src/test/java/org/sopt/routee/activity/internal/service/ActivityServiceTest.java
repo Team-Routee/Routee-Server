@@ -215,8 +215,8 @@ class ActivityServiceTest {
 		ArgumentCaptor<FileDeleteCommand> commandCaptor = ArgumentCaptor.forClass(FileDeleteCommand.class);
 		verify(fileDeletePort, times(2)).deleteImage(commandCaptor.capture());
 		assertThat(commandCaptor.getAllValues()).containsExactly(
-			new FileDeleteCommand(FileUploadDirectory.TIMELINE, "10", "10/first.jpg"),
-			new FileDeleteCommand(FileUploadDirectory.TIMELINE, "11", "11/second.jpg")
+			new FileDeleteCommand(FileUploadDirectory.TIMELINE, MEMBER_ID.toString(), "10", "10/first.jpg"),
+			new FileDeleteCommand(FileUploadDirectory.TIMELINE, MEMBER_ID.toString(), "11", "11/second.jpg")
 		);
 	}
 

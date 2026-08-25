@@ -101,7 +101,8 @@ public class ActivityService {
 			command.memberId());
 
 		if (!transactionResult.imageDeleteTargets().isEmpty()) {
-			Thread.startVirtualThread(() -> deleteTimelineImages(transactionResult.imageDeleteTargets()));
+			Thread.startVirtualThread(
+				() -> deleteTimelineImages(command.memberId(), transactionResult.imageDeleteTargets()));
 		}
 
 		return transactionResult.result();
@@ -134,11 +135,12 @@ public class ActivityService {
 		);
 	}
 
-	private void deleteTimelineImages(List<TimelineImageDeleteTargetProjection> targets) {
+	private void deleteTimelineImages(Long memberId, List<TimelineImageDeleteTargetProjection> targets) {
 		for (TimelineImageDeleteTargetProjection target : targets) {
 			try {
 				fileDeletePort.deleteImage(new FileDeleteCommand(
 					FileUploadDirectory.TIMELINE,
+					memberId.toString(),
 					target.getActivityId().toString(),
 					target.getObjectKey()
 				));
@@ -162,6 +164,7 @@ public class ActivityService {
 		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
 			command.directory(),
 			command.imageSize(),
+			command.memberId().toString(),
 			command.activityId().toString(),
 			command.fileName()
 		);
@@ -296,7 +299,8 @@ public class ActivityService {
 					.getOrDefault(activity.getId(), List.of())
 					.stream()
 					.limit(MAX_EDIT_LIST_TIMELINE_IMAGE_COUNT)
-					.map(timeline -> generateTimelineImageUrl(activity.getId(), timeline, FileUploadImageSize.MEDIUM))
+					.map(timeline -> generateTimelineImageUrl(memberId, activity.getId(), timeline,
+						FileUploadImageSize.MEDIUM))
 					.toList();
 				LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
 				return ActivityMapper.toActivityEditItemResult(activity, activityDate, timelineImageUrls);
@@ -321,7 +325,7 @@ public class ActivityService {
 		);
 		List<TimelineMarkerResult> timelineMarkers = timelines.stream()
 			.map(timeline -> ActivityTrackMapper.toTimelineMarker(
-				timeline, generateTimelineImageUrl(activityId, timeline, FileUploadImageSize.SMALL)
+				timeline, generateTimelineImageUrl(memberId, activityId, timeline, FileUploadImageSize.SMALL)
 			))
 			.toList();
 
@@ -336,6 +340,7 @@ public class ActivityService {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
 			FileUploadImageSize.SMALL,
+			activity.getMemberId().toString(),
 			activity.getId().toString(),
 			activity.getCoverImageObjectKey()
 		);
@@ -347,10 +352,12 @@ public class ActivityService {
 		activityRepository.deleteByMemberId(memberId);
 	}
 
-	private String generateTimelineImageUrl(Long activityId, Timeline timeline, FileUploadImageSize imageSize) {
+	private String generateTimelineImageUrl(Long memberId, Long activityId, Timeline timeline,
+		FileUploadImageSize imageSize) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
 			imageSize,
+			memberId.toString(),
 			activityId.toString(),
 			timeline.getTimelineImageObjectKey()
 		);

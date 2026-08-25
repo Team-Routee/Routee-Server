@@ -31,7 +31,8 @@ public class S3PresignAdapter implements FileUploadPresignPort {
 		String presignedObjectKey = S3ObjectKeyAssembler.assemble(
 			command.directory(),
 			command.imageSize(),
-			command.ownerId(),
+			command.memberId(),
+			command.activityId(),
 			objectKey
 		);
 		String presignedUrl = generatePutPresignedUrl(presignedObjectKey);

@@ -89,6 +89,7 @@ class TimelineServiceTest {
 
 		FileDeleteCommand command = commandCaptor.getValue();
 		assertThat(command.directory()).isEqualTo(FileUploadDirectory.TIMELINE);
+		assertThat(command.memberId()).isEqualTo(memberId.toString());
 		assertThat(command.activityId()).isEqualTo(activityId.toString());
 		assertThat(command.objectKey()).isEqualTo(objectKey);
 	}

@@ -60,7 +60,7 @@ public class TimelineService {
 		}
 
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
-			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(activityId, timeline)))
+			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(memberId, activityId, timeline)))
 			.toList();
 	}
 
@@ -75,7 +75,7 @@ public class TimelineService {
 
 		String objectKey = timeline.getTimelineImageObjectKey();
 
-		Thread.startVirtualThread(() -> deleteTimelineImage(activityId, objectKey));
+		Thread.startVirtualThread(() -> deleteTimelineImage(memberId, activityId, objectKey));
 	}
 
 	@Transactional
@@ -92,10 +92,11 @@ public class TimelineService {
 		timelineRepository.deleteTimelinesByMemberId(memberId);
 	}
 
-	private String generateImageUrl(Long activityId, Timeline timeline) {
+	private String generateImageUrl(Long memberId, Long activityId, Timeline timeline) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
 			FileUploadImageSize.LARGE,
+			memberId.toString(),
 			activityId.toString(),
 			timeline.getTimelineImageObjectKey()
 		);
@@ -110,10 +111,10 @@ public class TimelineService {
 				: new ActivityNotFoundException());
 	}
 
-	private void deleteTimelineImage(Long activityId, String objectKey) {
+	private void deleteTimelineImage(Long memberId, Long activityId, String objectKey) {
 		try {
 			fileDeletePort.deleteImage(
-				new FileDeleteCommand(FileUploadDirectory.TIMELINE, activityId.toString(), objectKey));
+				new FileDeleteCommand(FileUploadDirectory.TIMELINE, memberId.toString(), activityId.toString(), objectKey));
 		} catch (BaseException e) {
 			log.warn("Timeline image delete failed. activityId={}, objectKey={}", activityId, objectKey, e);
 		}
