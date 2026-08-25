@@ -58,8 +58,8 @@ public class Activity {
 	@Column(name = "max_elevation")
 	private Integer maxElevation;
 
-	@Column(name = "map_image_url")
-	private String mapImageUrl;
+	@Column(name = "map_image_object_key")
+	private String mapImageObjectKey;
 
 	@Column(name = "track_image_url")
 	private String trackImageUrl;
@@ -96,7 +96,7 @@ public class Activity {
 		Integer distance,
 		Integer durationSec,
 		Integer maxElevation,
-		String mapImageUrl,
+		String mapImageObjectKey,
 		String coverImageObjectKey,
 		LineString track,
 		Instant endedAt
@@ -106,7 +106,7 @@ public class Activity {
 		this.distance = distance;
 		this.durationSec = durationSec;
 		this.maxElevation = maxElevation;
-		this.mapImageUrl = mapImageUrl;
+		this.mapImageObjectKey = mapImageObjectKey;
 		this.coverImageObjectKey = coverImageObjectKey;
 		this.track = track;
 		this.endedAt = endedAt;

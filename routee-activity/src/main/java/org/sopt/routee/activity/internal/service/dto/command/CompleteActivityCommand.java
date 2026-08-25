@@ -14,7 +14,7 @@ public record CompleteActivityCommand(
 	Integer distance,
 	Integer durationSec,
 	Integer maxElevation,
-	String mapImageUrl,
+	String mapImageObjectKey,
 	List<TrackPoint> track,
 	LocalDateTime endedAt
 ) {

@@ -207,7 +207,7 @@ public class ActivityService {
 			command.distance(),
 			command.durationSec(),
 			command.maxElevation(),
-			command.mapImageUrl(),
+			command.mapImageObjectKey(),
 			coverImageObjectKey,
 			ActivityMapper.toLineString(command.track()),
 			endedAt
@@ -245,8 +245,24 @@ public class ActivityService {
 
 		return ActivityMapper.toRecapResult(
 			activity,
+			generateMapImageUrl(activity),
 			routeRepository.findByActivityIdOrderBySequenceAsc(command.activityId())
 		);
+	}
+
+	private String generateMapImageUrl(Activity activity) {
+		if (activity.getMapImageObjectKey() == null) {
+			return null;
+		}
+
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+			FileUploadDirectory.RECAP,
+			null,
+			activity.getMemberId().toString(),
+			activity.getId().toString(),
+			activity.getMapImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
 	@Transactional(readOnly = true)
