@@ -215,8 +215,9 @@ public class ActivityService {
 			activityDate
 		);
 
+		Long coverActivityId = coverImageObjectKey == null ? null : activity.getId();
 		activityDailySummaryService.recordActivity(
-			command.memberId(), activityDate, command.durationSec(), activity.getId(), coverImageObjectKey
+			command.memberId(), activityDate, command.durationSec(), coverActivityId, coverImageObjectKey
 		);
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));

@@ -24,8 +24,10 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 		ON CONFLICT (member_id, activity_date)
 		DO UPDATE SET
 			total_duration_sec = activity_daily_summary.total_duration_sec + EXCLUDED.total_duration_sec,
-			cover_activity_id = COALESCE(activity_daily_summary.cover_activity_id, EXCLUDED.cover_activity_id),
-			cover_image_object_key = COALESCE(activity_daily_summary.cover_image_object_key, EXCLUDED.cover_image_object_key),
+			cover_activity_id = CASE WHEN activity_daily_summary.cover_image_object_key IS NULL
+				THEN EXCLUDED.cover_activity_id ELSE activity_daily_summary.cover_activity_id END,
+			cover_image_object_key = CASE WHEN activity_daily_summary.cover_image_object_key IS NULL
+				THEN EXCLUDED.cover_image_object_key ELSE activity_daily_summary.cover_image_object_key END,
 			activity_count = activity_daily_summary.activity_count + 1
 		""", nativeQuery = true)
 	void upsertDailySummary(
