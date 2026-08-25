@@ -159,7 +159,7 @@ public class MemberService {
 			return objectKey;
 		});
 
-		if (previousObjectKey != null) {
+		if (previousObjectKey != null && !previousObjectKey.equals(command.objectKey())) {
 			Thread.startVirtualThread(() -> deleteProfileImage(command.memberId(), previousObjectKey));
 		}
 
