@@ -26,7 +26,6 @@ import org.sopt.routee.activity.internal.mapper.ActivityTrackMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.repository.TimelineRepository;
-import org.sopt.routee.activity.internal.repository.projection.TimelineImageDeleteTargetProjection;
 import org.sopt.routee.activity.internal.service.dto.command.CompleteActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.CreateActivityCommand;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
@@ -50,7 +49,7 @@ import org.sopt.routee.activity.internal.service.dto.result.UpdateActivityTitleR
 import org.sopt.routee.activity.internal.service.dto.vo.TrackPoint;
 import org.sopt.routee.activity.internal.service.validator.ActivityImageFileNameValidator;
 import org.sopt.routee.exception.BaseException;
-import org.sopt.routee.external.api.command.FileDeleteCommand;
+import org.sopt.routee.external.api.command.FileDeleteDirectoryCommand;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
 import org.sopt.routee.external.api.port.FileDeletePort;
@@ -100,8 +99,9 @@ public class ActivityService {
 		log.info("Activity created. activityId={}, memberId={}", transactionResult.result().activityId(),
 			command.memberId());
 
-		if (!transactionResult.imageDeleteTargets().isEmpty()) {
-			Thread.startVirtualThread(() -> deleteTimelineImages(transactionResult.imageDeleteTargets()));
+		if (!transactionResult.deletedActivityIds().isEmpty()) {
+			Thread.startVirtualThread(
+				() -> deleteActivityImageDirectories(command.memberId(), transactionResult.deletedActivityIds()));
 		}
 
 		return transactionResult.result();
@@ -115,10 +115,7 @@ public class ActivityService {
 			ACTIVE_STATUSES
 		);
 
-		List<TimelineImageDeleteTargetProjection> imageDeleteTargets = List.of();
 		if (!activeActivityIds.isEmpty()) {
-			imageDeleteTargets = timelineRepository.findImageDeleteTargetsByActivityIdIn(activeActivityIds);
-
 			timelineRepository.deleteByActivityIdIn(activeActivityIds);
 			activityRepository.deleteByIdIn(activeActivityIds);
 		}
@@ -130,21 +127,17 @@ public class ActivityService {
 
 		return new ActivityCreationTransactionResult(
 			new CreateActivityResult(savedActivity.getId(), title),
-			imageDeleteTargets
+			activeActivityIds
 		);
 	}
 
-	private void deleteTimelineImages(List<TimelineImageDeleteTargetProjection> targets) {
-		for (TimelineImageDeleteTargetProjection target : targets) {
+	private void deleteActivityImageDirectories(Long memberId, List<Long> activityIds) {
+		for (Long activityId : activityIds) {
 			try {
-				fileDeletePort.deleteImage(new FileDeleteCommand(
-					FileUploadDirectory.TIMELINE,
-					target.getActivityId().toString(),
-					target.getObjectKey()
-				));
+				fileDeletePort.deleteDirectory(
+					new FileDeleteDirectoryCommand(memberId.toString(), activityId.toString()));
 			} catch (BaseException e) {
-				log.warn("Timeline image delete failed. activityId={}, objectKey={}",
-					target.getActivityId(), target.getObjectKey(), e);
+				log.warn("Activity image directory delete failed. activityId={}", activityId, e);
 			}
 		}
 	}
@@ -162,6 +155,7 @@ public class ActivityService {
 		FileUploadPresignCommand presignCommand = new FileUploadPresignCommand(
 			command.directory(),
 			command.imageSize(),
+			command.memberId().toString(),
 			command.activityId().toString(),
 			command.fileName()
 		);
@@ -206,22 +200,24 @@ public class ActivityService {
 			.orElseThrow(ActivityNotFoundException::new);
 
 		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
+		String coverImageObjectKey = resolveCoverImageObjectKey(command.activityId());
+		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
 
 		activity.updateCompletedData(
 			command.title(),
 			command.distance(),
 			command.durationSec(),
 			command.maxElevation(),
-			command.mapImageUrl(),
-			command.coverImageObjectKey(),
+			command.mapImageObjectKey(),
+			coverImageObjectKey,
 			ActivityMapper.toLineString(command.track()),
-			endedAt
+			endedAt,
+			activityDate
 		);
 
-		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
-		String coverImageUrl = generateThumbnailUrl(activity);
+		Long coverActivityId = coverImageObjectKey == null ? null : activity.getId();
 		activityDailySummaryService.recordActivity(
-			command.memberId(), activityDate, command.durationSec(), coverImageUrl
+			command.memberId(), activityDate, command.durationSec(), coverActivityId, coverImageObjectKey
 		);
 
 		applicationEventPublisher.publishEvent(new ActivityCompletedEvent(command.memberId()));
@@ -250,8 +246,24 @@ public class ActivityService {
 
 		return ActivityMapper.toRecapResult(
 			activity,
+			generateMapImageUrl(activity),
 			routeRepository.findByActivityIdOrderBySequenceAsc(command.activityId())
 		);
+	}
+
+	private String generateMapImageUrl(Activity activity) {
+		if (activity.getMapImageObjectKey() == null) {
+			return null;
+		}
+
+		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
+			FileUploadDirectory.RECAP,
+			null,
+			activity.getMemberId().toString(),
+			activity.getId().toString(),
+			activity.getMapImageObjectKey()
+		);
+		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
 	}
 
 	@Transactional(readOnly = true)
@@ -296,7 +308,8 @@ public class ActivityService {
 					.getOrDefault(activity.getId(), List.of())
 					.stream()
 					.limit(MAX_EDIT_LIST_TIMELINE_IMAGE_COUNT)
-					.map(timeline -> generateTimelineImageUrl(activity.getId(), timeline, FileUploadImageSize.MEDIUM))
+					.map(timeline -> generateTimelineImageUrl(memberId, activity.getId(), timeline,
+						FileUploadImageSize.MEDIUM))
 					.toList();
 				LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), timeZone);
 				return ActivityMapper.toActivityEditItemResult(activity, activityDate, timelineImageUrls);
@@ -321,11 +334,18 @@ public class ActivityService {
 		);
 		List<TimelineMarkerResult> timelineMarkers = timelines.stream()
 			.map(timeline -> ActivityTrackMapper.toTimelineMarker(
-				timeline, generateTimelineImageUrl(activityId, timeline, FileUploadImageSize.SMALL)
+				timeline, generateTimelineImageUrl(memberId, activityId, timeline, FileUploadImageSize.SMALL)
 			))
 			.toList();
 
 		return new ActivityTrackResult(activityId, trackPointResults, timelineMarkers);
+	}
+
+	private String resolveCoverImageObjectKey(Long activityId) {
+		return timelineRepository
+			.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(activityId, TimelineStatus.SUCCESSFUL_CREATED)
+			.map(Timeline::getTimelineImageObjectKey)
+			.orElse(null);
 	}
 
 	private String generateThumbnailUrl(Activity activity) {
@@ -336,6 +356,7 @@ public class ActivityService {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
 			FileUploadImageSize.SMALL,
+			activity.getMemberId().toString(),
 			activity.getId().toString(),
 			activity.getCoverImageObjectKey()
 		);
@@ -347,10 +368,12 @@ public class ActivityService {
 		activityRepository.deleteByMemberId(memberId);
 	}
 
-	private String generateTimelineImageUrl(Long activityId, Timeline timeline, FileUploadImageSize imageSize) {
+	private String generateTimelineImageUrl(Long memberId, Long activityId, Timeline timeline,
+		FileUploadImageSize imageSize) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
 			imageSize,
+			memberId.toString(),
 			activityId.toString(),
 			timeline.getTimelineImageObjectKey()
 		);

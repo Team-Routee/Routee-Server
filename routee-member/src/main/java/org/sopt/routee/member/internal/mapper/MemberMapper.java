@@ -38,29 +38,29 @@ public class MemberMapper {
 		return new TokenClaimsResult(member.getId(), member.getRole().name());
 	}
 
-	public static MemberInfoResult toMemberInfoResult(Member member, ZoneId zoneId) {
+	public static MemberInfoResult toMemberInfoResult(Member member, String profileImageUrl, ZoneId zoneId) {
 		LocalDate joinDate = TimeZoneUtils.toLocalDate(member.getCreatedAt(), zoneId);
 		long daysSinceJoining = ChronoUnit.DAYS.between(joinDate, LocalDate.now(zoneId));
 
 		return new MemberInfoResult(
 			member.getNickname(),
-			member.getProfileImageUrl(),
+			profileImageUrl,
 			joinDate,
 			daysSinceJoining + 1,
 			member.getTotalActivityCount()
 		);
 	}
 
-	public static MemberProfileResult toMemberProfileResult(Member member) {
-		return new MemberProfileResult(member.getNickname(), member.getProfileImageUrl());
+	public static MemberProfileResult toMemberProfileResult(Member member, String profileImageUrl) {
+		return new MemberProfileResult(member.getNickname(), profileImageUrl);
 	}
 
 	public static UpdateNicknameResult toUpdateNicknameResult(Member member) {
 		return new UpdateNicknameResult(member.getNickname());
 	}
 
-	public static UpdateProfileImageResult toUpdateProfileImageResult(Member member) {
-		return new UpdateProfileImageResult(member.getProfileImageUrl());
+	public static UpdateProfileImageResult toUpdateProfileImageResult(String profileImageUrl) {
+		return new UpdateProfileImageResult(profileImageUrl);
 	}
 
 	public static ActivitySummaryResult toActivitySummaryResult(

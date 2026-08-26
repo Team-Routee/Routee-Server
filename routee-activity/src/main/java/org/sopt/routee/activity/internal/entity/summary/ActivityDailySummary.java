@@ -41,8 +41,11 @@ public class ActivityDailySummary {
 	@ColumnDefault("0")
 	private Integer totalDurationSec = 0;
 
-	@Column(name = "cover_image_url")
-	private String coverImageUrl;
+	@Column(name = "cover_activity_id")
+	private Long coverActivityId;
+
+	@Column(name = "cover_image_object_key")
+	private String coverImageObjectKey;
 
 	@Builder.Default
 	@Column(name = "activity_count", nullable = false)

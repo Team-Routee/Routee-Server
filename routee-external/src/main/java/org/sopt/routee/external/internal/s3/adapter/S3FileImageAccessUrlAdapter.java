@@ -19,7 +19,8 @@ public class S3FileImageAccessUrlAdapter implements FileImageAccessUrlPort {
 		String objectKey = S3ObjectKeyAssembler.assemble(
 			command.directory(),
 			command.imageSize(),
-			command.ownerId(),
+			command.memberId(),
+			command.activityId(),
 			command.objectKey()
 		);
 		return new FileImageAccessUrlResult("%s/%s".formatted(normalizeEndpoint(properties.endpoint()), objectKey));

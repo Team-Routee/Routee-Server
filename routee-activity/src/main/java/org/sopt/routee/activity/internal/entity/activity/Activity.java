@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.entity.activity;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.locationtech.jts.geom.LineString;
@@ -58,14 +59,17 @@ public class Activity {
 	@Column(name = "max_elevation")
 	private Integer maxElevation;
 
-	@Column(name = "map_image_url")
-	private String mapImageUrl;
+	@Column(name = "map_image_object_key")
+	private String mapImageObjectKey;
 
 	@Column(name = "track_image_url")
 	private String trackImageUrl;
 
 	@Column(name = "cover_image_object_key")
 	private String coverImageObjectKey;
+
+	@Column(name = "activity_date_with_timezone")
+	private LocalDate activityDateWithTimezone;
 
 	@Column(name = "track", columnDefinition = "geometry(LINESTRINGZM, 4326)")
 	private LineString track;
@@ -87,24 +91,30 @@ public class Activity {
 		this.title = title;
 	}
 
+	public void updateCoverImageObjectKey(String coverImageObjectKey) {
+		this.coverImageObjectKey = coverImageObjectKey;
+	}
+
 	public void updateCompletedData(
 		String title,
 		Integer distance,
 		Integer durationSec,
 		Integer maxElevation,
-		String mapImageUrl,
+		String mapImageObjectKey,
 		String coverImageObjectKey,
 		LineString track,
-		Instant endedAt
+		Instant endedAt,
+		LocalDate activityDateWithTimezone
 	) {
 		this.title = title;
 		this.activityStatus = ActivityStatus.ACTIVITY_COMPLETED;
 		this.distance = distance;
 		this.durationSec = durationSec;
 		this.maxElevation = maxElevation;
-		this.mapImageUrl = mapImageUrl;
+		this.mapImageObjectKey = mapImageObjectKey;
 		this.coverImageObjectKey = coverImageObjectKey;
 		this.track = track;
 		this.endedAt = endedAt;
+		this.activityDateWithTimezone = activityDateWithTimezone;
 	}
 }

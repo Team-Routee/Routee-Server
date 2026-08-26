@@ -1,10 +1,13 @@
 package org.sopt.routee.activity.internal.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
+import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
+import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
 import org.sopt.routee.activity.internal.exception.TimelineNotFoundException;
 import org.sopt.routee.activity.internal.mapper.TimelineMapper;
@@ -37,6 +40,7 @@ public class TimelineService {
 
 	private final ActivityRepository activityRepository;
 	private final TimelineRepository timelineRepository;
+	private final ActivityDailySummaryService activityDailySummaryService;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
 	private final FileDeletePort fileDeletePort;
 	private final TransactionTemplate transactionTemplate;
@@ -60,7 +64,7 @@ public class TimelineService {
 		}
 
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
-			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(activityId, timeline)))
+			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(memberId, activityId, timeline)))
 			.toList();
 	}
 
@@ -69,13 +73,14 @@ public class TimelineService {
 			Timeline ownedTimeline = findOwnedTimeline(activityId, timelineId, memberId);
 
 			timelineRepository.delete(ownedTimeline);
+			refreshCoverImageIfDeleted(ownedTimeline);
 
 			return ownedTimeline;
 		});
 
 		String objectKey = timeline.getTimelineImageObjectKey();
 
-		Thread.startVirtualThread(() -> deleteTimelineImage(activityId, objectKey));
+		Thread.startVirtualThread(() -> deleteTimelineImage(memberId, activityId, objectKey));
 	}
 
 	@Transactional
@@ -92,15 +97,49 @@ public class TimelineService {
 		timelineRepository.deleteTimelinesByMemberId(memberId);
 	}
 
-	private String generateImageUrl(Long activityId, Timeline timeline) {
+	private String generateImageUrl(Long memberId, Long activityId, Timeline timeline) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(
 			FileUploadDirectory.TIMELINE,
 			FileUploadImageSize.LARGE,
+			memberId.toString(),
 			activityId.toString(),
 			timeline.getTimelineImageObjectKey()
 		);
 
 		return fileImageAccessUrlPort.generateImageUrl(command).imageUrl();
+	}
+
+	private void refreshCoverImageIfDeleted(Timeline deletedTimeline) {
+		Activity activity = deletedTimeline.getActivity();
+		if (!deletedTimeline.getTimelineImageObjectKey().equals(activity.getCoverImageObjectKey())) {
+			return;
+		}
+
+		String newCoverImageObjectKey = timelineRepository
+			.findFirstByActivityIdAndTimelineStatusOrderByTrackPointIndexAsc(
+				activity.getId(), TimelineStatus.SUCCESSFUL_CREATED)
+			.map(Timeline::getTimelineImageObjectKey)
+			.orElse(null);
+
+		activity.updateCoverImageObjectKey(newCoverImageObjectKey);
+		refreshDailySummaryCoverIfNeeded(activity);
+	}
+
+	private void refreshDailySummaryCoverIfNeeded(Activity activity) {
+		LocalDate activityDate = activity.getActivityDateWithTimezone();
+		if (activityDate == null) {
+			return;
+		}
+
+		Activity firstActivityWithCover = activityRepository
+			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
+				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED)
+			.orElse(null);
+
+		Long coverActivityId = firstActivityWithCover == null ? null : firstActivityWithCover.getId();
+		String coverImageObjectKey = firstActivityWithCover == null ? null : firstActivityWithCover.getCoverImageObjectKey();
+
+		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, coverActivityId, coverImageObjectKey);
 	}
 
 	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {
@@ -110,10 +149,10 @@ public class TimelineService {
 				: new ActivityNotFoundException());
 	}
 
-	private void deleteTimelineImage(Long activityId, String objectKey) {
+	private void deleteTimelineImage(Long memberId, Long activityId, String objectKey) {
 		try {
 			fileDeletePort.deleteImage(
-				new FileDeleteCommand(FileUploadDirectory.TIMELINE, activityId.toString(), objectKey));
+				new FileDeleteCommand(FileUploadDirectory.TIMELINE, memberId.toString(), activityId.toString(), objectKey));
 		} catch (BaseException e) {
 			log.warn("Timeline image delete failed. activityId={}, objectKey={}", activityId, objectKey, e);
 		}

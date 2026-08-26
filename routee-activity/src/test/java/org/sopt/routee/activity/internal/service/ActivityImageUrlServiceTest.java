@@ -92,6 +92,7 @@ class ActivityImageUrlServiceTest {
 		FileUploadPresignCommand command = new FileUploadPresignCommand(
 			DIRECTORY,
 			IMAGE_SIZE,
+			MEMBER_ID.toString(),
 			ACTIVITY_ID.toString(),
 			"hike.jpg"
 		);

@@ -6,8 +6,12 @@ import java.util.List;
 
 import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
 import org.sopt.routee.activity.api.usecase.ActivityUseCase;
+import org.sopt.routee.exception.BaseException;
+import org.sopt.routee.external.api.command.FileDeleteCommand;
+import org.sopt.routee.external.api.command.FileDeleteDirectoryCommand;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.command.FileUploadPresignCommand;
+import org.sopt.routee.external.api.port.FileDeletePort;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
 import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
@@ -36,9 +40,12 @@ import org.sopt.routee.member.internal.service.validator.ProfileImageFileNameVal
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -49,7 +56,9 @@ public class MemberService {
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
+	private final FileDeletePort fileDeletePort;
 	private final ProfileImageFileNameValidator profileImageFileNameValidator;
+	private final TransactionTemplate transactionTemplate;
 
 	@Transactional(readOnly = true)
 	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider) {
@@ -74,16 +83,27 @@ public class MemberService {
 		memberRepository.save(MemberMapper.toEntity(command, oauthId));
 	}
 
-	@Transactional
 	public void withdraw(long memberId, String accessTokenHash, String refreshTokenHash) {
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(MemberNotFoundException::new);
+		transactionTemplate.executeWithoutResult(status -> {
+			Member member = memberRepository.findById(memberId)
+				.orElseThrow(MemberNotFoundException::new);
 
-		memberRepository.delete(member);
+			memberRepository.delete(member);
 
-		activityUseCase.deleteForMemberWithdrawal(memberId);
+			activityUseCase.deleteForMemberWithdrawal(memberId);
 
-		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
+			applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
+		});
+
+		Thread.startVirtualThread(() -> deleteMemberImages(memberId));
+	}
+
+	private void deleteMemberImages(long memberId) {
+		try {
+			fileDeletePort.deleteDirectory(new FileDeleteDirectoryCommand(Long.toString(memberId)));
+		} catch (BaseException e) {
+			log.warn("Member image directory delete failed. memberId={}", memberId, e);
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -91,7 +111,8 @@ public class MemberService {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(MemberNotFoundException::new);
 
-		return MemberMapper.toMemberInfoResult(member, zoneId);
+		return MemberMapper.toMemberInfoResult(
+			member, generateProfileImageUrl(member.getId(), member.getProfileImageObjectKey()), zoneId);
 	}
 
 	@Transactional(readOnly = true)
@@ -99,7 +120,8 @@ public class MemberService {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(MemberNotFoundException::new);
 
-		return MemberMapper.toMemberProfileResult(member);
+		return MemberMapper.toMemberProfileResult(
+			member, generateProfileImageUrl(member.getId(), member.getProfileImageObjectKey()));
 	}
 
 	@Transactional
@@ -127,21 +149,43 @@ public class MemberService {
 		return new ProfileImageUploadUrlResult(result.presignedUrl(), result.objectKey());
 	}
 
-	@Transactional
 	public UpdateProfileImageResult updateProfileImage(UpdateProfileImageCommand command) {
-		Member member = memberRepository.findById(command.memberId())
-			.orElseThrow(MemberNotFoundException::new);
+		String previousObjectKey = transactionTemplate.execute(status -> {
+			Member member = memberRepository.findById(command.memberId())
+				.orElseThrow(MemberNotFoundException::new);
+
+			String objectKey = member.getProfileImageObjectKey();
+			member.updateProfileImageObjectKey(command.objectKey());
+			return objectKey;
+		});
+
+		if (previousObjectKey != null && !previousObjectKey.equals(command.objectKey())) {
+			Thread.startVirtualThread(() -> deleteProfileImage(command.memberId(), previousObjectKey));
+		}
+
+		return MemberMapper.toUpdateProfileImageResult(generateProfileImageUrl(command.memberId(), command.objectKey()));
+	}
+
+	private void deleteProfileImage(Long memberId, String objectKey) {
+		try {
+			fileDeletePort.deleteImage(new FileDeleteCommand(FileUploadDirectory.PROFILE, memberId.toString(), objectKey));
+		} catch (BaseException e) {
+			log.warn("Profile image delete failed. memberId={}, objectKey={}", memberId, objectKey, e);
+		}
+	}
+
+	private String generateProfileImageUrl(Long memberId, String profileImageObjectKey) {
+		if (profileImageObjectKey == null) {
+			return null;
+		}
 
 		FileImageAccessUrlCommand accessUrlCommand = new FileImageAccessUrlCommand(
 			FileUploadDirectory.PROFILE,
 			null,
-			command.memberId().toString(),
-			command.objectKey()
+			memberId.toString(),
+			profileImageObjectKey
 		);
-		String profileImageUrl = fileImageAccessUrlPort.generateImageUrl(accessUrlCommand).imageUrl();
-
-		member.updateProfileImageUrl(profileImageUrl);
-		return MemberMapper.toUpdateProfileImageResult(member);
+		return fileImageAccessUrlPort.generateImageUrl(accessUrlCommand).imageUrl();
 	}
 
 	@Transactional

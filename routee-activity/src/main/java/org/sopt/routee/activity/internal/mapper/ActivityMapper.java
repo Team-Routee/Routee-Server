@@ -71,7 +71,7 @@ public class ActivityMapper {
 		return new ActivityEditItemResult(activity.getId(), activity.getTitle(), activityDate, timelineImageUrls);
 	}
 
-	public static ActivityRecapResult toRecapResult(Activity activity, List<Route> routes) {
+	public static ActivityRecapResult toRecapResult(Activity activity, String mapImageUrl, List<Route> routes) {
 		List<ActivityRecapRouteResult> routeResults = routes.stream()
 			.map(route -> new ActivityRecapRouteResult(route.getSequence(), route.getName()))
 			.toList();
@@ -80,7 +80,7 @@ public class ActivityMapper {
 			activity.getDistance(),
 			activity.getDurationSec(),
 			activity.getMaxElevation(),
-			activity.getMapImageUrl(),
+			mapImageUrl,
 			routeResults
 		);
 	}
