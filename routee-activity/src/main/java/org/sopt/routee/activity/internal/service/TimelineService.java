@@ -131,13 +131,13 @@ public class TimelineService {
 			return;
 		}
 
-		Activity firstActivityOfDay = activityRepository
-			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusOrderByStartedAtAsc(
+		Activity firstActivityWithCover = activityRepository
+			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
 				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED)
 			.orElse(null);
 
-		Long coverActivityId = firstActivityOfDay == null ? null : firstActivityOfDay.getId();
-		String coverImageObjectKey = firstActivityOfDay == null ? null : firstActivityOfDay.getCoverImageObjectKey();
+		Long coverActivityId = firstActivityWithCover == null ? null : firstActivityWithCover.getId();
+		String coverImageObjectKey = firstActivityWithCover == null ? null : firstActivityWithCover.getCoverImageObjectKey();
 
 		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, coverActivityId, coverImageObjectKey);
 	}

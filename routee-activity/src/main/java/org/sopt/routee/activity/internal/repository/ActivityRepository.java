@@ -40,7 +40,7 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 		Instant startedAtTo
 	);
 
-	Optional<Activity> findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusOrderByStartedAtAsc(
+	Optional<Activity> findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
 		Long memberId,
 		LocalDate activityDateWithTimezone,
 		ActivityStatus activityStatus
