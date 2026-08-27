@@ -116,6 +116,7 @@ public class ActivityService {
 		);
 
 		if (!activeActivityIds.isEmpty()) {
+			routeRepository.deleteByActivityIdIn(activeActivityIds);
 			timelineRepository.deleteByActivityIdIn(activeActivityIds);
 			activityRepository.deleteByIdIn(activeActivityIds);
 		}

@@ -17,4 +17,8 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 	@Modifying
 	@Query("DELETE FROM Route r WHERE r.activity.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
+
+	@Modifying
+	@Query("DELETE FROM Route r WHERE r.activity.id IN :activityIds")
+	void deleteByActivityIdIn(@Param("activityIds") List<Long> activityIds);
 }
