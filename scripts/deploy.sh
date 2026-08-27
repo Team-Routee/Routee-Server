@@ -59,18 +59,17 @@ docker compose -f docker-compose.yml up -d --no-deps $TARGET
 echo "Step 1: Waiting for $TARGET container healthcheck..."
 for i in {1..40}; do
   STATUS=$(docker inspect --format='{{.State.Health.Status}}' routee-$TARGET 2>/dev/null || echo "unknown")
+  echo "Health status: $STATUS ($i/40)"
   if [ "$STATUS" = "healthy" ]; then
     echo "$TARGET container is healthy"
     break
   fi
-  if [ "$STATUS" = "unhealthy" ]; then
-    echo "$TARGET container is unhealthy"
-    docker logs routee-$TARGET --tail 50
-    exit 1
-  fi
   if [ "$i" -eq 40 ]; then
     echo "$TARGET container healthcheck failed (status: $STATUS)"
-    docker logs routee-$TARGET --tail 50
+    docker logs routee-$TARGET --tail 100
+    echo "Cleaning up failed $TARGET container..."
+    docker compose -f docker-compose.yml stop $TARGET || true
+    docker compose -f docker-compose.yml rm -f $TARGET || true
     exit 1
   fi
   sleep 3
@@ -85,6 +84,9 @@ for i in {1..10}; do
   if [ "$i" -eq 10 ]; then
     echo "$TARGET not reachable from nginx"
     docker logs routee-$TARGET --tail 50
+    echo "Cleaning up failed $TARGET container..."
+    docker compose -f docker-compose.yml stop $TARGET || true
+    docker compose -f docker-compose.yml rm -f $TARGET || true
     exit 1
   fi
   sleep 2
