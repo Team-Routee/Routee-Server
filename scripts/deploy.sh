@@ -57,14 +57,14 @@ docker compose -f docker-compose.yml pull $TARGET
 docker compose -f docker-compose.yml up -d --no-deps $TARGET
 
 echo "Step 1: Waiting for $TARGET container healthcheck..."
-for i in {1..40}; do
+for i in {1..60}; do
   STATUS=$(docker inspect --format='{{.State.Health.Status}}' routee-$TARGET 2>/dev/null || echo "unknown")
-  echo "Health status: $STATUS ($i/40)"
+  echo "Health status: $STATUS ($i/60)"
   if [ "$STATUS" = "healthy" ]; then
     echo "$TARGET container is healthy"
     break
   fi
-  if [ "$i" -eq 40 ]; then
+  if [ "$i" -eq 60 ]; then
     echo "$TARGET container healthcheck failed (status: $STATUS)"
     docker logs routee-$TARGET --tail 100
     echo "Cleaning up failed $TARGET container..."
