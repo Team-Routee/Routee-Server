@@ -1,5 +1,7 @@
 package org.sopt.routee.member.internal.service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
+import org.sopt.routee.member.internal.service.dto.command.AgreementCommand;
 import org.sopt.routee.member.internal.service.dto.command.ProfileImageUploadUrlCommand;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.command.UpdateNicknameCommand;
@@ -33,10 +36,13 @@ import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
+import org.sopt.routee.member.internal.exception.RequiredAgreementNotAcceptedException;
 import org.sopt.routee.member.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.member.internal.mapper.MemberMapper;
+import org.sopt.routee.member.internal.repository.MemberAgreementRepository;
 import org.sopt.routee.member.internal.repository.MemberRepository;
 import org.sopt.routee.member.internal.service.validator.ProfileImageFileNameValidator;
+import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +59,7 @@ public class MemberService {
 	private final OidcVerifyPort oidcVerifyPort;
 	private final ActivityUseCase activityUseCase;
 	private final MemberRepository memberRepository;
+	private final MemberAgreementRepository memberAgreementRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
@@ -75,12 +82,29 @@ public class MemberService {
 
 	@Transactional
 	public void register(RegisterCommand command) {
+		validateRequiredAgreements(command.agreement());
+
 		String oauthId = oidcVerifyPort.extractSubject(command.provider(), command.idToken());
 
 		if (memberRepository.existsByOauthIdAndOauthProvider(oauthId, command.provider())) {
 			throw new AlreadyRegisteredMemberException();
 		}
-		memberRepository.save(MemberMapper.toEntity(command, oauthId));
+
+		Member savedMember = memberRepository.save(MemberMapper.toEntity(command, oauthId));
+
+		Instant agreedAt = TimeZoneUtils.toUtcInstantTime(LocalDateTime.now(command.timeZone()), command.timeZone());
+		memberAgreementRepository.save(MemberMapper.toAgreementEntity(savedMember, command.agreement(), agreedAt));
+	}
+
+	private void validateRequiredAgreements(AgreementCommand agreement) {
+		boolean allRequiredAccepted = agreement.serviceTerms()
+			&& agreement.privacyPolicy()
+			&& agreement.locationServiceTerms()
+			&& agreement.over14();
+
+		if (!allRequiredAccepted) {
+			throw new RequiredAgreementNotAcceptedException();
+		}
 	}
 
 	public void withdraw(long memberId, String accessTokenHash, String refreshTokenHash) {
@@ -88,6 +112,7 @@ public class MemberService {
 			Member member = memberRepository.findById(memberId)
 				.orElseThrow(MemberNotFoundException::new);
 
+			memberAgreementRepository.deleteByMember_Id(memberId);
 			memberRepository.delete(member);
 
 			activityUseCase.deleteForMemberWithdrawal(memberId);

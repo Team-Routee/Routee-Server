@@ -1,11 +1,13 @@
 package org.sopt.routee.member.internal.mapper;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
+import org.sopt.routee.member.internal.service.dto.command.AgreementCommand;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.DailySummary;
@@ -16,6 +18,7 @@ import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResu
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.internal.entity.Member;
+import org.sopt.routee.member.internal.entity.MemberAgreement;
 import org.sopt.routee.util.TimeZoneUtils;
 
 import lombok.AccessLevel;
@@ -31,6 +34,17 @@ public class MemberMapper {
 			.oauthProvider(command.provider())
 			.role(MemberRole.ROLE_USER)
 			.totalActivityCount(0)
+			.build();
+	}
+
+	public static MemberAgreement toAgreementEntity(Member member, AgreementCommand agreement, Instant agreedAt) {
+		return MemberAgreement.builder()
+			.member(member)
+			.serviceTermsAgreedAt(agreement.serviceTerms() ? agreedAt : null)
+			.privacyPolicyAgreedAt(agreement.privacyPolicy() ? agreedAt : null)
+			.locationServiceTermsAgreedAt(agreement.locationServiceTerms() ? agreedAt : null)
+			.over14ConfirmedAt(agreement.over14() ? agreedAt : null)
+			.marketingConsentAgreedAt(agreement.marketingConsent() ? agreedAt : null)
 			.build();
 	}
 
