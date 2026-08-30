@@ -46,7 +46,7 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
 					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.\"}"),
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
 					@ExampleObject(name = "INVALID_REQUEST_BODY",
 						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),
@@ -164,7 +164,7 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
 					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.\"}"),
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
 					@ExampleObject(name = "INVALID_REQUEST_BODY",
 						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),

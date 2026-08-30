@@ -13,7 +13,7 @@ public record RegisterRequest(
 	@NotBlank
 	String idToken,
 	@NotBlank
-	@Pattern(regexp = "^[가-힣a-zA-Z0-9]{2,12}$", message = "닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.")
+	@Pattern(regexp = "^(?=.{1,12}$)[가-힣a-zA-Z0-9]+(?: [가-힣a-zA-Z0-9]+)*$", message = "닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.")
 	String nickname
 ) {
 	public RegisterCommand toCommand(){
