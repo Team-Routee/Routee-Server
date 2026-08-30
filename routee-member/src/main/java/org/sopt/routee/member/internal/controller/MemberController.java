@@ -130,6 +130,16 @@ public class MemberController implements MemberControllerDocs {
 			.body(ApiResponse.success(SuccessCode.PROFILE_IMAGE_UPDATED, ProfileImageResponse.from(result)));
 	}
 
+	@PatchMapping(path = "/member/profile-image/default")
+	public ResponseEntity<SuccessResponse<ProfileImageResponse>> resetProfileImage(
+		@AuthenticationPrincipal Long memberId
+	) {
+		UpdateProfileImageResult result = memberService.resetProfileImage(memberId);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.PROFILE_IMAGE_RESET, ProfileImageResponse.from(result)));
+	}
+
 	@GetMapping(path = "/archive/activity-summary")
 	public ResponseEntity<SuccessResponse<ActivitySummaryResponse>> getActivitySummary(
 		@AuthenticationPrincipal Long memberId,

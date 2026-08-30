@@ -166,6 +166,23 @@ public class MemberService {
 		return MemberMapper.toUpdateProfileImageResult(generateProfileImageUrl(command.memberId(), command.objectKey()));
 	}
 
+	public UpdateProfileImageResult resetProfileImage(long memberId) {
+		String previousObjectKey = transactionTemplate.execute(status -> {
+			Member member = memberRepository.findById(memberId)
+				.orElseThrow(MemberNotFoundException::new);
+
+			String objectKey = member.getProfileImageObjectKey();
+			member.updateProfileImageObjectKey(null);
+			return objectKey;
+		});
+
+		if (previousObjectKey != null) {
+			Thread.startVirtualThread(() -> deleteProfileImage(memberId, previousObjectKey));
+		}
+
+		return MemberMapper.toUpdateProfileImageResult(null);
+	}
+
 	private void deleteProfileImage(Long memberId, String objectKey) {
 		try {
 			fileDeletePort.deleteImage(new FileDeleteCommand(FileUploadDirectory.PROFILE, memberId.toString(), objectKey));

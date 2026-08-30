@@ -263,6 +263,29 @@ public interface MemberControllerDocs {
 	);
 
 	@Operation(
+		summary = "프로필 이미지 기본 이미지로 초기화",
+		description = "회원의 프로필 이미지를 기본 이미지로 되돌립니다. 기존에 업로드된 S3 이미지는 함께 삭제됩니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "초기화 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageResponse.class))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageResponse>> resetProfileImage(Long memberId);
+
+	@Operation(
 		summary = "월별 활동 요약 조회",
 		description = "인증된 회원의 특정 연/월에 대한 일자별 활동 요약(총 활동 시간, 활동 횟수, 커버 이미지)을 조회합니다."
 	)
