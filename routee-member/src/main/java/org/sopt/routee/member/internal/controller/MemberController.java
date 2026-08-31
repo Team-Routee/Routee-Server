@@ -53,9 +53,10 @@ public class MemberController implements MemberControllerDocs {
 
 	@PostMapping(path = "/member/register")
 	public ResponseEntity<SuccessResponse<Void>> register(
-		@Valid @RequestBody RegisterRequest request
+		@Valid @RequestBody RegisterRequest request,
+		@RequestHeader(name = "Time-Zone") ZoneId timeZone
 	) {
-		memberService.register(request.toCommand());
+		memberService.register(request.toCommand(timeZone));
 
 		return ResponseEntity.status(HttpStatus.CREATED)
 			.body(ApiResponse.success(SuccessCode.MEMBER_REGISTER));

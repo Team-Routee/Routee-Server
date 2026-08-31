@@ -38,7 +38,9 @@ public interface MemberControllerDocs {
 
 	@Operation(
 		summary = "소셜 회원가입",
-		description = "OIDC ID 토큰과 닉네임으로 회원가입합니다. 완료 후 POST /auth/login으로 토큰을 발급받으세요."
+		description = "OIDC ID 토큰, 닉네임, 약관 동의 여부로 회원가입합니다. 필수 약관(서비스 이용약관, 개인정보 처리방침, "
+			+ "위치기반 서비스 이용약관, 만 14세 이상 확인)에 모두 동의해야 하며, 동의 시점은 Time-Zone 헤더 기준으로 저장됩니다. "
+			+ "완료 후 POST /auth/login으로 토큰을 발급받으세요."
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "회원가입 성공"),
@@ -47,6 +49,12 @@ public interface MemberControllerDocs {
 				examples = {
 					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
+					@ExampleObject(name = "REQUIRED_AGREEMENT_NOT_ACCEPTED",
+						value = "{\"status\":400,\"code\":\"REQUIRED_AGREEMENT_NOT_ACCEPTED\",\"message\":\"필수 약관에 모두 동의해야 합니다.\"}"),
+					@ExampleObject(name = "MISSING_REQUEST_HEADER",
+						value = "{\"status\":400,\"code\":\"MISSING_REQUEST_HEADER\",\"message\":\"필수 요청 헤더가 누락되었습니다.\"}"),
+					@ExampleObject(name = "INVALID_HEADER",
+						value = "{\"status\":400,\"code\":\"INVALID_HEADER\",\"message\":\"헤더값이 올바르지 않습니다.\"}"),
 					@ExampleObject(name = "INVALID_REQUEST_BODY",
 						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),
@@ -65,7 +73,16 @@ public interface MemberControllerDocs {
 				examples = @ExampleObject(name = "ALREADY_REGISTERED_MEMBER",
 					value = "{\"status\":409,\"code\":\"ALREADY_REGISTERED_MEMBER\",\"message\":\"이미 가입된 회원입니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<Void>> register(@Valid @RequestBody RegisterRequest request);
+	ResponseEntity<SuccessResponse<Void>> register(
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = RegisterRequest.class),
+				examples = @ExampleObject(value = "{\"provider\":\"APPLE\",\"idToken\":\"eyJ...\",\"nickname\":\"루티\","
+					+ "\"agreements\":{\"serviceTerms\":true,\"privacyPolicy\":true,\"locationServiceTerms\":true,"
+					+ "\"over14\":true,\"marketingConsent\":false}}")))
+		@Valid @RequestBody RegisterRequest request,
+		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
+		@RequestHeader("Time-Zone") ZoneId timeZone
+	);
 
 	@Operation(summary = "회원 탈퇴", description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다.")
 	@SecurityRequirement(name = "bearerAuth")
