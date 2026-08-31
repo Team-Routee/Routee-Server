@@ -93,7 +93,8 @@ public class MemberService {
 		Member savedMember = memberRepository.save(MemberMapper.toEntity(command, oauthId));
 
 		Instant agreedAt = TimeZoneUtils.toUtcInstantTime(LocalDateTime.now(command.timeZone()), command.timeZone());
-		memberAgreementRepository.save(MemberMapper.toAgreementEntity(savedMember, command.agreement(), agreedAt));
+		memberAgreementRepository.save(
+			MemberMapper.toAgreementEntity(savedMember, command.agreement(), agreedAt, command.timeZone()));
 	}
 
 	private void validateRequiredAgreements(AgreementCommand agreement) {

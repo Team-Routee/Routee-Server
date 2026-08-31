@@ -37,14 +37,21 @@ public class MemberMapper {
 			.build();
 	}
 
-	public static MemberAgreement toAgreementEntity(Member member, AgreementCommand agreement, Instant agreedAt) {
+	public static MemberAgreement toAgreementEntity(
+		Member member, AgreementCommand agreement, Instant agreedAt, ZoneId agreedZone
+	) {
 		return MemberAgreement.builder()
 			.member(member)
 			.serviceTermsAgreedAt(agreement.serviceTerms() ? agreedAt : null)
+			.serviceTermsAgreedZone(agreement.serviceTerms() ? agreedZone : null)
 			.privacyPolicyAgreedAt(agreement.privacyPolicy() ? agreedAt : null)
+			.privacyPolicyAgreedZone(agreement.privacyPolicy() ? agreedZone : null)
 			.locationServiceTermsAgreedAt(agreement.locationServiceTerms() ? agreedAt : null)
+			.locationServiceTermsAgreedZone(agreement.locationServiceTerms() ? agreedZone : null)
 			.over14ConfirmedAt(agreement.over14() ? agreedAt : null)
+			.over14ConfirmedZone(agreement.over14() ? agreedZone : null)
 			.marketingConsentAgreedAt(agreement.marketingConsent() ? agreedAt : null)
+			.marketingConsentAgreedZone(agreement.marketingConsent() ? agreedZone : null)
 			.build();
 	}
 

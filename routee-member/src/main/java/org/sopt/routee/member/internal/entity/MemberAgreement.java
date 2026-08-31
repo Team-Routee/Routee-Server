@@ -1,6 +1,7 @@
 package org.sopt.routee.member.internal.entity;
 
 import java.time.Instant;
+import java.time.ZoneId;
 
 import org.sopt.routee.entity.BaseEntity;
 
@@ -42,15 +43,30 @@ public class MemberAgreement extends BaseEntity {
 	@Column(name = "service_terms_agreed_at")
 	private Instant serviceTermsAgreedAt;
 
+	@Column(name = "service_terms_agreed_zone")
+	private ZoneId serviceTermsAgreedZone;
+
 	@Column(name = "privacy_policy_agreed_at")
 	private Instant privacyPolicyAgreedAt;
+
+	@Column(name = "privacy_policy_agreed_zone")
+	private ZoneId privacyPolicyAgreedZone;
 
 	@Column(name = "location_service_terms_agreed_at")
 	private Instant locationServiceTermsAgreedAt;
 
+	@Column(name = "location_service_terms_agreed_zone")
+	private ZoneId locationServiceTermsAgreedZone;
+
 	@Column(name = "over14_confirmed_at")
 	private Instant over14ConfirmedAt;
 
+	@Column(name = "over14_confirmed_zone")
+	private ZoneId over14ConfirmedZone;
+
 	@Column(name = "marketing_consent_agreed_at")
 	private Instant marketingConsentAgreedAt;
+
+	@Column(name = "marketing_consent_agreed_zone")
+	private ZoneId marketingConsentAgreedZone;
 }
