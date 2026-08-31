@@ -48,7 +48,7 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
 					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.\"}"),
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
 					@ExampleObject(name = "REQUIRED_AGREEMENT_NOT_ACCEPTED",
 						value = "{\"status\":400,\"code\":\"REQUIRED_AGREEMENT_NOT_ACCEPTED\",\"message\":\"필수 약관에 모두 동의해야 합니다.\"}"),
 					@ExampleObject(name = "MISSING_REQUEST_HEADER",
@@ -181,7 +181,7 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
 					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.\"}"),
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
 					@ExampleObject(name = "INVALID_REQUEST_BODY",
 						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),
@@ -278,6 +278,29 @@ public interface MemberControllerDocs {
 				examples = @ExampleObject(value = "{\"objectKey\":\"a1b2c3d4e5f6.jpg\"}")))
 		@Valid @RequestBody ProfileImageUpdateRequest request
 	);
+
+	@Operation(
+		summary = "프로필 이미지 기본 이미지로 초기화",
+		description = "회원의 프로필 이미지를 기본 이미지로 되돌립니다. 기존에 업로드된 S3 이미지는 함께 삭제됩니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "초기화 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageResponse.class))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageResponse>> resetProfileImage(Long memberId);
 
 	@Operation(
 		summary = "월별 활동 요약 조회",
