@@ -78,5 +78,6 @@ jobs:
             export S3_REGION="${{ secrets.S3_REGION }}"
             export S3_BUCKET="${{ secrets[format('{0}S3_BUCKET', inputs.secret_prefix)] }}"
             export S3_ENDPOINT="${{ secrets[format('{0}S3_ENDPOINT', inputs.secret_prefix)] }}"
+            export APPLE_CLIENT_ID="${{ secrets[format('{0}APPLE_CLIENT_ID', inputs.secret_prefix)] }}"
 
             cd ~/app && bash scripts/deploy.sh ${{ secrets.DOCKER_USERNAME }}/routee-api:${{ inputs.environment }}-${{ github.sha }}
