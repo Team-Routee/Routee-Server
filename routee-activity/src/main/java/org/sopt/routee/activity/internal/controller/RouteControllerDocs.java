@@ -32,7 +32,9 @@ public interface RouteControllerDocs {
 					@ExampleObject(name = "ROUTES_EMPTY",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트 목록 생성 시 최소 1개 이상의 루트를 입력해야 합니다.\"}"),
 					@ExampleObject(name = "ROUTES_TOO_MANY",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트는 최대 12개까지 등록할 수 있습니다.\"}")
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"루트는 최대 20개까지 등록할 수 있습니다.\"}"),
+					@ExampleObject(name = "ROUTE_NAME_TOO_LONG",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"name은 16자 이하여야 합니다.\"}")
 				})),
 		@ApiResponse(responseCode = "401", description = "인증 실패",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
