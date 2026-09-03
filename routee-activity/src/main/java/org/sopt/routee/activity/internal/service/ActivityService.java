@@ -200,6 +200,10 @@ public class ActivityService {
 		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
 
+		if (activity.getActivityStatus().isCompleted()) {
+			throw new ActivityAlreadyCompletedException();
+		}
+
 		Instant endedAt = TimeZoneUtils.toUtcInstantTime(command.endedAt(), command.timeZone());
 		String coverImageObjectKey = resolveCoverImageObjectKey(command.activityId());
 		LocalDate activityDate = TimeZoneUtils.toLocalDate(activity.getStartedAt(), command.timeZone());
