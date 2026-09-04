@@ -277,7 +277,7 @@ public class ActivityService {
 		Instant startedAtTo = TimeZoneUtils.toUtcInstant(date.plusDays(1), timeZone).minusNanos(1);
 
 		List<ActivityPreviewResult> activities = activityRepository
-			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtAsc(
+			.findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtDesc(
 				memberId, ActivityStatus.ACTIVITY_COMPLETED, startedAtFrom, startedAtTo
 			)
 			.stream()
