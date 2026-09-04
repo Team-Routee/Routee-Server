@@ -26,13 +26,6 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
 	Optional<Activity> findByIdAndMemberId(Long id, Long memberId);
 
-	List<Activity> findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtAsc(
-		Long memberId,
-		ActivityStatus activityStatus,
-		Instant startedAtFrom,
-		Instant startedAtTo
-	);
-
 	List<Activity> findByMemberIdAndActivityStatusAndStartedAtBetweenOrderByStartedAtDesc(
 		Long memberId,
 		ActivityStatus activityStatus,
