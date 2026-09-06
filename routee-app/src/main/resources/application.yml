@@ -34,6 +34,10 @@ oidc:
       jwk-set-uri: https://appleid.apple.com/auth/keys
       issuer: https://appleid.apple.com
       client-id: ${APPLE_CLIENT_ID}
+    google:
+      jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+      issuer: https://accounts.google.com
+      client-id: ${GOOGLE_CLIENT_ID}
 
 jwt:
   secret: ${JWT_SECRET}
