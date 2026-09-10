@@ -44,6 +44,7 @@ import org.sopt.routee.member.internal.repository.MemberRepository;
 import org.sopt.routee.member.internal.service.validator.ProfileImageFileNameValidator;
 import org.sopt.routee.util.TimeZoneUtils;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -109,17 +110,21 @@ public class MemberService {
 	}
 
 	public void withdraw(long memberId, String accessTokenHash, String refreshTokenHash) {
-		transactionTemplate.executeWithoutResult(status -> {
-			Member member = memberRepository.findById(memberId)
-				.orElseThrow(MemberNotFoundException::new);
+		try {
+			transactionTemplate.executeWithoutResult(status -> {
+				Member member = memberRepository.findById(memberId)
+					.orElseThrow(MemberNotFoundException::new);
 
-			memberAgreementRepository.deleteByMember_Id(memberId);
-			memberRepository.delete(member);
+				memberAgreementRepository.deleteByMember_Id(memberId);
+				memberRepository.delete(member);
 
-			activityUseCase.deleteForMemberWithdrawal(memberId);
+				activityUseCase.deleteForMemberWithdrawal(memberId);
+			});
+		} catch (ObjectOptimisticLockingFailureException e) {
+			throw new MemberNotFoundException();
+		}
 
-			applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
-		});
+		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
 
 		Thread.startVirtualThread(() -> deleteMemberImages(memberId));
 	}
