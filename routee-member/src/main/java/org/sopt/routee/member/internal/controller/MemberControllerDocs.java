@@ -84,14 +84,17 @@ public interface MemberControllerDocs {
 		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
 
-	@Operation(summary = "회원 탈퇴", description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다.")
+	@Operation(summary = "회원 탈퇴",
+		description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다. "
+			+ "함께 전달한 authorization_code로 소셜 로그인(Apple/Google) 연동도 해제합니다. "
+			+ "authorization_code는 탈퇴 직전 재인증하여 발급받은 값이어야 하며, 연동 해제에 실패하더라도 탈퇴 자체는 완료됩니다.")
 	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "탈퇴 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "INVALID_INPUT_VALUE",
-					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"refresh_token은 필수입니다.\"}"))),
+					value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"authorization_code는 필수입니다.\"}"))),
 		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {

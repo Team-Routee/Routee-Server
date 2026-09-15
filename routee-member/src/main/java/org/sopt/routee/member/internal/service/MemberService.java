@@ -19,6 +19,7 @@ import org.sopt.routee.external.api.port.FileUploadPresignPort;
 import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
+import org.sopt.routee.external.api.port.OAuthRevokePort;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.AgreementCommand;
@@ -26,6 +27,7 @@ import org.sopt.routee.member.internal.service.dto.command.ProfileImageUploadUrl
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.command.UpdateNicknameCommand;
 import org.sopt.routee.member.internal.service.dto.command.UpdateProfileImageCommand;
+import org.sopt.routee.member.internal.service.dto.command.WithdrawCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
 import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
@@ -58,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MemberService {
 
 	private final OidcVerifyPort oidcVerifyPort;
+	private final OAuthRevokePort oAuthRevokePort;
 	private final ActivityUseCase activityUseCase;
 	private final MemberRepository memberRepository;
 	private final MemberAgreementRepository memberAgreementRepository;
@@ -109,9 +112,12 @@ public class MemberService {
 		}
 	}
 
-	public void withdraw(long memberId, String accessTokenHash, String refreshTokenHash) {
+	public void withdraw(WithdrawCommand command) {
+		long memberId = command.memberId();
+
+		OAuthProvider oauthProvider;
 		try {
-			transactionTemplate.executeWithoutResult(status -> {
+			oauthProvider = transactionTemplate.execute(status -> {
 				Member member = memberRepository.findById(memberId)
 					.orElseThrow(MemberNotFoundException::new);
 
@@ -119,14 +125,27 @@ public class MemberService {
 				memberRepository.delete(member);
 
 				activityUseCase.deleteForMemberWithdrawal(memberId);
+
+				return member.getOauthProvider();
 			});
 		} catch (ObjectOptimisticLockingFailureException e) {
 			throw new MemberNotFoundException();
 		}
 
-		applicationEventPublisher.publishEvent(new MemberWithdrawnEvent(memberId, accessTokenHash, refreshTokenHash));
+		revokeOAuthConnection(memberId, oauthProvider, command.authorizationCode());
+
+		applicationEventPublisher.publishEvent(
+			new MemberWithdrawnEvent(memberId, command.accessTokenHash(), command.refreshTokenHash()));
 
 		Thread.startVirtualThread(() -> deleteMemberImages(memberId));
+	}
+
+	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider, String authorizationCode) {
+		try {
+			oAuthRevokePort.revoke(oauthProvider, authorizationCode);
+		} catch (BaseException e) {
+			log.warn("OAuth revoke failed. memberId={}, provider={}", memberId, oauthProvider, e);
+		}
 	}
 
 	private void deleteMemberImages(long memberId) {
