@@ -86,7 +86,7 @@ public interface MemberControllerDocs {
 
 	@Operation(summary = "회원 탈퇴",
 		description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다. "
-			+ "함께 전달한 authorization_code로 소셜 로그인(Apple/Google) 연동도 해제합니다. "
+			+ "함께 전달한 authorization_code로 소셜 로그인(Apple) 연동도 해제합니다. "
 			+ "authorization_code는 탈퇴 직전 재인증하여 발급받은 값이어야 하며, 연동 해제에 실패하더라도 탈퇴 자체는 완료됩니다.")
 	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
