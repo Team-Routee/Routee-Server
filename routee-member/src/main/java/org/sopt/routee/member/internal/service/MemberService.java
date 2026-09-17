@@ -141,8 +141,12 @@ public class MemberService {
 	}
 
 	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider, String authorizationCode) {
+		if (oauthProvider != OAuthProvider.APPLE) {
+			return;
+		}
+
 		try {
-			oAuthRevokePort.revoke(oauthProvider, authorizationCode);
+			oAuthRevokePort.revoke(authorizationCode);
 		} catch (BaseException e) {
 			log.warn("OAuth revoke failed. memberId={}, provider={}", memberId, oauthProvider, e);
 		}
