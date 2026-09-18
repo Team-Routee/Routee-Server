@@ -21,11 +21,6 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
-/**
- * Apple client secret(ES256로 서명한 JWT)을 생성한다.
- * <p>
- * 서명 비용을 줄이기 위해 만료 전까지 캐시한다. Apple은 최대 6개월까지 허용하지만 보수적으로 짧게 잡는다.
- */
 @Component
 class AppleClientSecretGenerator {
 
