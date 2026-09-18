@@ -3,10 +3,8 @@ package org.sopt.routee.activity.internal.service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
-import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
@@ -133,13 +131,7 @@ public class TimelineService {
 			return;
 		}
 
-		Optional<Activity> firstActivityWithCover = activityRepository
-			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
-				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED);
-
-		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, activity.getId(),
-			firstActivityWithCover.map(Activity::getId).orElse(null),
-			firstActivityWithCover.map(Activity::getCoverImageObjectKey).orElse(null));
+		activityDailySummaryService.refreshCoverAfterActivityChanged(activity.getMemberId(), activityDate, activity.getId());
 	}
 
 	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {

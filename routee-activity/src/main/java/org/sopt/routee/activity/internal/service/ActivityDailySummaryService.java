@@ -3,10 +3,14 @@ package org.sopt.routee.activity.internal.service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
+import org.sopt.routee.activity.internal.entity.activity.Activity;
+import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.summary.ActivityDailySummary;
 import org.sopt.routee.activity.internal.mapper.ActivityDailySummaryMapper;
 import org.sopt.routee.activity.internal.repository.ActivityDailySummaryRepository;
+import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityDailySummaryResult;
 import org.sopt.routee.external.api.command.FileImageAccessUrlCommand;
 import org.sopt.routee.external.api.port.FileImageAccessUrlPort;
@@ -23,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class ActivityDailySummaryService {
 
 	private final ActivityDailySummaryRepository activityDailySummaryRepository;
+	private final ActivityRepository activityRepository;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
 
 	@Transactional(readOnly = true)
@@ -50,11 +55,16 @@ public class ActivityDailySummaryService {
 	}
 
 	@Transactional
-	public void refreshCoverImage(
-		Long memberId, LocalDate activityDate, Long previousCoverActivityId, Long coverActivityId, String coverImageObjectKey
-	) {
+	public void refreshCoverAfterActivityChanged(Long memberId, LocalDate activityDate, Long previousCoverActivityId) {
+		Optional<Activity> replacementCover = activityRepository
+			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
+				memberId, activityDate, ActivityStatus.ACTIVITY_COMPLETED);
+
 		activityDailySummaryRepository.updateCoverImage(
-			memberId, activityDate, coverActivityId, coverImageObjectKey, previousCoverActivityId);
+			memberId, activityDate,
+			replacementCover.map(Activity::getId).orElse(null),
+			replacementCover.map(Activity::getCoverImageObjectKey).orElse(null),
+			previousCoverActivityId);
 	}
 
 	@Transactional

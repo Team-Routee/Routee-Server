@@ -8,7 +8,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -401,15 +400,7 @@ public class ActivityService {
 		}
 
 		activityDailySummaryService.removeActivity(activity.getMemberId(), activityDate, activity.getDurationSec());
-
-		Optional<Activity> firstActivityWithCover = activityRepository
-			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
-				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED);
-
-		activityDailySummaryService.refreshCoverImage(
-			activity.getMemberId(), activityDate, activity.getId(),
-			firstActivityWithCover.map(Activity::getId).orElse(null),
-			firstActivityWithCover.map(Activity::getCoverImageObjectKey).orElse(null));
+		activityDailySummaryService.refreshCoverAfterActivityChanged(activity.getMemberId(), activityDate, activity.getId());
 	}
 
 	private String generateTimelineImageUrl(Long memberId, Long activityId, Timeline timeline,
