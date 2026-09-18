@@ -2,8 +2,9 @@ package org.sopt.routee.auth.internal.listener;
 
 import org.sopt.routee.auth.internal.service.AuthService;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
-import org.springframework.modulith.events.ApplicationModuleListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import lombok.RequiredArgsConstructor;
 
@@ -13,7 +14,8 @@ class AuthMemberEventListener {
 
 	private final AuthService authService;
 
-	@ApplicationModuleListener
+	@Async
+	@TransactionalEventListener(fallbackExecution = true)
 	void handleMemberWithdrawnEvent(MemberWithdrawnEvent event) {
 		authService.revokeTokens(event.accessTokenHash(), event.refreshTokenHash());
 	}

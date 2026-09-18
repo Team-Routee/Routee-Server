@@ -34,10 +34,8 @@ public record ActivityCompleteRequest(
 	@Max(value = 9000, message = "maxElevation은 9000 이하여야 합니다.")
 	Integer maxElevation,
 
-	@NotBlank(message = "mapImageUrl은 필수입니다.")
-	String mapImageUrl,
-
-	String coverImageObjectKey,
+	@NotBlank(message = "mapImageObjectKey는 필수입니다.")
+	String mapImageObjectKey,
 
 	@NotEmpty(message = "track은 필수입니다.")
 	@Valid
@@ -55,8 +53,7 @@ public record ActivityCompleteRequest(
 			distance,
 			durationSec,
 			maxElevation,
-			mapImageUrl,
-			coverImageObjectKey,
+			mapImageObjectKey,
 			track.stream().map(ActivityTrackPoint::toTrackPoint).toList(),
 			endedAt
 		);

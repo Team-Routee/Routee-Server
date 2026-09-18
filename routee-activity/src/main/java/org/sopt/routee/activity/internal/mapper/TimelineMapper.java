@@ -10,6 +10,7 @@ import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.service.dto.command.CreateTimelineCommand;
 import org.sopt.routee.activity.internal.service.dto.result.TimelineResult;
+import org.sopt.routee.activity.internal.service.dto.result.UpdateTimelineTitleResult;
 
 public class TimelineMapper {
 
@@ -35,6 +36,10 @@ public class TimelineMapper {
 			imageUrl,
 			timeline.getCreatedAt()
 		);
+	}
+
+	public static UpdateTimelineTitleResult toTitleUpdateResult(Timeline timeline) {
+		return new UpdateTimelineTitleResult(timeline.getId(), timeline.getTitle());
 	}
 
 	private static Point toPoint(CreateTimelineCommand command) {

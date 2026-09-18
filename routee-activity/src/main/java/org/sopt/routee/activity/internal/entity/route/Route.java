@@ -36,7 +36,7 @@ public class Route {
 	@Tsid
 	private Long id;
 
-	@Column(name = "name", nullable = false)
+	@Column(name = "name", nullable = false, length = 16)
 	private String name;
 
 	@Column(name = "sequence", nullable = false)

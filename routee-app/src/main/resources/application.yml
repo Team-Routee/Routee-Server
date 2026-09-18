@@ -1,6 +1,9 @@
 spring:
   application:
     name: routee
+  modulith:
+    events:
+      completion-mode: delete
 
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -17,7 +20,7 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
-    show-sql: false
+    show-sql: true
 
   data:
     redis:
@@ -30,7 +33,22 @@ oidc:
     apple:
       jwk-set-uri: https://appleid.apple.com/auth/keys
       issuer: https://appleid.apple.com
-      client-id: ${APPLE_CLIENT_ID:com.Routee-iOS}
+      client-id: ${APPLE_CLIENT_ID}
+    google:
+      jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+      issuer: https://accounts.google.com
+      client-id: ${GOOGLE_CLIENT_ID}
+
+oauth:
+  providers:
+    apple:
+      token-uri: https://appleid.apple.com/auth/token
+      revoke-uri: https://appleid.apple.com/auth/revoke
+      audience: https://appleid.apple.com
+      client-id: ${APPLE_CLIENT_ID}
+      team-id: ${APPLE_TEAM_ID}
+      key-id: ${APPLE_KEY_ID}
+      private-key: ${APPLE_PRIVATE_KEY}
 
 jwt:
   secret: ${JWT_SECRET}

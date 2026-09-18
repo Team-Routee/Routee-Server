@@ -3,7 +3,10 @@ package org.sopt.routee.activity.internal.controller;
 import java.time.ZoneId;
 
 import org.sopt.routee.activity.internal.controller.dto.request.CreateTimelineRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.TimelineTitleUpdateRequest;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.TimelineListResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.TimelineTitleResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +32,8 @@ public interface TimelineControllerDocs {
 	@Operation(summary = "타임라인 생성", description = "인증된 사용자의 활동 기록에 타임라인을 생성합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "타임라인 생성 성공",
-			content = @Content(
-				examples = @ExampleObject(value = "{\"status\":201,\"code\":\"TIMELINE_CREATED\",\"message\":\"타임라인 생성에 성공했습니다.\",\"data\":null}"))),
+			content = @Content(schema = @Schema(implementation = TimelineCreateResponse.class),
+				examples = @ExampleObject(value = "{\"status\":201,\"code\":\"TIMELINE_CREATED\",\"message\":\"타임라인 생성에 성공했습니다.\",\"data\":{\"timelineId\":3}}"))),
 		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
@@ -46,7 +49,7 @@ public interface TimelineControllerDocs {
 				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
 					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<Void>> create(
+	ResponseEntity<SuccessResponse<TimelineCreateResponse>> create(
 		@Parameter(hidden = true)
 		Long memberId,
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
@@ -75,5 +78,67 @@ public interface TimelineControllerDocs {
 		Long memberId,
 		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
 		@PathVariable(name = "activityId") Long activityId
+	);
+
+	@Operation(summary = "타임라인 제목 수정", description = "인증된 사용자의 활동 기록에 속한 타임라인 제목을 수정합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "타임라인 제목 수정 성공",
+			content = @Content(schema = @Schema(implementation = TimelineTitleResponse.class),
+				examples = @ExampleObject(value = "{\"status\":200,\"code\":\"TIMELINE_TITLE_UPDATED\",\"message\":\"타임라인 제목 수정에 성공했습니다.\",\"data\":{\"timelineId\":3,\"title\":\"백운대 정상 도착\"}}"))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "TITLE_REQUIRED",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 필수입니다.\"}"),
+					@ExampleObject(name = "TITLE_TOO_LONG",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"title은 16자 이하여야 합니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록 또는 타임라인이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "ACTIVITY_NOT_FOUND",
+						value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}"),
+					@ExampleObject(name = "TIMELINE_NOT_FOUND",
+						value = "{\"status\":404,\"code\":\"TIMELINE_NOT_FOUND\",\"message\":\"타임라인이 존재하지 않습니다.\"}")
+				}))
+	})
+	ResponseEntity<SuccessResponse<TimelineTitleResponse>> updateTitle(
+		@Parameter(hidden = true)
+		Long memberId,
+		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
+		@PathVariable(name = "activityId") Long activityId,
+		@Parameter(description = "타임라인 식별자", example = "3", required = true)
+		@PathVariable(name = "timelineId") Long timelineId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = TimelineTitleUpdateRequest.class),
+				examples = @ExampleObject(value = "{\"title\":\"백운대 정상 도착\"}")))
+		@Valid @RequestBody TimelineTitleUpdateRequest request
+	);
+
+	@Operation(summary = "타임라인 삭제", description = "인증된 사용자의 활동 기록에 속한 타임라인을 삭제합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "타임라인 삭제 성공",
+			content = @Content(
+				examples = @ExampleObject(value = "{\"status\":200,\"code\":\"TIMELINE_DELETED\",\"message\":\"타임라인 삭제에 성공했습니다.\",\"data\":null}"))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록 또는 타임라인이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "ACTIVITY_NOT_FOUND",
+						value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}"),
+					@ExampleObject(name = "TIMELINE_NOT_FOUND",
+						value = "{\"status\":404,\"code\":\"TIMELINE_NOT_FOUND\",\"message\":\"타임라인이 존재하지 않습니다.\"}")
+				}))
+	})
+	ResponseEntity<SuccessResponse<Void>> delete(
+		@Parameter(hidden = true)
+		Long memberId,
+		@Parameter(description = "활동 기록 식별자", example = "1", required = true)
+		@PathVariable(name = "activityId") Long activityId,
+		@Parameter(description = "타임라인 식별자", example = "3", required = true)
+		@PathVariable(name = "timelineId") Long timelineId
 	);
 }

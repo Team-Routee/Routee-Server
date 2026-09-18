@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ActivityDailySummaryMapper {
 
-	public static ActivityDailySummaryResult toResult(ActivityDailySummary summary) {
+	public static ActivityDailySummaryResult toResult(ActivityDailySummary summary, String coverImageUrl) {
 		return new ActivityDailySummaryResult(
 			summary.getActivityDate(),
 			summary.getTotalDurationSec(),
 			summary.getActivityCount(),
-			summary.getCoverImageUrl()
+			coverImageUrl
 		);
 	}
 }

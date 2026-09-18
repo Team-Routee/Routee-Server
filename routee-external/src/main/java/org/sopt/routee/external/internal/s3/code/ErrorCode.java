@@ -10,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ErrorCode implements ErrorResultCode {
 
-	FILE_UPLOAD_PRESIGN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 URL 생성에 실패했습니다.");
+	FILE_UPLOAD_PRESIGN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 URL 생성에 실패했습니다."),
+	FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다.");
 
 	private final HttpStatus status;
 	private final String message;

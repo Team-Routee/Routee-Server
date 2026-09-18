@@ -5,6 +5,10 @@ import org.sopt.routee.external.internal.s3.code.ErrorCode;
 
 public final class FileUploadPresignException extends BaseException {
 
+	public FileUploadPresignException() {
+		super(ErrorCode.FILE_UPLOAD_PRESIGN_FAILED);
+	}
+
 	public FileUploadPresignException(Throwable cause) {
 		super(ErrorCode.FILE_UPLOAD_PRESIGN_FAILED, cause);
 	}

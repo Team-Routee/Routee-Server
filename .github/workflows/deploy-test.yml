@@ -1,0 +1,14 @@
+name: Deploy to Test
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-common.yml
+    with:
+      environment: test
+      secret_prefix: "TEST_"
+    secrets: inherit

@@ -1,18 +1,24 @@
 package org.sopt.routee.member.internal.mapper;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
+import org.sopt.routee.member.internal.service.dto.command.AgreementCommand;
 import org.sopt.routee.member.internal.service.dto.command.RegisterCommand;
 import org.sopt.routee.member.internal.service.dto.result.ActivitySummaryResult;
 import org.sopt.routee.member.internal.service.dto.result.DailySummary;
 import org.sopt.routee.member.internal.service.dto.result.MemberInfoResult;
+import org.sopt.routee.member.internal.service.dto.result.MemberProfileResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
+import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.internal.entity.Member;
+import org.sopt.routee.member.internal.entity.MemberAgreement;
 import org.sopt.routee.util.TimeZoneUtils;
 
 import lombok.AccessLevel;
@@ -31,21 +37,51 @@ public class MemberMapper {
 			.build();
 	}
 
+	public static MemberAgreement toAgreementEntity(
+		Member member, AgreementCommand agreement, Instant agreedAt, ZoneId agreedZone
+	) {
+		return MemberAgreement.builder()
+			.member(member)
+			.serviceTermsAgreedAt(agreement.serviceTerms() ? agreedAt : null)
+			.serviceTermsAgreedZone(agreement.serviceTerms() ? agreedZone : null)
+			.privacyPolicyAgreedAt(agreement.privacyPolicy() ? agreedAt : null)
+			.privacyPolicyAgreedZone(agreement.privacyPolicy() ? agreedZone : null)
+			.locationServiceTermsAgreedAt(agreement.locationServiceTerms() ? agreedAt : null)
+			.locationServiceTermsAgreedZone(agreement.locationServiceTerms() ? agreedZone : null)
+			.over14ConfirmedAt(agreement.over14() ? agreedAt : null)
+			.over14ConfirmedZone(agreement.over14() ? agreedZone : null)
+			.marketingConsentAgreedAt(agreement.marketingConsent() ? agreedAt : null)
+			.marketingConsentAgreedZone(agreement.marketingConsent() ? agreedZone : null)
+			.build();
+	}
+
 	public static TokenClaimsResult toTokenClaimsResult(Member member) {
 		return new TokenClaimsResult(member.getId(), member.getRole().name());
 	}
 
-	public static MemberInfoResult toMemberInfoResult(Member member, ZoneId zoneId) {
+	public static MemberInfoResult toMemberInfoResult(Member member, String profileImageUrl, ZoneId zoneId) {
 		LocalDate joinDate = TimeZoneUtils.toLocalDate(member.getCreatedAt(), zoneId);
 		long daysSinceJoining = ChronoUnit.DAYS.between(joinDate, LocalDate.now(zoneId));
 
 		return new MemberInfoResult(
 			member.getNickname(),
-			member.getProfileImageUrl(),
+			profileImageUrl,
 			joinDate,
 			daysSinceJoining + 1,
 			member.getTotalActivityCount()
 		);
+	}
+
+	public static MemberProfileResult toMemberProfileResult(Member member, String profileImageUrl) {
+		return new MemberProfileResult(member.getNickname(), profileImageUrl);
+	}
+
+	public static UpdateNicknameResult toUpdateNicknameResult(Member member) {
+		return new UpdateNicknameResult(member.getNickname());
+	}
+
+	public static UpdateProfileImageResult toUpdateProfileImageResult(String profileImageUrl) {
+		return new UpdateProfileImageResult(profileImageUrl);
 	}
 
 	public static ActivitySummaryResult toActivitySummaryResult(

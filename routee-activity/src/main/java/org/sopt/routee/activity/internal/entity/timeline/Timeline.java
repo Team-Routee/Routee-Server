@@ -64,4 +64,8 @@ public class Timeline {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "activity_id", nullable = false)
 	private Activity activity;
+
+	public void updateTitle(String title) {
+		this.title = title;
+	}
 }

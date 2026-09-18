@@ -4,6 +4,13 @@ import java.time.ZoneId;
 
 import org.sopt.routee.member.internal.controller.dto.response.ActivitySummaryResponse;
 import org.sopt.routee.member.internal.controller.dto.response.MemberInfoResponse;
+import org.sopt.routee.member.internal.controller.dto.response.MemberProfileResponse;
+import org.sopt.routee.member.internal.controller.dto.response.NicknameResponse;
+import org.sopt.routee.member.internal.controller.dto.response.ProfileImageResponse;
+import org.sopt.routee.member.internal.controller.dto.response.ProfileImageUploadUrlResponse;
+import org.sopt.routee.member.internal.controller.dto.request.NicknameUpdateRequest;
+import org.sopt.routee.member.internal.controller.dto.request.ProfileImageUpdateRequest;
+import org.sopt.routee.member.internal.controller.dto.request.ProfileImageUploadUrlRequest;
 import org.sopt.routee.member.internal.controller.dto.request.RegisterRequest;
 import org.sopt.routee.member.internal.controller.dto.request.WithdrawRequest;
 import org.sopt.routee.response.FailureResponse;
@@ -31,7 +38,9 @@ public interface MemberControllerDocs {
 
 	@Operation(
 		summary = "소셜 회원가입",
-		description = "OIDC ID 토큰과 닉네임으로 회원가입합니다. 완료 후 POST /auth/login으로 토큰을 발급받으세요."
+		description = "OIDC ID 토큰, 닉네임, 약관 동의 여부로 회원가입합니다. 필수 약관(서비스 이용약관, 개인정보 처리방침, "
+			+ "위치기반 서비스 이용약관, 만 14세 이상 확인)에 모두 동의해야 하며, 동의 시점은 Time-Zone 헤더 기준으로 저장됩니다. "
+			+ "완료 후 POST /auth/login으로 토큰을 발급받으세요."
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "회원가입 성공"),
@@ -39,7 +48,13 @@ public interface MemberControllerDocs {
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
 					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
-						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자만 사용하여 2자 이상 12자 이하로 입력해야 합니다.\"}"),
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
+					@ExampleObject(name = "REQUIRED_AGREEMENT_NOT_ACCEPTED",
+						value = "{\"status\":400,\"code\":\"REQUIRED_AGREEMENT_NOT_ACCEPTED\",\"message\":\"필수 약관에 모두 동의해야 합니다.\"}"),
+					@ExampleObject(name = "MISSING_REQUEST_HEADER",
+						value = "{\"status\":400,\"code\":\"MISSING_REQUEST_HEADER\",\"message\":\"필수 요청 헤더가 누락되었습니다.\"}"),
+					@ExampleObject(name = "INVALID_HEADER",
+						value = "{\"status\":400,\"code\":\"INVALID_HEADER\",\"message\":\"헤더값이 올바르지 않습니다.\"}"),
 					@ExampleObject(name = "INVALID_REQUEST_BODY",
 						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
 				})),
@@ -58,9 +73,22 @@ public interface MemberControllerDocs {
 				examples = @ExampleObject(name = "ALREADY_REGISTERED_MEMBER",
 					value = "{\"status\":409,\"code\":\"ALREADY_REGISTERED_MEMBER\",\"message\":\"이미 가입된 회원입니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<Void>> register(@Valid @RequestBody RegisterRequest request);
+	ResponseEntity<SuccessResponse<Void>> register(
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = RegisterRequest.class),
+				examples = @ExampleObject(value = "{\"provider\":\"APPLE\",\"idToken\":\"eyJ...\",\"nickname\":\"루티\","
+					+ "\"agreements\":{\"serviceTerms\":true,\"privacyPolicy\":true,\"locationServiceTerms\":true,"
+					+ "\"over14\":true,\"marketingConsent\":false}}")))
+		@Valid @RequestBody RegisterRequest request,
+		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
+		@RequestHeader("Time-Zone") ZoneId timeZone
+	);
 
-	@Operation(summary = "회원 탈퇴", description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다.")
+	@Operation(summary = "회원 탈퇴",
+		description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다. refresh_token은 모든 탈퇴 요청에 필수입니다. "
+			+ "Apple 로그인 회원은 authorization_code를 함께 전달해야 소셜 로그인 연동도 해제됩니다. "
+			+ "authorization_code는 탈퇴 직전 재인증하여 발급받은 값이어야 하며, Apple 외 소셜 로그인 회원은 전달하지 않아도 됩니다. "
+			+ "연동 해제에 실패하더라도 탈퇴 자체는 완료됩니다.")
 	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "탈퇴 성공"),
@@ -84,6 +112,14 @@ public interface MemberControllerDocs {
 	ResponseEntity<SuccessResponse<Void>> withdraw(
 		Long memberId,
 		@RequestHeader(name = "Authorization") String accessTokenWithBearer,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = WithdrawRequest.class),
+				examples = {
+					@ExampleObject(name = "APPLE_MEMBER", summary = "Apple 로그인 회원",
+						value = "{\"refreshToken\":\"eyJ...\",\"authorizationCode\":\"c1234...\"}"),
+					@ExampleObject(name = "OTHER_MEMBER", summary = "그 외 소셜 로그인 회원",
+						value = "{\"refreshToken\":\"eyJ...\"}")
+				}))
 		@Valid @RequestBody WithdrawRequest request
 	);
 
@@ -121,6 +157,162 @@ public interface MemberControllerDocs {
 		@Parameter(description = "IANA Time Zone ID", example = "Asia/Seoul", required = true)
 		@RequestHeader("Time-Zone") ZoneId timeZone
 	);
+
+	@Operation(
+		summary = "설정 페이지 회원 정보 조회",
+		description = "인증된 회원의 닉네임과 프로필 이미지 URL을 조회합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "조회 성공",
+			content = @Content(schema = @Schema(implementation = MemberProfileResponse.class))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<MemberProfileResponse>> getMemberProfile(Long memberId);
+
+	@Operation(
+		summary = "닉네임 변경",
+		description = "인증된 회원의 닉네임을 변경합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "변경 성공",
+			content = @Content(schema = @Schema(implementation = NicknameResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_NICKNAME_FORMAT",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"닉네임은 한글, 영어, 숫자와 공백을 사용하여 1자 이상 12자 이하로 입력해야 하며, 공백은 연속될 수 없습니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<NicknameResponse>> updateNickname(
+		Long memberId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = NicknameUpdateRequest.class),
+				examples = @ExampleObject(value = "{\"nickname\":\"루티\"}")))
+		@Valid @RequestBody NicknameUpdateRequest request
+	);
+
+	@Operation(
+		summary = "프로필 이미지 업로드 URL 발급",
+		description = "S3에 프로필 이미지를 직접 업로드할 수 있는 presigned URL과 objectKey를 발급합니다. " +
+			"발급받은 URL로 이미지를 업로드한 뒤 objectKey를 PATCH /member/profile-image로 전달해 반영해야 합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "발급 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageUploadUrlResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"fileName은 필수입니다.\"}"),
+					@ExampleObject(name = "UNSUPPORTED_IMAGE_FILE_EXTENSION",
+						value = "{\"status\":400,\"code\":\"UNSUPPORTED_IMAGE_FILE_EXTENSION\",\"message\":\"지원하지 않는 이미지 파일 확장자입니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				}))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageUploadUrlResponse>> generateProfileImageUploadUrl(
+		Long memberId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ProfileImageUploadUrlRequest.class),
+				examples = @ExampleObject(value = "{\"fileName\":\"profile.jpg\"}")))
+		@Valid @RequestBody ProfileImageUploadUrlRequest request
+	);
+
+	@Operation(
+		summary = "프로필 이미지 변경",
+		description = "presigned URL로 업로드한 이미지의 objectKey를 받아 회원의 프로필 이미지를 갱신합니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "변경 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_INPUT_VALUE",
+						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"objectKey는 필수입니다.\"}"),
+					@ExampleObject(name = "INVALID_REQUEST_BODY",
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+				})),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageResponse>> updateProfileImage(
+		Long memberId,
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = ProfileImageUpdateRequest.class),
+				examples = @ExampleObject(value = "{\"objectKey\":\"a1b2c3d4e5f6.jpg\"}")))
+		@Valid @RequestBody ProfileImageUpdateRequest request
+	);
+
+	@Operation(
+		summary = "프로필 이미지 기본 이미지로 초기화",
+		description = "회원의 프로필 이미지를 기본 이미지로 되돌립니다. 기존에 업로드된 S3 이미지는 함께 삭제됩니다."
+	)
+	@SecurityRequirement(name = "bearerAuth")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "초기화 성공",
+			content = @Content(schema = @Schema(implementation = ProfileImageResponse.class))),
+		@ApiResponse(responseCode = "401", description = "만료되었거나 유효하지 않은 액세스 토큰",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = {
+					@ExampleObject(name = "INVALID_TOKEN",
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}"),
+					@ExampleObject(name = "TOKEN_EXPIRED",
+						value = "{\"status\":401,\"code\":\"TOKEN_EXPIRED\",\"message\":\"만료된 토큰입니다.\"}")
+				})),
+		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<ProfileImageResponse>> resetProfileImage(Long memberId);
 
 	@Operation(
 		summary = "월별 활동 요약 조회",
