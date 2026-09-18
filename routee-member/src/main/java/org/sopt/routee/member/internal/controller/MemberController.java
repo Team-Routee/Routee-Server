@@ -71,7 +71,7 @@ public class MemberController implements MemberControllerDocs {
 		String accessTokenHash = TokenHasher.hash(TokenExtractor.extract(accessTokenWithBearer));
 		String refreshTokenHash = TokenHasher.hash(request.refreshToken());
 
-		memberService.withdraw(memberId, accessTokenHash, refreshTokenHash);
+		memberService.withdraw(request.toCommand(memberId, accessTokenHash, refreshTokenHash));
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.MEMBER_WITHDRAW));

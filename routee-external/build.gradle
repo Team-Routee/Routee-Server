@@ -6,6 +6,9 @@ dependencies {
     // OAuth
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
+    // Apple client secret nimbus
+    implementation 'com.nimbusds:nimbus-jose-jwt'
+
     // AWS
     implementation platform("software.amazon.awssdk:bom:${rootProject.ext['awsSdkVersion']}")
     implementation 'software.amazon.awssdk:s3'
