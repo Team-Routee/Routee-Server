@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
-import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
 import org.sopt.routee.activity.internal.entity.timeline.TimelineStatus;
 import org.sopt.routee.activity.internal.exception.ActivityNotFoundException;
@@ -64,7 +63,8 @@ public class TimelineService {
 		}
 
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
-			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(memberId, activityId, timeline)))
+			.map(
+				timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(memberId, activityId, timeline)))
 			.toList();
 	}
 
@@ -131,15 +131,7 @@ public class TimelineService {
 			return;
 		}
 
-		Activity firstActivityWithCover = activityRepository
-			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
-				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED)
-			.orElse(null);
-
-		Long coverActivityId = firstActivityWithCover == null ? null : firstActivityWithCover.getId();
-		String coverImageObjectKey = firstActivityWithCover == null ? null : firstActivityWithCover.getCoverImageObjectKey();
-
-		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, coverActivityId, coverImageObjectKey);
+		activityDailySummaryService.refreshCoverAfterActivityChanged(activity.getMemberId(), activityDate, activity.getId());
 	}
 
 	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {
@@ -152,7 +144,8 @@ public class TimelineService {
 	private void deleteTimelineImage(Long memberId, Long activityId, String objectKey) {
 		try {
 			fileDeletePort.deleteImage(
-				new FileDeleteCommand(FileUploadDirectory.TIMELINE, memberId.toString(), activityId.toString(), objectKey));
+				new FileDeleteCommand(FileUploadDirectory.TIMELINE, memberId.toString(), activityId.toString(),
+					objectKey));
 		} catch (BaseException e) {
 			log.warn("Timeline image delete failed. activityId={}, objectKey={}", activityId, objectKey, e);
 		}
