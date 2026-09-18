@@ -3,6 +3,7 @@ package org.sopt.routee.activity.internal.service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
@@ -64,7 +65,8 @@ public class TimelineService {
 		}
 
 		return timelineRepository.findByActivityIdOrderByCreatedAtAsc(activityId).stream()
-			.map(timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(memberId, activityId, timeline)))
+			.map(
+				timeline -> TimelineMapper.toTimelineResult(timeline, generateImageUrl(memberId, activityId, timeline)))
 			.toList();
 	}
 
@@ -131,15 +133,13 @@ public class TimelineService {
 			return;
 		}
 
-		Activity firstActivityWithCover = activityRepository
+		Optional<Activity> firstActivityWithCover = activityRepository
 			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
-				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED)
-			.orElse(null);
+				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED);
 
-		Long coverActivityId = firstActivityWithCover == null ? null : firstActivityWithCover.getId();
-		String coverImageObjectKey = firstActivityWithCover == null ? null : firstActivityWithCover.getCoverImageObjectKey();
-
-		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, coverActivityId, coverImageObjectKey);
+		activityDailySummaryService.refreshCoverImage(activity.getMemberId(), activityDate, activity.getId(),
+			firstActivityWithCover.map(Activity::getId).orElse(null),
+			firstActivityWithCover.map(Activity::getCoverImageObjectKey).orElse(null));
 	}
 
 	private Timeline findOwnedTimeline(Long activityId, Long timelineId, Long memberId) {
@@ -152,7 +152,8 @@ public class TimelineService {
 	private void deleteTimelineImage(Long memberId, Long activityId, String objectKey) {
 		try {
 			fileDeletePort.deleteImage(
-				new FileDeleteCommand(FileUploadDirectory.TIMELINE, memberId.toString(), activityId.toString(), objectKey));
+				new FileDeleteCommand(FileUploadDirectory.TIMELINE, memberId.toString(), activityId.toString(),
+					objectKey));
 		} catch (BaseException e) {
 			log.warn("Timeline image delete failed. activityId={}, objectKey={}", activityId, objectKey, e);
 		}

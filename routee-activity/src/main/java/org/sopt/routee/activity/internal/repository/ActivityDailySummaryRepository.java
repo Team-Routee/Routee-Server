@@ -46,12 +46,29 @@ public interface ActivityDailySummaryRepository extends JpaRepository<ActivityDa
 	@Modifying
 	@Query("""
 		UPDATE ActivityDailySummary ads SET ads.coverActivityId = :coverActivityId, ads.coverImageObjectKey = :coverImageObjectKey
-		WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate
+		WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate AND ads.coverActivityId = :previousCoverActivityId
 		""")
 	void updateCoverImage(
 		@Param("memberId") Long memberId,
 		@Param("activityDate") LocalDate activityDate,
 		@Param("coverActivityId") Long coverActivityId,
-		@Param("coverImageObjectKey") String coverImageObjectKey
+		@Param("coverImageObjectKey") String coverImageObjectKey,
+		@Param("previousCoverActivityId") Long previousCoverActivityId
 	);
+
+	@Modifying
+	@Query("""
+		UPDATE ActivityDailySummary ads
+		SET ads.totalDurationSec = ads.totalDurationSec - :durationSec, ads.activityCount = ads.activityCount - 1
+		WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate
+		""")
+	void decrementDailySummary(
+		@Param("memberId") Long memberId,
+		@Param("activityDate") LocalDate activityDate,
+		@Param("durationSec") Integer durationSec
+	);
+
+	@Modifying
+	@Query("DELETE FROM ActivityDailySummary ads WHERE ads.memberId = :memberId AND ads.activityDate = :activityDate AND ads.activityCount <= 0")
+	void deleteIfEmpty(@Param("memberId") Long memberId, @Param("activityDate") LocalDate activityDate);
 }

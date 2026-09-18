@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -371,6 +372,44 @@ public class ActivityService {
 	@Transactional
 	public void deleteActivitiesByMemberId(long memberId) {
 		activityRepository.deleteByMemberId(memberId);
+	}
+
+	public void delete(Long activityId, Long memberId) {
+		Activity deletedActivity = transactionTemplate.execute(status -> {
+			Activity activity = activityRepository.findByIdAndMemberId(activityId, memberId)
+				.orElseThrow(ActivityNotFoundException::new);
+
+			routeRepository.deleteByActivityIdIn(List.of(activityId));
+			timelineRepository.deleteByActivityIdIn(List.of(activityId));
+			activityRepository.delete(activity);
+
+			if (activity.getActivityStatus().isCompleted()) {
+				refreshDailySummaryAfterDelete(activity);
+			}
+
+			return activity;
+		});
+
+		log.info("Activity deleted. activityId={}, memberId={}", activityId, memberId);
+		Thread.startVirtualThread(() -> deleteActivityImageDirectories(memberId, List.of(deletedActivity.getId())));
+	}
+
+	private void refreshDailySummaryAfterDelete(Activity activity) {
+		LocalDate activityDate = activity.getActivityDateWithTimezone();
+		if (activityDate == null) {
+			return;
+		}
+
+		activityDailySummaryService.removeActivity(activity.getMemberId(), activityDate, activity.getDurationSec());
+
+		Optional<Activity> firstActivityWithCover = activityRepository
+			.findFirstByMemberIdAndActivityDateWithTimezoneAndActivityStatusAndCoverImageObjectKeyIsNotNullOrderByStartedAtAsc(
+				activity.getMemberId(), activityDate, ActivityStatus.ACTIVITY_COMPLETED);
+
+		activityDailySummaryService.refreshCoverImage(
+			activity.getMemberId(), activityDate, activity.getId(),
+			firstActivityWithCover.map(Activity::getId).orElse(null),
+			firstActivityWithCover.map(Activity::getCoverImageObjectKey).orElse(null));
 	}
 
 	private String generateTimelineImageUrl(Long memberId, Long activityId, Timeline timeline,

@@ -50,8 +50,17 @@ public class ActivityDailySummaryService {
 	}
 
 	@Transactional
-	public void refreshCoverImage(Long memberId, LocalDate activityDate, Long coverActivityId, String coverImageObjectKey) {
-		activityDailySummaryRepository.updateCoverImage(memberId, activityDate, coverActivityId, coverImageObjectKey);
+	public void refreshCoverImage(
+		Long memberId, LocalDate activityDate, Long previousCoverActivityId, Long coverActivityId, String coverImageObjectKey
+	) {
+		activityDailySummaryRepository.updateCoverImage(
+			memberId, activityDate, coverActivityId, coverImageObjectKey, previousCoverActivityId);
+	}
+
+	@Transactional
+	public void removeActivity(Long memberId, LocalDate activityDate, Integer durationSec) {
+		activityDailySummaryRepository.decrementDailySummary(memberId, activityDate, durationSec);
+		activityDailySummaryRepository.deleteIfEmpty(memberId, activityDate);
 	}
 
 	private String generateCoverImageUrl(Long memberId, ActivityDailySummary summary) {
