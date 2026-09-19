@@ -1,9 +1,11 @@
 package org.sopt.routee.member.internal.entity;
 
 import org.sopt.routee.entity.BaseEntity;
+import org.sopt.routee.member.internal.converter.RefreshTokenAttributeConverter;
 
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -37,6 +39,7 @@ public class MemberOAuthCredential extends BaseEntity {
 	@JoinColumn(name = "member_id", nullable = false, updatable = false)
 	private Member member;
 
-	@Column(name = "refresh_token", nullable = false)
+	@Convert(converter = RefreshTokenAttributeConverter.class)
+	@Column(name = "refresh_token", nullable = false, length = 512)
 	private String refreshToken;
 }
