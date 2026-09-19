@@ -22,7 +22,10 @@ import jakarta.validation.Valid;
 @Tag(name = "Auth", description = "인증 API")
 public interface AuthControllerDocs {
 
-	@Operation(summary = "소셜 로그인", description = "OIDC ID 토큰으로 로그인하고 액세스/리프레시 토큰을 발급합니다.")
+	@Operation(summary = "소셜 로그인",
+		description = "OIDC ID 토큰으로 로그인하고 액세스/리프레시 토큰을 발급합니다. Apple 로그인 회원이 authorization_code를 함께 전달하면, "
+			+ "아직 저장된 Apple refresh_token이 없을 때에 한해 이를 교환하여 저장합니다. 이미 저장되어 있다면 전달값은 무시되며, "
+			+ "저장된 refresh_token은 회원 탈퇴 시 소셜 로그인 연동 해제에 사용됩니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "로그인 성공",
 			content = @Content(schema = @Schema(implementation = TokenResponse.class))),
@@ -49,7 +52,17 @@ public interface AuthControllerDocs {
 				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
 					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request);
+	ResponseEntity<SuccessResponse<TokenResponse>> login(
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = LoginRequest.class),
+				examples = {
+					@ExampleObject(name = "APPLE_MEMBER", summary = "Apple 로그인 회원",
+						value = "{\"provider\":\"APPLE\",\"idToken\":\"eyJ...\",\"authorizationCode\":\"c1234...\"}"),
+					@ExampleObject(name = "OTHER_MEMBER", summary = "그 외 소셜 로그인 회원",
+						value = "{\"provider\":\"GOOGLE\",\"idToken\":\"eyJ...\"}")
+				}))
+		@Valid @RequestBody LoginRequest request
+	);
 
 	@Operation(summary = "토큰 재발급", description = "리프레시 토큰으로 액세스/리프레시 토큰을 재발급합니다.")
 	@ApiResponses({

@@ -19,6 +19,7 @@ import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.api.type.MemberRole;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.entity.MemberAgreement;
+import org.sopt.routee.member.internal.entity.MemberOAuthCredential;
 import org.sopt.routee.util.TimeZoneUtils;
 
 import lombok.AccessLevel;
@@ -52,6 +53,13 @@ public class MemberMapper {
 			.over14ConfirmedZone(agreement.over14() ? agreedZone : null)
 			.marketingConsentAgreedAt(agreement.marketingConsent() ? agreedAt : null)
 			.marketingConsentAgreedZone(agreement.marketingConsent() ? agreedZone : null)
+			.build();
+	}
+
+	public static MemberOAuthCredential toOAuthCredentialEntity(Member member, String refreshToken) {
+		return MemberOAuthCredential.builder()
+			.member(member)
+			.refreshToken(refreshToken)
 			.build();
 	}
 

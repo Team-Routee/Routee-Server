@@ -4,6 +4,7 @@ import org.sopt.routee.external.api.type.OAuthProvider;
 
 public record LoginCommand(
 	OAuthProvider provider,
-	String idToken
+	String idToken,
+	String authorizationCode
 ) {
 }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
 import org.sopt.routee.activity.api.usecase.ActivityUseCase;
@@ -20,6 +21,7 @@ import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OAuthRevokePort;
+import org.sopt.routee.external.api.port.OAuthRefreshTokenExchangePort;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.AgreementCommand;
@@ -36,12 +38,14 @@ import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
 import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
+import org.sopt.routee.member.internal.entity.MemberOAuthCredential;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
 import org.sopt.routee.member.internal.exception.RequiredAgreementNotAcceptedException;
 import org.sopt.routee.member.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.member.internal.mapper.MemberMapper;
 import org.sopt.routee.member.internal.repository.MemberAgreementRepository;
+import org.sopt.routee.member.internal.repository.MemberOAuthCredentialRepository;
 import org.sopt.routee.member.internal.repository.MemberRepository;
 import org.sopt.routee.member.internal.service.validator.ProfileImageFileNameValidator;
 import org.sopt.routee.util.TimeZoneUtils;
@@ -50,6 +54,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,9 +66,11 @@ public class MemberService {
 
 	private final OidcVerifyPort oidcVerifyPort;
 	private final OAuthRevokePort oAuthRevokePort;
+	private final OAuthRefreshTokenExchangePort oAuthRefreshTokenExchangePort;
 	private final ActivityUseCase activityUseCase;
 	private final MemberRepository memberRepository;
 	private final MemberAgreementRepository memberAgreementRepository;
+	private final MemberOAuthCredentialRepository memberOAuthCredentialRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
@@ -71,12 +78,32 @@ public class MemberService {
 	private final ProfileImageFileNameValidator profileImageFileNameValidator;
 	private final TransactionTemplate transactionTemplate;
 
-	@Transactional(readOnly = true)
-	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider) {
+	@Transactional
+	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider, String authorizationCode) {
 		Member member = memberRepository.findByOauthIdAndOauthProvider(oauthId, oauthProvider)
 			.orElseThrow(MemberNotFoundException::new);
 
+		ensureOAuthCredential(member, authorizationCode);
+
 		return MemberMapper.toTokenClaimsResult(member);
+	}
+
+	private void ensureOAuthCredential(Member member, String authorizationCode) {
+		if (member.getOauthProvider() != OAuthProvider.APPLE || !StringUtils.hasText(authorizationCode)) {
+			return;
+		}
+
+		if (memberOAuthCredentialRepository.existsByMember_Id(member.getId())) {
+			return;
+		}
+
+		try {
+			String refreshToken = oAuthRefreshTokenExchangePort.exchangeForRefreshToken(
+				member.getOauthProvider(), authorizationCode);
+			memberOAuthCredentialRepository.save(MemberMapper.toOAuthCredentialEntity(member, refreshToken));
+		} catch (BaseException e) {
+			log.warn("OIDC token exchange failed. memberId={}, provider={}", member.getId(), member.getOauthProvider(), e);
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -115,24 +142,28 @@ public class MemberService {
 	public void withdraw(WithdrawCommand command) {
 		long memberId = command.memberId();
 
-		OAuthProvider oauthProvider;
+		WithdrawalContext context;
 		try {
-			oauthProvider = transactionTemplate.execute(status -> {
+			context = transactionTemplate.execute(status -> {
 				Member member = memberRepository.findById(memberId)
 					.orElseThrow(MemberNotFoundException::new);
+
+				Optional<MemberOAuthCredential> credential = memberOAuthCredentialRepository.findByMember_Id(memberId);
+				credential.ifPresent(memberOAuthCredentialRepository::delete);
 
 				memberAgreementRepository.deleteByMember_Id(memberId);
 				memberRepository.delete(member);
 
 				activityUseCase.deleteForMemberWithdrawal(memberId);
 
-				return member.getOauthProvider();
+				return new WithdrawalContext(
+					member.getOauthProvider(), credential.map(MemberOAuthCredential::getRefreshToken).orElse(null));
 			});
 		} catch (ObjectOptimisticLockingFailureException e) {
 			throw new MemberNotFoundException();
 		}
 
-		revokeOAuthConnection(memberId, oauthProvider, command.authorizationCode());
+		revokeOAuthConnection(memberId, context.oauthProvider(), context.refreshToken());
 
 		applicationEventPublisher.publishEvent(
 			new MemberWithdrawnEvent(memberId, command.accessTokenHash(), command.refreshTokenHash()));
@@ -140,13 +171,16 @@ public class MemberService {
 		Thread.startVirtualThread(() -> deleteMemberImages(memberId));
 	}
 
-	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider, String authorizationCode) {
-		if (oauthProvider != OAuthProvider.APPLE) {
+	private record WithdrawalContext(OAuthProvider oauthProvider, String refreshToken) {
+	}
+
+	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider, String refreshToken) {
+		if (oauthProvider != OAuthProvider.APPLE || !StringUtils.hasText(refreshToken)) {
 			return;
 		}
 
 		try {
-			oAuthRevokePort.revoke(authorizationCode);
+			oAuthRevokePort.revoke(refreshToken);
 		} catch (BaseException e) {
 			log.warn("OAuth revoke failed. memberId={}, provider={}", memberId, oauthProvider, e);
 		}
