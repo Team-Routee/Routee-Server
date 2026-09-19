@@ -21,6 +21,7 @@ import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OAuthRevokePort;
+import org.sopt.routee.external.api.exception.OAuthAuthorizationCodeExpiredException;
 import org.sopt.routee.external.api.port.OAuthRefreshTokenExchangePort;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
@@ -101,6 +102,8 @@ public class MemberService {
 			String refreshToken = oAuthRefreshTokenExchangePort.exchangeForRefreshToken(
 				member.getOauthProvider(), authorizationCode);
 			memberOAuthCredentialRepository.save(MemberMapper.toOAuthCredentialEntity(member, refreshToken));
+		} catch (OAuthAuthorizationCodeExpiredException e) {
+			throw e;
 		} catch (BaseException e) {
 			log.warn("OIDC token exchange failed. memberId={}, provider={}", member.getId(), member.getOauthProvider(), e);
 		}

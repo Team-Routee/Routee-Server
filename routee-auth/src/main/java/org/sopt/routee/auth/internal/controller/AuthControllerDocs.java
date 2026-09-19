@@ -25,7 +25,8 @@ public interface AuthControllerDocs {
 	@Operation(summary = "소셜 로그인",
 		description = "OIDC ID 토큰으로 로그인하고 액세스/리프레시 토큰을 발급합니다. Apple 로그인 회원이 authorization_code를 함께 전달하면, "
 			+ "아직 저장된 Apple refresh_token이 없을 때에 한해 이를 교환하여 저장합니다. 이미 저장되어 있다면 전달값은 무시되며, "
-			+ "저장된 refresh_token은 회원 탈퇴 시 소셜 로그인 연동 해제에 사용됩니다.")
+			+ "저장된 refresh_token은 회원 탈퇴 시 소셜 로그인 연동 해제에 사용됩니다. 단, 전달된 authorization_code가 만료되었거나 "
+			+ "유효하지 않으면 로그인 자체가 실패합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "로그인 성공",
 			content = @Content(schema = @Schema(implementation = TokenResponse.class))),
@@ -45,7 +46,9 @@ public interface AuthControllerDocs {
 					@ExampleObject(name = "ID_TOKEN_EXPIRED",
 						value = "{\"status\":401,\"code\":\"ID_TOKEN_EXPIRED\",\"message\":\"만료된 id_token입니다.\"}"),
 					@ExampleObject(name = "INVALID_TOKEN_CLAIMS",
-						value = "{\"status\":401,\"code\":\"INVALID_TOKEN_CLAIMS\",\"message\":\"id_token 클레임이 유효하지 않습니다.\"}")
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN_CLAIMS\",\"message\":\"id_token 클레임이 유효하지 않습니다.\"}"),
+					@ExampleObject(name = "AUTHORIZATION_CODE_EXPIRED",
+						value = "{\"status\":401,\"code\":\"AUTHORIZATION_CODE_EXPIRED\",\"message\":\"만료되었거나 유효하지 않은 authorization_code입니다.\"}")
 				})),
 		@ApiResponse(responseCode = "404", description = "가입된 회원 없음 - 회원가입 필요",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
