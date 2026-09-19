@@ -21,7 +21,6 @@ import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OAuthRevokePort;
-import org.sopt.routee.external.api.exception.OAuthAuthorizationCodeExpiredException;
 import org.sopt.routee.external.api.port.OAuthRefreshTokenExchangePort;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
@@ -41,6 +40,7 @@ import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
 import org.sopt.routee.member.internal.entity.MemberOAuthCredential;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
+import org.sopt.routee.member.internal.exception.AuthorizationCodeRequiredException;
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
 import org.sopt.routee.member.internal.exception.RequiredAgreementNotAcceptedException;
 import org.sopt.routee.member.internal.exception.UnsupportedImageFileExtensionException;
@@ -90,7 +90,7 @@ public class MemberService {
 	}
 
 	private void ensureOAuthCredential(Member member, String authorizationCode) {
-		if (member.getOauthProvider() != OAuthProvider.APPLE || !StringUtils.hasText(authorizationCode)) {
+		if (member.getOauthProvider() != OAuthProvider.APPLE) {
 			return;
 		}
 
@@ -98,15 +98,13 @@ public class MemberService {
 			return;
 		}
 
-		try {
-			String refreshToken = oAuthRefreshTokenExchangePort.exchangeForRefreshToken(
-				member.getOauthProvider(), authorizationCode);
-			memberOAuthCredentialRepository.save(MemberMapper.toOAuthCredentialEntity(member, refreshToken));
-		} catch (OAuthAuthorizationCodeExpiredException e) {
-			throw e;
-		} catch (BaseException e) {
-			log.warn("OIDC token exchange failed. memberId={}, provider={}", member.getId(), member.getOauthProvider(), e);
+		if (!StringUtils.hasText(authorizationCode)) {
+			throw new AuthorizationCodeRequiredException();
 		}
+
+		String refreshToken = oAuthRefreshTokenExchangePort.exchangeForRefreshToken(
+			member.getOauthProvider(), authorizationCode);
+		memberOAuthCredentialRepository.save(MemberMapper.toOAuthCredentialEntity(member, refreshToken));
 	}
 
 	@Transactional(readOnly = true)

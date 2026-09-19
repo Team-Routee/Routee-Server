@@ -1,4 +1,4 @@
-package org.sopt.routee.external.api.exception;
+package org.sopt.routee.external.internal.oauth.exception;
 
 import org.sopt.routee.exception.BaseException;
 import org.sopt.routee.external.internal.oauth.code.ErrorCode;

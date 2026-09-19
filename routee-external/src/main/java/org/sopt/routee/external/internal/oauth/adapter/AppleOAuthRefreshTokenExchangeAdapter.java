@@ -1,8 +1,8 @@
 package org.sopt.routee.external.internal.oauth.adapter;
 
-import org.sopt.routee.external.api.exception.OAuthAuthorizationCodeExpiredException;
 import org.sopt.routee.external.api.port.OAuthRefreshTokenExchangePort;
 import org.sopt.routee.external.api.type.OAuthProvider;
+import org.sopt.routee.external.internal.oauth.exception.OAuthAuthorizationCodeExpiredException;
 import org.sopt.routee.external.internal.oauth.exception.OAuthRefreshTokenExchangeException;
 import org.sopt.routee.external.internal.oidc.exception.UnsupportedOidcProviderException;
 import org.springframework.stereotype.Component;
