@@ -5,7 +5,7 @@ import org.sopt.routee.member.api.result.TokenClaimsResult;
 
 public interface MemberUseCase {
 
-	TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider);
+	TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider, String authorizationCode);
 
 	boolean existsById(long memberId);
 

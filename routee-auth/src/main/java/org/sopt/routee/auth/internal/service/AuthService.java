@@ -41,7 +41,8 @@ public class AuthService {
 	public TokenResult login(LoginCommand command) {
 		String oauthId = oidcVerifyPort.extractSubject(command.provider(), command.idToken());
 
-		TokenClaimsResult tokenClaims = memberUseCase.getTokenResult(oauthId, command.provider());
+		TokenClaimsResult tokenClaims =
+			memberUseCase.getTokenResult(oauthId, command.provider(), command.authorizationCode());
 
 		TokenResult tokenResult = issueTokenPair(tokenClaims.memberId(), tokenClaims.memberRole());
 		log.info("Login succeeded. memberId={}, provider={}", tokenClaims.memberId(), command.provider());
