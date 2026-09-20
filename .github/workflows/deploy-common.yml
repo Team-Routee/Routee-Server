@@ -71,6 +71,7 @@ jobs:
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export CREDENTIAL_ENCRYPT_KEY="${{ secrets.CREDENTIAL_ENCRYPT_KEY }}"
             export DOZZLE_USERNAME="${{ secrets.DOZZLE_USERNAME }}"
             export DOZZLE_PASSWORD="${{ secrets.DOZZLE_PASSWORD }}"
             export GRAFANA_ADMIN_USER="${{ secrets.GRAFANA_ADMIN_USER }}"
