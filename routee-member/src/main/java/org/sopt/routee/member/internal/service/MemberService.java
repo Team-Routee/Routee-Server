@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Optional;
 
 import org.sopt.routee.activity.api.result.MonthlyActivityDailySummaryResult;
 import org.sopt.routee.activity.api.usecase.ActivityUseCase;
@@ -143,28 +142,24 @@ public class MemberService {
 	public void withdraw(WithdrawCommand command) {
 		long memberId = command.memberId();
 
-		WithdrawalContext context;
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
+
+		revokeOAuthConnection(memberId, member.getOauthProvider());
+
 		try {
-			context = transactionTemplate.execute(status -> {
-				Member member = memberRepository.findById(memberId)
-					.orElseThrow(MemberNotFoundException::new);
-
-				Optional<MemberOAuthCredential> credential = memberOAuthCredentialRepository.findByMember_Id(memberId);
-				credential.ifPresent(memberOAuthCredentialRepository::delete);
-
+			transactionTemplate.execute(status -> {
+				memberOAuthCredentialRepository.deleteByMember_Id(memberId);
 				memberAgreementRepository.deleteByMember_Id(memberId);
 				memberRepository.delete(member);
 
 				activityUseCase.deleteForMemberWithdrawal(memberId);
 
-				return new WithdrawalContext(
-					member.getOauthProvider(), credential.map(MemberOAuthCredential::getRefreshToken).orElse(null));
+				return null;
 			});
 		} catch (ObjectOptimisticLockingFailureException e) {
 			throw new MemberNotFoundException();
 		}
-
-		revokeOAuthConnection(memberId, context.oauthProvider(), context.refreshToken());
 
 		applicationEventPublisher.publishEvent(
 			new MemberWithdrawnEvent(memberId, command.accessTokenHash(), command.refreshTokenHash()));
@@ -172,19 +167,20 @@ public class MemberService {
 		Thread.startVirtualThread(() -> deleteMemberImages(memberId));
 	}
 
-	private record WithdrawalContext(OAuthProvider oauthProvider, String refreshToken) {
-	}
-
-	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider, String refreshToken) {
-		if (oauthProvider != OAuthProvider.APPLE || !StringUtils.hasText(refreshToken)) {
+	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider) {
+		if (oauthProvider != OAuthProvider.APPLE) {
 			return;
 		}
 
-		try {
-			oAuthRevokePort.revoke(refreshToken);
-		} catch (BaseException e) {
-			log.warn("OAuth revoke failed. memberId={}, provider={}", memberId, oauthProvider, e);
+		String refreshToken = memberOAuthCredentialRepository.findByMember_Id(memberId)
+			.map(MemberOAuthCredential::getRefreshToken)
+			.orElse(null);
+
+		if (!StringUtils.hasText(refreshToken)) {
+			return;
 		}
+
+		oAuthRevokePort.revoke(refreshToken);
 	}
 
 	private void deleteMemberImages(long memberId) {
