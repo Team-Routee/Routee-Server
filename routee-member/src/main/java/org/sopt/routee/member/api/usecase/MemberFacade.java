@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 public class MemberFacade implements MemberUseCase {
 	private final MemberService memberService;
 
-	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider) {
-		return memberService.getTokenResult(oauthId, oauthProvider);
+	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider, String authorizationCode) {
+		return memberService.getTokenResult(oauthId, oauthProvider, authorizationCode);
 	}
 
 	public boolean existsById(long memberId) {

@@ -86,9 +86,9 @@ public interface MemberControllerDocs {
 
 	@Operation(summary = "회원 탈퇴",
 		description = "인증된 회원의 정보를 삭제하고, 보유한 액세스/리프레시 토큰을 무효화합니다. refresh_token은 모든 탈퇴 요청에 필수입니다. "
-			+ "Apple 로그인 회원은 authorization_code를 함께 전달해야 소셜 로그인 연동도 해제됩니다. "
-			+ "authorization_code는 탈퇴 직전 재인증하여 발급받은 값이어야 하며, Apple 외 소셜 로그인 회원은 전달하지 않아도 됩니다. "
-			+ "연동 해제에 실패하더라도 탈퇴 자체는 완료됩니다.")
+			+ "Apple 로그인 회원은 로그인 시점에 저장해둔 Apple refresh_token으로 소셜 로그인 연동도 함께 해제되며, "
+			+ "탈퇴 요청 자체에는 별도의 인가 정보를 전달할 필요가 없습니다. 연동 해제에 실패하면 탈퇴 자체도 실패하지만, "
+			+ "이미 연동이 해제된 상태(Apple 계정 설정에서 직접 연동을 끊은 경우 등)라면 실패로 보지 않고 탈퇴를 계속 진행합니다.")
 	@SecurityRequirement(name = "bearerAuth")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "탈퇴 성공"),
@@ -107,19 +107,18 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "404", description = "가입된 회원 없음",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
-					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}"))),
+		@ApiResponse(responseCode = "502", description = "소셜 로그인 연동 해제에 실패함 (Apple refresh_token이 저장된 회원만 해당)",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "OAUTH_REVOKE_FAILED",
+					value = "{\"status\":502,\"code\":\"OAUTH_REVOKE_FAILED\",\"message\":\"소셜 로그인 연동 해제에 실패했습니다.\"}")))
 	})
 	ResponseEntity<SuccessResponse<Void>> withdraw(
 		Long memberId,
 		@RequestHeader(name = "Authorization") String accessTokenWithBearer,
 		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
 			content = @Content(schema = @Schema(implementation = WithdrawRequest.class),
-				examples = {
-					@ExampleObject(name = "APPLE_MEMBER", summary = "Apple 로그인 회원",
-						value = "{\"refreshToken\":\"eyJ...\",\"authorizationCode\":\"c1234...\"}"),
-					@ExampleObject(name = "OTHER_MEMBER", summary = "그 외 소셜 로그인 회원",
-						value = "{\"refreshToken\":\"eyJ...\"}")
-				}))
+				examples = @ExampleObject(value = "{\"refreshToken\":\"eyJ...\"}")))
 		@Valid @RequestBody WithdrawRequest request
 	);
 

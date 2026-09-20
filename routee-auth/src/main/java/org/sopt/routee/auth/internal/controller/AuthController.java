@@ -1,7 +1,6 @@
 package org.sopt.routee.auth.internal.controller;
 
 import org.sopt.routee.auth.internal.service.AuthService;
-import org.sopt.routee.auth.internal.service.dto.command.LoginCommand;
 import org.sopt.routee.auth.internal.code.SuccessCode;
 import org.sopt.routee.auth.internal.controller.dto.response.TokenResponse;
 import org.sopt.routee.auth.internal.controller.dto.request.LoginRequest;
@@ -36,7 +35,7 @@ public class AuthController implements AuthControllerDocs {
 	public ResponseEntity<SuccessResponse<TokenResponse>> login(
 		@Valid @RequestBody LoginRequest request
 	) {
-		TokenResult result = authService.login(new LoginCommand(request.provider(), request.idToken()));
+		TokenResult result = authService.login(request.toCommand());
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ApiResponse.success(SuccessCode.LOGIN_SUCCESS, TokenResponse.of(result)));
 	}
