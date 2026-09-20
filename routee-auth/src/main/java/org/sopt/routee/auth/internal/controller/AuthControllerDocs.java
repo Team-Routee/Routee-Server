@@ -22,7 +22,11 @@ import jakarta.validation.Valid;
 @Tag(name = "Auth", description = "인증 API")
 public interface AuthControllerDocs {
 
-	@Operation(summary = "소셜 로그인", description = "OIDC ID 토큰으로 로그인하고 액세스/리프레시 토큰을 발급합니다.")
+	@Operation(summary = "소셜 로그인",
+		description = "OIDC ID 토큰으로 로그인하고 액세스/리프레시 토큰을 발급합니다. Apple 로그인 회원 중 아직 저장된 Apple refresh_token이 없는 "
+			+ "회원은 authorization_code가 필수이며, 이를 교환해 refresh_token을 저장합니다. 이미 저장되어 있는 회원은 authorization_code를 "
+			+ "전달하지 않아도 되고 전달되어도 무시됩니다. 저장된 refresh_token은 회원 탈퇴 시 소셜 로그인 연동 해제에 사용됩니다. "
+			+ "저장된 refresh_token이 없는데 authorization_code를 전달하지 않았거나, authorization_code 교환/저장에 실패하면 로그인 자체가 실패합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "로그인 성공",
 			content = @Content(schema = @Schema(implementation = TokenResponse.class))),
@@ -32,9 +36,11 @@ public interface AuthControllerDocs {
 					@ExampleObject(name = "INVALID_INPUT_VALUE",
 						value = "{\"status\":400,\"code\":\"INVALID_INPUT_VALUE\",\"message\":\"provider는 필수입니다.\"}"),
 					@ExampleObject(name = "INVALID_REQUEST_BODY",
-						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}")
+						value = "{\"status\":400,\"code\":\"INVALID_REQUEST_BODY\",\"message\":\"요청 바디를 읽을 수 없습니다.\"}"),
+					@ExampleObject(name = "AUTHORIZATION_CODE_REQUIRED",
+						value = "{\"status\":400,\"code\":\"AUTHORIZATION_CODE_REQUIRED\",\"message\":\"저장된 소셜 로그인 연동 정보가 없어 authorization_code가 필요합니다.\"}")
 				})),
-		@ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 id_token",
+		@ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 id_token/authorization_code",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = {
 					@ExampleObject(name = "INVALID_ID_TOKEN",
@@ -42,14 +48,30 @@ public interface AuthControllerDocs {
 					@ExampleObject(name = "ID_TOKEN_EXPIRED",
 						value = "{\"status\":401,\"code\":\"ID_TOKEN_EXPIRED\",\"message\":\"만료된 id_token입니다.\"}"),
 					@ExampleObject(name = "INVALID_TOKEN_CLAIMS",
-						value = "{\"status\":401,\"code\":\"INVALID_TOKEN_CLAIMS\",\"message\":\"id_token 클레임이 유효하지 않습니다.\"}")
+						value = "{\"status\":401,\"code\":\"INVALID_TOKEN_CLAIMS\",\"message\":\"id_token 클레임이 유효하지 않습니다.\"}"),
+					@ExampleObject(name = "AUTHORIZATION_CODE_EXPIRED",
+						value = "{\"status\":401,\"code\":\"AUTHORIZATION_CODE_EXPIRED\",\"message\":\"만료되었거나 유효하지 않은 authorization_code입니다.\"}")
 				})),
 		@ApiResponse(responseCode = "404", description = "가입된 회원 없음 - 회원가입 필요",
 			content = @Content(schema = @Schema(implementation = FailureResponse.class),
 				examples = @ExampleObject(name = "MEMBER_NOT_FOUND",
-					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}")))
+					value = "{\"status\":404,\"code\":\"MEMBER_NOT_FOUND\",\"message\":\"사용자 정보가 존재하지 않습니다.\"}"))),
+		@ApiResponse(responseCode = "502", description = "소셜 로그인 refresh_token 교환에 실패함 (저장된 연동 정보가 없는 회원만 해당)",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "OAUTH_REFRESH_TOKEN_EXCHANGE_FAILED",
+					value = "{\"status\":502,\"code\":\"OAUTH_REFRESH_TOKEN_EXCHANGE_FAILED\",\"message\":\"소셜 로그인 refresh_token 교환에 실패했습니다.\"}")))
 	})
-	ResponseEntity<SuccessResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request);
+	ResponseEntity<SuccessResponse<TokenResponse>> login(
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+			content = @Content(schema = @Schema(implementation = LoginRequest.class),
+				examples = {
+					@ExampleObject(name = "APPLE_MEMBER", summary = "Apple 로그인 회원",
+						value = "{\"provider\":\"APPLE\",\"idToken\":\"eyJ...\",\"authorizationCode\":\"c1234...\"}"),
+					@ExampleObject(name = "OTHER_MEMBER", summary = "그 외 소셜 로그인 회원",
+						value = "{\"provider\":\"GOOGLE\",\"idToken\":\"eyJ...\"}")
+				}))
+		@Valid @RequestBody LoginRequest request
+	);
 
 	@Operation(summary = "토큰 재발급", description = "리프레시 토큰으로 액세스/리프레시 토큰을 재발급합니다.")
 	@ApiResponses({

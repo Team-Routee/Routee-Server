@@ -20,6 +20,7 @@ import org.sopt.routee.external.api.result.FileUploadPresignResult;
 import org.sopt.routee.external.api.type.FileUploadDirectory;
 import org.sopt.routee.external.api.type.OAuthProvider;
 import org.sopt.routee.external.api.port.OAuthRevokePort;
+import org.sopt.routee.external.api.port.OAuthRefreshTokenExchangePort;
 import org.sopt.routee.external.api.port.OidcVerifyPort;
 import org.sopt.routee.member.api.event.MemberWithdrawnEvent;
 import org.sopt.routee.member.internal.service.dto.command.AgreementCommand;
@@ -36,12 +37,15 @@ import org.sopt.routee.member.internal.service.dto.result.UpdateNicknameResult;
 import org.sopt.routee.member.internal.service.dto.result.UpdateProfileImageResult;
 import org.sopt.routee.member.api.result.TokenClaimsResult;
 import org.sopt.routee.member.internal.entity.Member;
+import org.sopt.routee.member.internal.entity.MemberOAuthCredential;
 import org.sopt.routee.member.internal.exception.AlreadyRegisteredMemberException;
+import org.sopt.routee.member.internal.exception.AuthorizationCodeRequiredException;
 import org.sopt.routee.member.internal.exception.MemberNotFoundException;
 import org.sopt.routee.member.internal.exception.RequiredAgreementNotAcceptedException;
 import org.sopt.routee.member.internal.exception.UnsupportedImageFileExtensionException;
 import org.sopt.routee.member.internal.mapper.MemberMapper;
 import org.sopt.routee.member.internal.repository.MemberAgreementRepository;
+import org.sopt.routee.member.internal.repository.MemberOAuthCredentialRepository;
 import org.sopt.routee.member.internal.repository.MemberRepository;
 import org.sopt.routee.member.internal.service.validator.ProfileImageFileNameValidator;
 import org.sopt.routee.util.TimeZoneUtils;
@@ -50,6 +54,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,9 +66,11 @@ public class MemberService {
 
 	private final OidcVerifyPort oidcVerifyPort;
 	private final OAuthRevokePort oAuthRevokePort;
+	private final OAuthRefreshTokenExchangePort oAuthRefreshTokenExchangePort;
 	private final ActivityUseCase activityUseCase;
 	private final MemberRepository memberRepository;
 	private final MemberAgreementRepository memberAgreementRepository;
+	private final MemberOAuthCredentialRepository memberOAuthCredentialRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final FileUploadPresignPort fileUploadPresignPort;
 	private final FileImageAccessUrlPort fileImageAccessUrlPort;
@@ -71,12 +78,32 @@ public class MemberService {
 	private final ProfileImageFileNameValidator profileImageFileNameValidator;
 	private final TransactionTemplate transactionTemplate;
 
-	@Transactional(readOnly = true)
-	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider) {
+	@Transactional
+	public TokenClaimsResult getTokenResult(String oauthId, OAuthProvider oauthProvider, String authorizationCode) {
 		Member member = memberRepository.findByOauthIdAndOauthProvider(oauthId, oauthProvider)
 			.orElseThrow(MemberNotFoundException::new);
 
+		ensureOAuthCredential(member, authorizationCode);
+
 		return MemberMapper.toTokenClaimsResult(member);
+	}
+
+	private void ensureOAuthCredential(Member member, String authorizationCode) {
+		if (member.getOauthProvider() != OAuthProvider.APPLE) {
+			return;
+		}
+
+		if (memberOAuthCredentialRepository.existsByMember_Id(member.getId())) {
+			return;
+		}
+
+		if (!StringUtils.hasText(authorizationCode)) {
+			throw new AuthorizationCodeRequiredException();
+		}
+
+		String refreshToken = oAuthRefreshTokenExchangePort.exchangeForRefreshToken(
+			member.getOauthProvider(), authorizationCode);
+		memberOAuthCredentialRepository.save(MemberMapper.toOAuthCredentialEntity(member, refreshToken));
 	}
 
 	@Transactional(readOnly = true)
@@ -115,24 +142,24 @@ public class MemberService {
 	public void withdraw(WithdrawCommand command) {
 		long memberId = command.memberId();
 
-		OAuthProvider oauthProvider;
-		try {
-			oauthProvider = transactionTemplate.execute(status -> {
-				Member member = memberRepository.findById(memberId)
-					.orElseThrow(MemberNotFoundException::new);
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
 
+		revokeOAuthConnection(memberId, member.getOauthProvider());
+
+		try {
+			transactionTemplate.execute(status -> {
+				memberOAuthCredentialRepository.deleteByMember_Id(memberId);
 				memberAgreementRepository.deleteByMember_Id(memberId);
 				memberRepository.delete(member);
 
 				activityUseCase.deleteForMemberWithdrawal(memberId);
 
-				return member.getOauthProvider();
+				return null;
 			});
 		} catch (ObjectOptimisticLockingFailureException e) {
 			throw new MemberNotFoundException();
 		}
-
-		revokeOAuthConnection(memberId, oauthProvider, command.authorizationCode());
 
 		applicationEventPublisher.publishEvent(
 			new MemberWithdrawnEvent(memberId, command.accessTokenHash(), command.refreshTokenHash()));
@@ -140,16 +167,20 @@ public class MemberService {
 		Thread.startVirtualThread(() -> deleteMemberImages(memberId));
 	}
 
-	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider, String authorizationCode) {
+	private void revokeOAuthConnection(long memberId, OAuthProvider oauthProvider) {
 		if (oauthProvider != OAuthProvider.APPLE) {
 			return;
 		}
 
-		try {
-			oAuthRevokePort.revoke(authorizationCode);
-		} catch (BaseException e) {
-			log.warn("OAuth revoke failed. memberId={}, provider={}", memberId, oauthProvider, e);
+		String refreshToken = memberOAuthCredentialRepository.findByMember_Id(memberId)
+			.map(MemberOAuthCredential::getRefreshToken)
+			.orElse(null);
+
+		if (!StringUtils.hasText(refreshToken)) {
+			return;
 		}
+
+		oAuthRevokePort.revoke(refreshToken);
 	}
 
 	private void deleteMemberImages(long memberId) {
