@@ -3,8 +3,8 @@ package org.sopt.routee.activity.internal.controller;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.code.SuccessCode;
-import org.sopt.routee.activity.internal.controller.dto.request.CreateRoutesRequest;
-import org.sopt.routee.activity.internal.controller.dto.request.UpdateRoutesRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.RoutesCreateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.RoutesUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.RouteListResponse;
 import org.sopt.routee.activity.internal.service.RouteService;
 import org.sopt.routee.activity.internal.service.dto.result.RouteResult;
@@ -33,7 +33,7 @@ public class RouteController implements RouteControllerDocs {
 	@PostMapping("/{activityId}/route")
 	public ResponseEntity<SuccessResponse<RouteListResponse>> createRoutes(
 		@PathVariable(name = "activityId") Long activityId,
-		@Valid @RequestBody CreateRoutesRequest request
+		@Valid @RequestBody RoutesCreateRequest request
 	) {
 		List<RouteResult> results = routeService.createRoutes(activityId, request.toCommands());
 
@@ -44,7 +44,7 @@ public class RouteController implements RouteControllerDocs {
 	@PutMapping("/{activityId}/route")
 	public ResponseEntity<SuccessResponse<RouteListResponse>> updateRoutes(
 		@PathVariable(name = "activityId") Long activityId,
-		@Valid @RequestBody UpdateRoutesRequest request
+		@Valid @RequestBody RoutesUpdateRequest request
 	) {
 		List<RouteResult> results = routeService.updateRoutes(activityId, request.toCommands());
 
