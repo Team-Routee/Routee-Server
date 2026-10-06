@@ -19,6 +19,7 @@ public enum SuccessCode implements SuccessResultCode {
 	ACTIVITY_TRACK_GET_SUCCESS(HttpStatus.OK, "활동 경로 데이터 조회에 성공했습니다."),
 	ARCHIVE_ACTIVITY_LIST_GET_SUCCESS(HttpStatus.OK, "특정 날짜의 활동 목록 조회에 성공했습니다."),
 	IMAGE_UPLOAD_URL_CREATED(HttpStatus.OK, "이미지 업로드 URL 발급에 성공했습니다."),
+	ROUTE_LIST_UPDATE_SUCCESS(HttpStatus.OK, "루트 목록 수정에 성공했습니다."),
 	ROUTE_LIST_GET_SUCCESS(HttpStatus.OK, "루트 목록 조회에 성공했습니다."),
 	TIMELINE_DELETED(HttpStatus.OK, "타임라인 삭제에 성공했습니다."),
 	TIMELINE_LIST_GET_SUCCESS(HttpStatus.OK, "타임라인 목록 조회에 성공했습니다."),
