@@ -10,21 +10,21 @@ import org.sopt.routee.activity.internal.controller.dto.request.ActivityCreateRe
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityStatusUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ActivityTitleUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.request.ImageUrlRequest;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityCreateResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityEditListResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityRecapResponse;
-import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatisticsResponse;
-import org.sopt.routee.activity.internal.controller.dto.response.ActivitiesByDateResponse;
+import org.sopt.routee.activity.internal.controller.dto.response.ActivityStatusResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityTitleResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ActivityTrackResponse;
 import org.sopt.routee.activity.internal.controller.dto.response.ImageUrlResponse;
 import org.sopt.routee.activity.internal.service.ActivityService;
 import org.sopt.routee.activity.internal.service.dto.command.GetActivityRecapCommand;
+import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityEditListResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityRecapResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityStatisticsResult;
-import org.sopt.routee.activity.internal.service.dto.result.ActivitiesByDateResult;
 import org.sopt.routee.activity.internal.service.dto.result.ActivityTrackResult;
 import org.sopt.routee.activity.internal.service.dto.result.CreateActivityResult;
 import org.sopt.routee.activity.internal.service.dto.result.ImageUrlResult;
@@ -39,9 +39,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -140,6 +141,17 @@ public class ActivityController implements ActivityControllerDocs {
 			.body(ApiResponse.success(SuccessCode.ACTIVITY_COMPLETED));
 	}
 
+	@DeleteMapping("/activity/{activityId}")
+	public ResponseEntity<SuccessResponse<Void>> delete(
+		@AuthenticationPrincipal Long memberId,
+		@PathVariable(name = "activityId") Long activityId
+	) {
+		activityService.delete(activityId, memberId);
+
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_DELETED));
+	}
+
 	@GetMapping("/activity/{activityId}/statistics")
 	public ResponseEntity<SuccessResponse<ActivityStatisticsResponse>> getStatistics(
 		@AuthenticationPrincipal Long memberId,
@@ -149,7 +161,8 @@ public class ActivityController implements ActivityControllerDocs {
 		ActivityStatisticsResult result = activityService.getStatistics(activityId, memberId, timeZone);
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS, ActivityStatisticsResponse.from(result)));
+			.body(ApiResponse.success(SuccessCode.ACTIVITY_STATISTICS_GET_SUCCESS,
+				ActivityStatisticsResponse.from(result)));
 	}
 
 	@GetMapping("/activity/{activityId}/track")
@@ -186,7 +199,8 @@ public class ActivityController implements ActivityControllerDocs {
 		);
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ApiResponse.success(SuccessCode.ACTIVITY_EDIT_LIST_GET_SUCCESS, ActivityEditListResponse.from(result)));
+			.body(
+				ApiResponse.success(SuccessCode.ACTIVITY_EDIT_LIST_GET_SUCCESS, ActivityEditListResponse.from(result)));
 	}
 
 	@GetMapping("/archive/activity")
@@ -198,6 +212,7 @@ public class ActivityController implements ActivityControllerDocs {
 		ActivitiesByDateResult result = activityService.getActivitiesByDate(memberId, date, timeZone);
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ApiResponse.success(SuccessCode.ARCHIVE_ACTIVITY_LIST_GET_SUCCESS, ActivitiesByDateResponse.from(result)));
+			.body(ApiResponse.success(SuccessCode.ARCHIVE_ACTIVITY_LIST_GET_SUCCESS,
+				ActivitiesByDateResponse.from(result)));
 	}
 }

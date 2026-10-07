@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.EnumSet;
@@ -287,5 +288,44 @@ class ActivityServiceTest {
 		} finally {
 			TransactionSynchronizationManager.clearSynchronization();
 		}
+	}
+
+	@Test
+	void delete_완료된_활동을_삭제하면_일별_요약_감소와_커버_재계산을_요청한다() {
+		Long activityId = 30L;
+		LocalDate activityDate = LocalDate.of(2026, 7, 7);
+		Activity activity = Activity.builder()
+			.id(activityId)
+			.memberId(MEMBER_ID)
+			.activityStatus(ActivityStatus.ACTIVITY_COMPLETED)
+			.durationSec(1800)
+			.activityDateWithTimezone(activityDate)
+			.build();
+
+		when(activityRepository.findByIdAndMemberId(activityId, MEMBER_ID)).thenReturn(Optional.of(activity));
+		stubTransactionTemplateToRunCallback();
+
+		activityService.delete(activityId, MEMBER_ID);
+
+		InOrder inOrder = inOrder(activityDailySummaryService);
+		inOrder.verify(activityDailySummaryService).removeActivity(MEMBER_ID, activityDate, 1800);
+		inOrder.verify(activityDailySummaryService).refreshCoverAfterActivityChanged(MEMBER_ID, activityDate, activityId);
+	}
+
+	@Test
+	void delete_진행중인_활동을_삭제하면_일별_요약에_영향을_주지_않는다() {
+		Long activityId = 31L;
+		Activity activity = Activity.builder()
+			.id(activityId)
+			.memberId(MEMBER_ID)
+			.activityStatus(ActivityStatus.ACTIVITY_IN_PROGRESS)
+			.build();
+
+		when(activityRepository.findByIdAndMemberId(activityId, MEMBER_ID)).thenReturn(Optional.of(activity));
+		stubTransactionTemplateToRunCallback();
+
+		activityService.delete(activityId, MEMBER_ID);
+
+		verifyNoInteractions(activityDailySummaryService);
 	}
 }
