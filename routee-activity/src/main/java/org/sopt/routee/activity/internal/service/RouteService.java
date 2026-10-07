@@ -1,5 +1,6 @@
 package org.sopt.routee.activity.internal.service;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.sopt.routee.activity.internal.entity.activity.Activity;
@@ -10,6 +11,7 @@ import org.sopt.routee.activity.internal.mapper.RouteMapper;
 import org.sopt.routee.activity.internal.repository.ActivityRepository;
 import org.sopt.routee.activity.internal.repository.RouteRepository;
 import org.sopt.routee.activity.internal.service.dto.command.CreateRouteCommand;
+import org.sopt.routee.activity.internal.service.dto.command.UpdateRouteCommand;
 import org.sopt.routee.activity.internal.service.dto.result.RouteResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,38 @@ public class RouteService {
 		Activity activity = activityRepository.getReferenceById(activityId);
 
 		List<Route> routes = commands.stream()
+			.map(command -> RouteMapper.toEntity(command, activity))
+			.toList();
+
+		return routeRepository.saveAll(routes).stream()
+			.map(RouteMapper::toResult)
+			.toList();
+	}
+
+	@Transactional
+	public List<RouteResult> updateRoutes(Long activityId, List<UpdateRouteCommand> commands) {
+		if (!activityRepository.existsById(activityId)) {
+			throw new ActivityNotFoundException();
+		}
+
+		List<UpdateRouteCommand> sortedCommands = commands.stream()
+			.sorted(Comparator.comparingInt(UpdateRouteCommand::sequence))
+			.toList();
+
+		List<Route> existingRoutes = routeRepository.findByActivityIdOrderBySequenceAsc(activityId);
+		List<UpdateRouteCommand> existingCommands = existingRoutes.stream()
+			.map(route -> new UpdateRouteCommand(route.getName(), route.getSequence()))
+			.toList();
+		if (existingCommands.equals(sortedCommands)) {
+			return existingRoutes.stream()
+				.map(RouteMapper::toResult)
+				.toList();
+		}
+
+		routeRepository.deleteByActivityId(activityId);
+		Activity activity = activityRepository.getReferenceById(activityId);
+
+		List<Route> routes = sortedCommands.stream()
 			.map(command -> RouteMapper.toEntity(command, activity))
 			.toList();
 
