@@ -46,8 +46,9 @@ public class RouteService {
 
 	@Transactional
 	public List<RouteResult> updateRoutes(Long activityId, List<UpdateRouteCommand> commands) {
-		Activity activity = activityRepository.findById(activityId)
-			.orElseThrow(ActivityNotFoundException::new);
+		if (!activityRepository.existsById(activityId)) {
+			throw new ActivityNotFoundException();
+		}
 
 		List<UpdateRouteCommand> sortedCommands = commands.stream()
 			.sorted(Comparator.comparingInt(UpdateRouteCommand::sequence))
@@ -64,6 +65,7 @@ public class RouteService {
 		}
 
 		routeRepository.deleteByActivityId(activityId);
+		Activity activity = activityRepository.getReferenceById(activityId);
 
 		List<Route> routes = sortedCommands.stream()
 			.map(command -> RouteMapper.toEntity(command, activity))
