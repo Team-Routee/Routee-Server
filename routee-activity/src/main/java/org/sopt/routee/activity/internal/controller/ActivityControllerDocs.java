@@ -256,6 +256,23 @@ public interface ActivityControllerDocs {
 		@Valid @RequestBody ActivityCompleteRequest request
 	);
 
+	@Operation(summary = "활동 삭제", description = "인증된 사용자의 활동 기록을 삭제합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "활동 삭제 성공",
+			content = @Content(
+				examples = @ExampleObject(value = "{\"status\":200,\"code\":\"ACTIVITY_DELETED\",\"message\":\"활동 기록 삭제에 성공했습니다.\",\"data\":null}"))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class),
+				examples = @ExampleObject(name = "ACTIVITY_NOT_FOUND",
+					value = "{\"status\":404,\"code\":\"ACTIVITY_NOT_FOUND\",\"message\":\"활동 기록이 존재하지 않습니다.\"}")))
+	})
+	ResponseEntity<SuccessResponse<Void>> delete(
+		Long memberId,
+		@PathVariable(name = "activityId") Long activityId
+	);
+
 	@Operation(summary = "활동 통계 기록 조회", description = "인증된 사용자의 활동 통계 기록을 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "활동 통계 기록 조회 성공",

@@ -1,6 +1,7 @@
 package org.sopt.routee.activity.internal.controller;
 
-import org.sopt.routee.activity.internal.controller.dto.request.CreateRoutesRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.RoutesCreateRequest;
+import org.sopt.routee.activity.internal.controller.dto.request.RoutesUpdateRequest;
 import org.sopt.routee.activity.internal.controller.dto.response.RouteListResponse;
 import org.sopt.routee.response.FailureResponse;
 import org.sopt.routee.response.SuccessResponse;
@@ -49,7 +50,23 @@ public interface RouteControllerDocs {
 	})
 	ResponseEntity<SuccessResponse<RouteListResponse>> createRoutes(
 		@PathVariable(name = "activityId") Long activityId,
-		@Valid @RequestBody CreateRoutesRequest request
+		@Valid @RequestBody RoutesCreateRequest request
+	);
+
+	@Operation(summary = "루트 목록 수정", description = "활동 기록의 기존 루트 목록을 요청한 루트 목록 전체로 수정합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "루트 목록 수정 성공",
+			content = @Content(schema = @Schema(implementation = RouteListResponse.class))),
+		@ApiResponse(responseCode = "400", description = "요청 값이 올바르지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class))),
+		@ApiResponse(responseCode = "404", description = "활동 기록이 존재하지 않음",
+			content = @Content(schema = @Schema(implementation = FailureResponse.class)))
+	})
+	ResponseEntity<SuccessResponse<RouteListResponse>> updateRoutes(
+		@PathVariable(name = "activityId") Long activityId,
+		@Valid @RequestBody RoutesUpdateRequest request
 	);
 
 	@Operation(summary = "루트 목록 조회", description = "활동 기록에 속하는 루트 목록을 조회합니다.")

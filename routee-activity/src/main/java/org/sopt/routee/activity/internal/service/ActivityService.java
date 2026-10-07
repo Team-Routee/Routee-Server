@@ -373,6 +373,36 @@ public class ActivityService {
 		activityRepository.deleteByMemberId(memberId);
 	}
 
+	public void delete(Long activityId, Long memberId) {
+		Activity deletedActivity = transactionTemplate.execute(status -> {
+			Activity activity = activityRepository.findByIdAndMemberId(activityId, memberId)
+				.orElseThrow(ActivityNotFoundException::new);
+
+			routeRepository.deleteByActivityIdIn(List.of(activityId));
+			timelineRepository.deleteByActivityIdIn(List.of(activityId));
+			activityRepository.delete(activity);
+
+			if (activity.getActivityStatus().isCompleted()) {
+				refreshDailySummaryAfterDelete(activity);
+			}
+
+			return activity;
+		});
+
+		log.info("Activity deleted. activityId={}, memberId={}", activityId, memberId);
+		Thread.startVirtualThread(() -> deleteActivityImageDirectories(memberId, List.of(deletedActivity.getId())));
+	}
+
+	private void refreshDailySummaryAfterDelete(Activity activity) {
+		LocalDate activityDate = activity.getActivityDateWithTimezone();
+		if (activityDate == null) {
+			return;
+		}
+
+		activityDailySummaryService.removeActivity(activity.getMemberId(), activityDate, activity.getDurationSec());
+		activityDailySummaryService.refreshCoverAfterActivityChanged(activity.getMemberId(), activityDate, activity.getId());
+	}
+
 	private String generateTimelineImageUrl(Long memberId, Long activityId, Timeline timeline,
 		FileUploadImageSize imageSize) {
 		FileImageAccessUrlCommand command = new FileImageAccessUrlCommand(

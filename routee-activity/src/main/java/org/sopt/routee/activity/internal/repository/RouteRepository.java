@@ -15,6 +15,10 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 	boolean existsByActivityId(Long activityId);
 
 	@Modifying
+	@Query("DELETE FROM Route r WHERE r.activity.id = :activityId")
+	void deleteByActivityId(@Param("activityId") Long activityId);
+
+	@Modifying
 	@Query("DELETE FROM Route r WHERE r.activity.memberId = :memberId")
 	void deleteByMemberId(@Param("memberId") Long memberId);
 
