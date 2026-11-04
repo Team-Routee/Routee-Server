@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.sopt.routee.activity.api.event.ActivityCompletedEvent;
+import org.sopt.routee.activity.api.event.ActivityDeletedEvent;
 import org.sopt.routee.activity.internal.entity.activity.Activity;
 import org.sopt.routee.activity.internal.entity.activity.ActivityStatus;
 import org.sopt.routee.activity.internal.entity.timeline.Timeline;
@@ -384,6 +385,7 @@ public class ActivityService {
 
 			if (activity.getActivityStatus().isCompleted()) {
 				refreshDailySummaryAfterDelete(activity);
+				applicationEventPublisher.publishEvent(new ActivityDeletedEvent(memberId));
 			}
 
 			return activity;
