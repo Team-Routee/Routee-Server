@@ -295,6 +295,11 @@ public class MemberService {
 		memberRepository.incrementTotalActivityCount(memberId);
 	}
 
+	@Transactional
+	public void decrementTotalActivityCount(long memberId) {
+		memberRepository.decrementTotalActivityCount(memberId);
+	}
+
 	@Transactional(readOnly = true)
 	public ActivitySummaryResult getActivitySummary(long memberId, int year, int month) {
 		if (!memberRepository.existsById(memberId)) {

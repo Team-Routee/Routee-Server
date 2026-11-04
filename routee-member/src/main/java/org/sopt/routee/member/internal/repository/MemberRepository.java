@@ -19,4 +19,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 	@Query("UPDATE Member m SET m.totalActivityCount = m.totalActivityCount + 1 WHERE m.id = :memberId")
 	void incrementTotalActivityCount(@Param("memberId") Long memberId);
 
+	@Modifying
+	@Query("UPDATE Member m SET m.totalActivityCount = m.totalActivityCount - 1 WHERE m.id = :memberId AND m.totalActivityCount > 0")
+	void decrementTotalActivityCount(@Param("memberId") Long memberId);
+
 }
