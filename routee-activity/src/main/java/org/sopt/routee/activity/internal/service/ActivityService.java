@@ -198,7 +198,7 @@ public class ActivityService {
 
 	@Transactional
 	public void complete(CompleteActivityCommand command) {
-		Activity activity = activityRepository.findByIdAndMemberId(command.activityId(), command.memberId())
+		Activity activity = activityRepository.findForUpdateByIdAndMemberId(command.activityId(), command.memberId())
 			.orElseThrow(ActivityNotFoundException::new);
 
 		if (activity.getActivityStatus().isCompleted()) {
@@ -376,7 +376,7 @@ public class ActivityService {
 
 	public void delete(Long activityId, Long memberId) {
 		Activity deletedActivity = transactionTemplate.execute(status -> {
-			Activity activity = activityRepository.findByIdAndMemberId(activityId, memberId)
+			Activity activity = activityRepository.findForUpdateByIdAndMemberId(activityId, memberId)
 				.orElseThrow(ActivityNotFoundException::new);
 
 			routeRepository.deleteByActivityIdIn(List.of(activityId));
