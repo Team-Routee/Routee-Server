@@ -101,6 +101,23 @@ echo "Step 4: Removing old container ($OLD)..."
 docker compose -f docker-compose.yml stop $OLD || true
 docker compose -f docker-compose.yml rm -f $OLD || true
 
+echo "Step 5: Cleaning up old application images..."
+
+PREVIOUS_IMAGE=""
+if [ -f .last-deployed-tag ]; then
+  PREVIOUS_IMAGE=$(cat .last-deployed-tag)
+fi
+
+APP_REPOSITORY="${APP_IMAGE%:*}"
+
+docker images "$APP_REPOSITORY" --format '{{.Repository}}:{{.Tag}}' |
+while read -r IMAGE; do
+  if [ "$IMAGE" != "$APP_IMAGE" ] &&
+     [ "$IMAGE" != "$PREVIOUS_IMAGE" ]; then
+    docker image rm "$IMAGE" || true
+  fi
+done
+
 docker image prune -f
 
 echo "$APP_IMAGE" > .last-deployed-tag
