@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   nginx:
     image: nginx:stable-alpine
@@ -15,6 +21,7 @@ services:
     image: ${APP_IMAGE}
     container_name: routee-app-blue
     restart: unless-stopped
+    logging: *default-logging
     expose:
       - "8080"
     environment:
@@ -51,6 +58,7 @@ services:
     image: ${APP_IMAGE}
     container_name: routee-app-green
     restart: unless-stopped
+    logging: *default-logging
     expose:
       - "8080"
     environment:
@@ -116,6 +124,7 @@ services:
     image: grafana/tempo:latest
     container_name: routee-tempo
     restart: unless-stopped
+    logging: *default-logging
     user: "0"
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
